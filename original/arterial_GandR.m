@@ -225,7 +225,7 @@ c_pressure_sys       = 16000;                                        % systolic 
                 
             sv_pressure_var_elastin(i) = v_pressure_elastin(sv_stretch_var(i));    
             
-            
+           
             sv_pressure_var_elastin(i)      = max( v_pressure_elastin(sv_stretch_var(i)) , 0 );   
             sv_pressure_var_collagen(i)     = v_pressure_collagen(sv_stretch_var(i)); %max( v_pressure_collagen(sv_stretch_var(i)) , 0 );    
             sv_pressure_var_collagen_me(i)  =v_pressure_collagen_me(sv_stretch_var(i));
