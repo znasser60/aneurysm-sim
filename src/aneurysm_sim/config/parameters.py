@@ -71,7 +71,7 @@ class ArterialParameters:
             self.c_load_borne_elastin
             * self.c_common_factor
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
-        )
+        ) 
 
         collagen_denominator = (
             2

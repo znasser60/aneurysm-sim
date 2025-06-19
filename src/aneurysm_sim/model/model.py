@@ -10,9 +10,9 @@ from aneurysm_sim.model.functions import (
 
 from aneurysm_sim.config.parameters import ArterialParameters
 
-def simulate_arterial_stress_and_pressure():
-    n = 235
+def simulate_arterial_stress_and_pressure(params):
 
+    n = 235
     sv_stretch_var = 0.55 + 0.01 * np.arange(n) # Stretch variable for simulation
 
     sv_stress_var_elastin = np.zeros(n)
@@ -30,15 +30,18 @@ def simulate_arterial_stress_and_pressure():
     sv_pressure_var_collagen_me = np.zeros(n)
     sv_pressure_var_collagen_ad = np.zeros(n)
 
+    # Calculate diameter from stretch variable
+    sv_diam_var = 2 * params.c_radius_tzero * 1e3 * sv_stretch_var
+
     for i in range(n):
         x = sv_stretch_var[i]
 
         # Stresses
-        sv_stress_var_elastin[i] = v_sigma_elastin(x)
-        sv_stress_var_collagen[i] = v_sigma_collagen(x)
-        sv_stress_var_muscle_a[i] = v_sigma_muscle_a(x)
-        sv_stress_var_muscle_p[i] = v_sigma_muscle_p(x)
-        sv_stress_var_muscle_t[i] = v_sigma_muscle_t(x)
+        sv_stress_var_elastin[i] = v_sigma_elastin(x, params)
+        sv_stress_var_collagen[i] = v_sigma_collagen(x, params)
+        sv_stress_var_muscle_a[i] = v_sigma_muscle_a(x, params)
+        sv_stress_var_muscle_p[i] = v_sigma_muscle_p(x, params)
+        sv_stress_var_muscle_t[i] = v_sigma_muscle_t(x, params)
 
         sv_stress_var_total[i] = (
             sv_stress_var_elastin[i]
@@ -47,12 +50,12 @@ def simulate_arterial_stress_and_pressure():
         )
 
         # Pressures
-        sv_pressure_var_elastin[i] = max(v_pressure_elastin(x), 0)
-        sv_pressure_var_collagen[i] = max(v_pressure_collagen(x), 0)
-        sv_pressure_var_collagen_me[i] = max(v_pressure_collagen_me(x), 0)
-        sv_pressure_var_collagen_ad[i] = max(v_pressure_collagen_ad(x), 0)
-        sv_pressure_var_muscle_p[i] = max(v_pressure_muscle_p(x), 0)
-        sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(x), 0)
+        sv_pressure_var_elastin[i] = max(v_pressure_elastin(x, params), 0)
+        sv_pressure_var_collagen[i] = max(v_pressure_collagen(x, params), 0)
+        sv_pressure_var_collagen_me[i] = max(v_pressure_collagen_me(x, params), 0)
+        sv_pressure_var_collagen_ad[i] = max(v_pressure_collagen_ad(x, params), 0)
+        sv_pressure_var_muscle_p[i] = max(v_pressure_muscle_p(x, params), 0)
+        sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(x, params), 0)
         sv_pressure_var_muscle[i] = max(sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i], 0)
 
         sv_pressure_var[i] = max(
@@ -60,14 +63,10 @@ def simulate_arterial_stress_and_pressure():
             0
             )
         
-    # Calculate diameter from stretch variable
-    params = ArterialParameters()
-    sv_diam_var = 2 * params.c_radius_tzero * 1e3 * sv_stretch_var
-        
     return {
         # Diameter variable
         'sv_diam_var': sv_diam_var,
-        
+
         # Stretch variables
         'sv_stretch_var': sv_stretch_var,
         'sv_stress_var_elastin': sv_stress_var_elastin,
@@ -87,3 +86,24 @@ def simulate_arterial_stress_and_pressure():
         'sv_pressure_var_collagen_me': sv_pressure_var_collagen_me,
         'sv_pressure_var_collagen_ad': sv_pressure_var_collagen_ad,
     }
+
+def simulate_elastin_degredation(params, degredation_factors):
+    """
+    Test function to simulate elastin degradation and its effect on arterial stress and pressure.
+    """
+    results_dict = {}
+    for degradation_factor in degredation_factors:
+        params.c_lambda_elastin *= degradation_factor
+        params.c_k_elastin *= degradation_factor
+        results = simulate_arterial_stress_and_pressure(params)
+        results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
+    return results_dict
+
+def simulate_smooth_muscle_loss(): 
+    """
+    Test function to simulate smooth muscle loss and its effect on arterial stress and pressure.
+    """
+    pass
+
+
+
