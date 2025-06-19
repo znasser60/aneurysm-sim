@@ -83,6 +83,15 @@ class ArterialParameters:
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
 
+        # Media collagen Cauchy stress
+        self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
+        self.v_delta_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me))
+
+        # Adventitia collagen Cauchy stress
+        self.v_gamma_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
+        self.v_delta_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
+
+
         muscle_a_denominator = (
             self.c_vasodil_conc
             * self.c_lambda_muscle

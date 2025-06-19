@@ -57,51 +57,43 @@ def main():
     def v_sigma_muscle_t(x):
         return v_sigma_muscle_a(x) + v_sigma_muscle_p(x)
 
-    # Collagen Cauchy stresses in media
-    v_gamma_me = params.c_k_collagen / ((params.v_b_me - params.v_a_me) * (params.v_c_me - params.v_a_me))
-    v_delta_me = params.c_k_collagen / ((params.v_b_me - params.v_a_me) * (params.v_b_me - params.v_c_me))
-
     def v_sigma_collagen_me_0(x):
         return 0 * x
 
     def v_sigma_collagen_me_ac(x):
-        return x * v_gamma_me * 2 * ((x + params.v_a_me) * np.log(x / params.v_a_me) + 2 * (params.v_a_me - x))
+        return x * params.v_gamma_me * 2 * ((x + params.v_a_me) * np.log(x / params.v_a_me) + 2 * (params.v_a_me - x))
 
     def v_sigma_collagen_me_cb(x):
         term1 = (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
         term2 = (x + params.v_b_me) * np.log(x / params.v_c_me) + params.v_b_me + params.v_c_me - ((params.v_b_me + params.v_c_me) / params.v_c_me) * x
-        return x * v_gamma_me * 2 * term1 - x * v_delta_me * 2 * term2
+        return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
 
     def v_sigma_collagen_me_b(x):
         term1 = (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
         term2 = (x + params.v_b_me) * np.log(params.v_b_me / params.v_c_me) + params.v_b_me - params.v_c_me + ((params.v_b_me - params.v_c_me) / params.v_c_me) * x
-        return x * v_gamma_me * 2 * term1 - x * v_delta_me * 2 * term2
+        return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
 
     def v_sigma_collagen_me(x):
         return v_sigma_collagen_me_0(x) * (x < params.v_a_me) + \
                v_sigma_collagen_me_ac(x) * (params.v_a_me <= x) * (x < params.v_c_me) + \
                v_sigma_collagen_me_cb(x) * (params.v_c_me <= x) * (x < params.v_b_me) + \
                v_sigma_collagen_me_b(x) * (x >= params.v_b_me)
-    
-    # Adventitia collagen Cauchy stresses
-    v_gamma_ad = params.c_k_collagen * params.c_collagen_ratio_ad_me / ((params.v_b_ad - params.v_a_ad) * (params.v_c_ad - params.v_a_ad))
-    v_delta_ad = params.c_k_collagen * params.c_collagen_ratio_ad_me / ((params.v_b_ad - params.v_a_ad) * (params.v_b_ad - params.v_c_ad))
 
     def v_sigma_collagen_ad_0(x):
         return 0 * x
 
     def v_sigma_collagen_ad_ac(x):
-        return x * v_gamma_ad * 2 * ((x + params.v_a_ad) * np.log(x / params.v_a_ad) + 2 * (params.v_a_ad - x))
+        return x * params.v_gamma_ad * 2 * ((x + params.v_a_ad) * np.log(x / params.v_a_ad) + 2 * (params.v_a_ad - x))
 
     def v_sigma_collagen_ad_cb(x):
         term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
         term2 = (x + params.v_b_ad) * np.log(x / params.v_c_ad) + params.v_b_ad + params.v_c_ad - ((params.v_b_ad + params.v_c_ad) / params.v_c_ad) * x
-        return x * v_gamma_ad * 2 * term1 - x * v_delta_ad * 2 * term2
+        return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
 
     def v_sigma_collagen_ad_b(x):
         term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
         term2 = (x + params.v_b_ad) * np.log(params.v_b_ad / params.v_c_ad) + params.v_b_ad - params.v_c_ad + ((params.v_b_ad - params.v_c_ad) / params.v_c_ad) * x
-        return x * v_gamma_ad * 2 * term1 - x * v_delta_ad * 2 * term2
+        return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
     
     def v_sigma_collagen_ad(x):
         return v_sigma_collagen_ad_0(x) * (x < params.v_a_ad) + \
