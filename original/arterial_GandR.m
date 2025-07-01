@@ -249,7 +249,7 @@ c_pressure_sys       = 16000;                                        % systolic 
     hold on
     plot(sv_stretch_var(1:n_zoom),sv_pressure_var(1:n_zoom)./(10^3),'LineWidth',2)
     plot(sv_stretch_var(33:n_zoom),sv_pressure_var_elastin(33:n_zoom)./(10^3), '--','LineWidth',2)
-%    plot(sv_stretch_var(65:n_zoom),sv_pressure_var_collagen(65:n_zoom)./(10^3), '--','LineWidth',2)
+%   plot(sv_stretch_var(65:n_zoom),sv_pressure_var_collagen(65:n_zoom)./(10^3), '--','LineWidth',2)
 	plot(sv_stretch_var(65:n_zoom),sv_pressure_var_collagen_me(65:n_zoom)./(10^3), '--','LineWidth',2)
 	plot(sv_stretch_var(65:n_zoom),sv_pressure_var_collagen_ad(65:n_zoom)./(10^3), '--','LineWidth',2)
     plot(sv_stretch_var(45:n_zoom),sv_pressure_var_muscle_p(45:n_zoom)./(10^3),'--', 'LineWidth',2)

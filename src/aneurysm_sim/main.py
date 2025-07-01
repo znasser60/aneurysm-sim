@@ -12,6 +12,3 @@ def main():
     degredation_factors = [1.0, 0.8, 0.6, 0.4, 0.2]
     degredation_results = simulate_elastin_degredation(params, degredation_factors)
     plots.plot_elastin_degradation(degredation_results)
-
-if __name__ == "__main__":
-    main()

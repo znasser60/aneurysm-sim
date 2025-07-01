@@ -34,14 +34,14 @@ def simulate_arterial_stress_and_pressure(params):
     sv_diam_var = 2 * params.c_radius_tzero * 1e3 * sv_stretch_var
 
     for i in range(n):
-        x = sv_stretch_var[i]
+        stretch = sv_stretch_var[i]
 
         # Stresses
-        sv_stress_var_elastin[i] = v_sigma_elastin(x, params)
-        sv_stress_var_collagen[i] = v_sigma_collagen(x, params)
-        sv_stress_var_muscle_a[i] = v_sigma_muscle_a(x, params)
-        sv_stress_var_muscle_p[i] = v_sigma_muscle_p(x, params)
-        sv_stress_var_muscle_t[i] = v_sigma_muscle_t(x, params)
+        sv_stress_var_elastin[i] = v_sigma_elastin(stretch, params)
+        sv_stress_var_collagen[i] = v_sigma_collagen(stretch, params)
+        sv_stress_var_muscle_a[i] = v_sigma_muscle_a(stretch, params)
+        sv_stress_var_muscle_p[i] = v_sigma_muscle_p(stretch, params)
+        sv_stress_var_muscle_t[i] = v_sigma_muscle_t(stretch, params)
 
         sv_stress_var_total[i] = (
             sv_stress_var_elastin[i]
@@ -50,25 +50,26 @@ def simulate_arterial_stress_and_pressure(params):
         )
 
         # Pressures
-        sv_pressure_var_elastin[i] = max(v_pressure_elastin(x, params), 0)
-        sv_pressure_var_collagen[i] = max(v_pressure_collagen(x, params), 0)
-        sv_pressure_var_collagen_me[i] = max(v_pressure_collagen_me(x, params), 0)
-        sv_pressure_var_collagen_ad[i] = max(v_pressure_collagen_ad(x, params), 0)
-        sv_pressure_var_muscle_p[i] = max(v_pressure_muscle_p(x, params), 0)
-        sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(x, params), 0)
-        sv_pressure_var_muscle[i] = max(sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i], 0)
+        sv_pressure_var_elastin[i] = max(v_pressure_elastin(stretch, params), 0)
+        sv_pressure_var_collagen[i] = v_pressure_collagen(stretch, params)
+        sv_pressure_var_collagen_me[i] = v_pressure_collagen_me(stretch, params)
+        sv_pressure_var_collagen_ad[i] = v_pressure_collagen_ad(stretch, params)
+        sv_pressure_var_muscle_p[i] = max(v_pressure_muscle_p(stretch, params), 0)
+        sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(stretch, params), 0)
+        sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i]
 
-        sv_pressure_var[i] = max(
-            sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i], 
-            0
-            )
+        sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]
+
+                                                                   
         
     return {
         # Diameter variable
         'sv_diam_var': sv_diam_var,
 
-        # Stretch variables
+        # Stretch variable
         'sv_stretch_var': sv_stretch_var,
+        
+        # Stress variables
         'sv_stress_var_elastin': sv_stress_var_elastin,
         'sv_stress_var_collagen': sv_stress_var_collagen,
         'sv_stress_var_muscle_a': sv_stress_var_muscle_a, 

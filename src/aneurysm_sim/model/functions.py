@@ -30,6 +30,12 @@ def v_sigma_muscle_a(x, params):
 def v_sigma_muscle_t(x, params):
     return v_sigma_muscle_a(x, params) + v_sigma_muscle_p(x, params)
 
+def _sigma_me_plateau(params):
+    return v_sigma_collagen_me_cb(params.v_b_me, params)
+
+def _sigma_ad_plateau(params):
+    return v_sigma_collagen_ad_cb(params.v_b_ad, params)
+
 def v_sigma_collagen_me_0(x, params):
     return 0 * x
 
@@ -46,11 +52,24 @@ def v_sigma_collagen_me_b(x, params):
     term2 = (x + params.v_b_me) * np.log(params.v_b_me / params.v_c_me) + params.v_b_me - params.v_c_me + ((params.v_b_me - params.v_c_me) / params.v_c_me) * x
     return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
 
+# def v_sigma_collagen_me(x, params):
+#     return v_sigma_collagen_me_0(x, params) * (x < params.v_a_me) + \
+#             v_sigma_collagen_me_ac(x, params) * (params.v_a_me <= x) * (x < params.v_c_me) + \
+#             v_sigma_collagen_me_cb(x, params) * (params.v_c_me <= x) * (x < params.v_b_me) + \
+#             v_sigma_collagen_me_b(x, params) * (x >= params.v_b_me)
+
 def v_sigma_collagen_me(x, params):
-    return v_sigma_collagen_me_0(x, params) * (x < params.v_a_me) + \
-            v_sigma_collagen_me_ac(x, params) * (params.v_a_me <= x) * (x < params.v_c_me) + \
-            v_sigma_collagen_me_cb(x, params) * (params.v_c_me <= x) * (x < params.v_b_me) + \
-            v_sigma_collagen_me_b(x, params) * (x >= params.v_b_me)
+    if x < params.v_a_me:
+        return 0.0
+    elif x < params.v_c_me:
+        return x * params.v_gamma_me * 2 * ((x + params.v_a_me) * np.log(x / params.v_a_me) + 2 * (params.v_a_me - x))
+    elif x <= params.v_b_me:
+        return x * params.v_gamma_me * 2 * ((x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x) \
+               - x * params.v_delta_me * 2 * ((x + params.v_b_me) * np.log(x / params.v_c_me) + params.v_b_me + params.v_c_me - ((params.v_b_me + params.v_c_me) / params.v_c_me) * x)
+    else:
+        return x * params.v_gamma_me * 2 * ((x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me -params.v_c_me) / params.v_c_me) * x) \
+               - x * params.v_delta_me * 2 * ((x + params.v_b_me) * np.log(params.v_b_me / params.v_c_me) - params.v_b_me + params.v_c_me - ((params.v_b_me -params.v_c_me) /params.v_c_me) * x)
+
 
 def v_sigma_collagen_ad_0(x, params):
     return 0 * x
@@ -68,13 +87,27 @@ def v_sigma_collagen_ad_b(x, params):
     term2 = (x + params.v_b_ad) * np.log(params.v_b_ad / params.v_c_ad) + params.v_b_ad - params.v_c_ad + ((params.v_b_ad - params.v_c_ad) / params.v_c_ad) * x
     return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
 
-def v_sigma_collagen_ad(x, params):
-    return v_sigma_collagen_ad_0(x, params) * (x < params.v_a_ad) + \
-            v_sigma_collagen_ad_ac(x, params) * (params.v_a_ad <= x) * (x < params.v_c_ad) + \
-            v_sigma_collagen_ad_cb(x, params) * (params.v_c_ad <= x) * (x < params.v_b_ad) + \
-            v_sigma_collagen_ad_b(x, params) * (x >= params.v_b_ad)
+# def v_sigma_collagen_ad(x, params):
+#     return v_sigma_collagen_ad_0(x, params) * (x < params.v_a_ad) + \
+#             v_sigma_collagen_ad_ac(x, params) * (params.v_a_ad <= x) * (x < params.v_c_ad) + \
+#             v_sigma_collagen_ad_cb(x, params) * (params.v_c_ad <= x) * (x < params.v_b_ad) + \
+#             v_sigma_collagen_ad_b(x, params) * (x >= params.v_b_ad)
 
-def v_sigma_collagen(x, params): 
+def v_sigma_collagen_ad(x, params):
+    if x < params.v_a_ad:
+        return 0.0
+    elif x < params.v_c_ad:
+        return x * params.v_gamma_ad * 2 * ((x + params.v_a_ad) * np.log(x / params.v_a_ad) + 2 * (params.v_a_ad - x))
+    elif x <= params.v_b_ad:
+        term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
+        term2 = (x + params.v_b_ad) * np.log(x / params.v_c_ad) + params.v_b_ad + params.v_c_ad - ((params.v_b_ad + params.v_c_ad) / params.v_c_ad) * x
+        return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
+    else:
+        term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
+        term2 = (x + params.v_b_ad) * np.log(params.v_b_ad / params.v_c_ad) - params.v_b_ad + params.v_c_ad - ((params.v_b_ad - params.v_c_ad) / params.v_c_ad) * x
+        return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
+
+def v_sigma_collagen(x, params):
     return v_sigma_collagen_me(x, params) + v_sigma_collagen_ad(x, params)
 
 def v_pres_prefactor(x, params): 
@@ -112,3 +145,28 @@ def v_pressure_collagen_me(x, params):
 
 def v_pressure_collagen_ad(x, params):
     return v_pres_prefactor(x, params) * v_sigma_collagen_ad(x, params)
+
+def f_lambda_collagen(x, params):
+    return (v_lambda_collagen(x, params) - params.c_lambda_collagen) / params.c_lambda_collagen
+
+# Idea for these: system of ODEs to solve for the concentrations of latent TGF-beta, active TGF-beta, and collagen activation. Then put these in the 
+# Cauchy stress equations for collagen to get the stress that is dependent on the TGF-beta concentrations? 
+
+def d_latent_TGF_beta(x, params): 
+    """
+    ODE: Equation 16 in Apricio et al.
+    """
+    pass 
+
+def d_active_TGF_beta(x, params):
+    """
+    ODE: Equation 17 in Apricio et al. 
+    """
+    pass
+
+def collagen_stretch(x, params): 
+    """
+    Uses the active TGF-beta concentration to calculate the collagen activation. 
+    Can then be used in equation above to calculate collagen stress ? 
+    """
+    pass 
