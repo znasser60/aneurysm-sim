@@ -149,10 +149,40 @@ def v_pressure_collagen_ad(x, params):
     return v_pres_prefactor(x, params) * v_sigma_collagen_ad(x, params)
 
 # New equations from Aparicio et al. start here 
+# Medial degeneration (by immune cells)
 def calculate_immune_cell_level(t, params): 
     """
+    Immune cell level as a function of time. Equation 7 from Aparicio et al. 2016.
     """
-    
+    if t < params.t_i0: 
+        return params.i_0
+    else: 
+        return params.i_0 + params.i_max * ((t - params.t_i0) / (params.k_i + (t - params.t_i0)))
+
+def d_medial_elastin_dt(t, elastases, elastin_me, params): 
+    """
+    Medial elastin ODE: Equation 8 
+    """
+    return -params.r_e * elastases * elastin_me
+
+def d_medial_collagen_dt(t, collagenases, collagen_me, params):
+    """
+    Medial collagen ODE: Equation 8 from Aparicio et al. 2016.
+    """
+    return -params.r_cm * collagenases * collagen_me
+
+def d_collagenases_dt(t, immune_cells, collagenases, params): 
+    """
+    Collagenases ODE: Equation 9 from Aparicio et al. 2016
+    Immune cells will come from calculate_immune_cell_level(t, params)
+    """
+    return params.r_pc1 * immune_cells - params.r_pc2 * collagenases
+
+def d_elastases_dt(t, immune_cells, elastases, params):
+    """
+    Elastases ODE: Equation 9 from Aparicio et al. 2016.
+    """
+    return params.r_pc1 * immune_cells - params.r_pc2 * elastases
 
 def f_lambda_fibroblast(lambda_c_max, lambda_att_max):
     """
@@ -226,9 +256,10 @@ def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
     """
     N = int(params.remodel_time / dt)
     if t_idx < N:
-        return np.mean(lambda_c_max_history[:t_idx+1])
+        lambda_att_max =  np.mean(lambda_c_max_history[:t_idx+1])
     else:
-        return np.mean(lambda_c_max_history[t_idx - N + 1:t_idx + 1])
+        lambda_att_max = np.mean(lambda_c_max_history[t_idx - N + 1:t_idx + 1])
+    return lambda_att_max
 
 def calculate_min_attachment_stretch(lambda_att_max, params): 
     """
@@ -236,7 +267,8 @@ def calculate_min_attachment_stretch(lambda_att_max, params):
     max attachment stretch at time t minus w(t), where w(t) is the width of the attachment stretch distribution at time t.
     For simplicity, we take w(t) = 0.1
     """
-    return lambda_att_max - params.width_att_dist
+    lambda_att_min = lambda_att_max - params.width_att_dist
+    return lambda_att_min
 
 def calculate_mode_attachment_stretch(lambda_att_min, lambda_att_max, params): 
     """
@@ -245,14 +277,16 @@ def calculate_mode_attachment_stretch(lambda_att_min, lambda_att_max, params):
     where s(t) is the skew of the distribution at time t. 
     For simplicity, we take s(t) = 0.5
     """
-    return lambda_att_min + params.skew_att_dist * (lambda_att_min - lambda_att_max)
+    lambda_att_mode = lambda_att_min + params.skew_att_dist * (lambda_att_min - lambda_att_max)
+    return lambda_att_mode
 
 # Collagen remodeling II: 
 def alpha_rate(params, fibroblast, collagen, collagenase): 
     """
     Equation 24 from Apricio et al. 2016.
     """
-    return params.alpha_init * (fibroblast / collagen) * np.sqrt(collagen * collagenase)
+    alpha = params.alpha_init * (fibroblast / collagen) * np.sqrt(collagen * collagenase)
+    return alpha
 
 def d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max, lambda_att_max):
     """
