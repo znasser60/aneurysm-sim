@@ -10,7 +10,7 @@ class ArterialParameters:
 
         # Stretches
         self.c_lambda_z = 1.3
-        self.c_lambda_elastin = 1.3
+        self.c_lambda_elastin = 1.3 
         self.c_lambda_muscle = 1.15
         self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
         self.c_musc_mean = 1.1
@@ -105,6 +105,71 @@ class ArterialParameters:
         )
 
         self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor / muscle_a_denominator
+
+        # Immune cell related rates
+        self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
+        self.r_cm = 1.0      # Medial collagen degradation rate by immune cell proteases (years^-1)
+        self.t_i0 = 40       # Time for onset of immune cell infiltration (years)
+        self.i_0 = 0         # Initial level of immune cells in the arterial wall
+        self.i_max = 1.0     # Maximum level of immune cells in the arterial wall
+        self.k_i = 1.25      # Time for immune cell levels to reach half of maximum level (years)
+        self.r_pc1 = 1.0     # Collagenase secretion rate by immune cells (years^-1)
+        self.r_pc2 = 1.0     # Baseline immune cell collagenase degradation rate (years^-1)
+        self.r_pe1 = 1.0     # Elastase secretion rate by immune cells (years^-1)
+        self.r_pe2 = 1.0     # Baseline immune cell elastase degradation rate (years^-1)
+
+        # Fibroblast rates
+        self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
+        self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
+        self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
+
+        # Procollagen rates
+        self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
+        self.r_p2 = 0.5      # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
+        self.r_p3 = 1.0      # Combined baseline procollagen degradation and modification rate (years^-1)
+
+        # Adventitial collagen rates
+        self.r_c1 = 0.5      # Baseline adventitial collagen maturation rat (years^-1)
+        self.r_c2 = 0.5      # Adventitial collagen degredation rate (years^-1)
+
+        # Zymogen rates
+        self.r_z1 = 1.0      # Baseline zymogen secretion rate by fibroblasts (years^-1)
+        self.r_z2 = 0.5      # Fibroblast zymogen secretion sensitivity to TGF-Beta (years^-1)
+        self.r_z3 = 1.0      # Combined baseline zymogen degradation and modification rates (years^-1)
+
+        # Collagenase rates
+        self.r_ca = 0.5      # Baseline active collagenase maturation rate (years^-1)
+        self.r_ca2 = 0.25    # Collagenase inactivation rate by TIMPs (years^-1)
+        self.r_ca3 = 0.25    # Inhibitor–collagenase complex formation rate (years^-1)
+
+        # Inhibitor rates
+        self.r_i1 = 1.0       # Baseline inhibitor secretion rate (years^-1)
+        self.r_i2 = 0.5       # Fibroblast collagenase inhibitor secretion sensitivity to TGF-β (years^-1)
+        self.r_i3 = 0.75      # Baseline collagenase inhibitor degradation rate (years^-1)
+        self.r_i4 = 0.25      # Inhibitor–collagenase complex formation rate (duplicate of r_ca3) (years^-1)
+
+        # TGF-Beta rates
+        self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
+        self.r_betal2 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
+        self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
+        self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
+        self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1
+        self.r_beta1 = 0.5           # Baseline latent TGF-Beta activation rate
+        self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
+        self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
+
+        # Mechanical model parameters
+        self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
+        self.t_sim = 90              # Simulation time in years
+        self.width_att_dist = 0.1    # Width of the attachment stretch distribution (assumed constant)
+        self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
+
+        # Set initial values for variables 
+        self.init_fibroblast = 1.0
+        self.init_collagen = 1.0
+        self.init_procollagen = 1.0
+        self.init_collagenase = 1.0
+
 
     def to_dict(self):
         return self.__dict__

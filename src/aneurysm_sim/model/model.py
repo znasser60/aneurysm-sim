@@ -5,10 +5,12 @@ from aneurysm_sim.model.functions import (
     v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
     v_pressure_elastin, v_pressure_collagen, v_pressure_collagen_me,
     v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p,
-    v_pressure_muscle,
+    v_pressure_muscle, get_tgf_beta1_protein_level, calculate_min_attachment_stretch, 
+    calculate_mode_attachment_stretch, d_fibroblast_dt, d_active_tgf_beta_dt, 
+    d_collagen_dt, d_collagen_max_recruitment_stretch_ad_dt, d_collagen_min_recruitment_stretch_ad_dt, 
+    d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
+    d_timp_dt, d_procollagen_dt
 )
-
-from aneurysm_sim.config.parameters import ArterialParameters
 
 def simulate_arterial_stress_and_pressure(params):
 
@@ -90,7 +92,7 @@ def simulate_arterial_stress_and_pressure(params):
 
 def simulate_elastin_degredation(params, degredation_factors):
     """
-    Test function to simulate elastin degradation and its effect on arterial stress and pressure.
+    TEST FUNCTION to simulate elastin degradation and its effect on arterial stress and pressure.
     """
     results_dict = {}
     for degradation_factor in degredation_factors:
@@ -100,11 +102,98 @@ def simulate_elastin_degredation(params, degredation_factors):
         results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
     return results_dict
 
-def simulate_smooth_muscle_loss(): 
+def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in years, step independence achieved
     """
-    Test function to simulate smooth muscle loss and its effect on arterial stress and pressure.
     """
-    pass
+    steps = int(params.t_sim / dt) + 1
+    time = np.linspace(0, params.t_sim, steps)
+
+    fibroblast = np.zeros(steps)
+    collagen = np.zeros(steps)
+    procollagen = np.zeros(steps)
+    collagenase = np.zeros(steps)
+    zymogen = np.zeros(steps)
+    timp = np.zeros(steps)
+    latent_tgf_beta = np.zeros(steps)
+    active_tgf_beta = np.zeros(steps)
+    diameter = np.zeros(steps)
+    lambda_c_max = np.zeros(steps)
+    lambda_att_max = np.zeros(steps)
+    lambda_att_min = np.zeros(steps)
+    lambda_att_mode = np.zeros(steps)
+    lambda_rec_max = np.zeros(steps)
+    lambda_rec_min = np.zeros(steps)
+    lambda_rec_mode = np.zeros(steps)
+
+    fibroblast[0] = params.init_fibroblast
+    collagen[0] = params.init_collagen
+    procollagen[0] = params.init_procollagen
+    collagenase[0] = params.init_collagenase
+    zymogen[0] = params.init_zymogen
+    timp[0] = params.init_timp
+    latent_tgf_beta[0] = params.init_latent_tgf_beta
+    active_tgf_beta[0] = get_tgf_beta1_protein_level(genotype)
+    lambda_att_max[0] = 1.0
+    lambda_att_min[0] = calculate_min_attachment_stretch(1.0, params)
+    lambda_att_mode[0] = calculate_mode_attachment_stretch(lambda_att_min[0], lambda_att_max[0], params)
+    lambda_rec_min[0] = lambda_att_min[0]
+    lambda_rec_max[0] = lambda_att_max[0]
+    lambda_rec_mode[0] = lambda_att_mode[0]
+    lambda_c_max[0] = params.c_lambda_elastin / lambda_att_max[0]
+    diameter[0] = lambda_att_max[0]
+
+    lambda_c_max_history = [lambda_c_max[0]]
+
+    for i in range(1, steps): 
+        # Update TGF-beta levels
+        if treatment is not None:
+            active_tgf_beta[i] = get_tgf_beta1_protein_level(genotype, treatment)
+        else:
+            active_tgf_beta[i] = get_tgf_beta1_protein_level(genotype)
+
+        # Update fibroblast, collagen, procollagen, collagenase, zymogen, and TIMP levels using backward Euler method
+        fibroblast[i] = fibroblast[i-1] + dt * d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
+        collagen[i] = collagen[i-1] + dt * d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen[i-1], params)
+        procollagen[i] = procollagen[i-1] + dt * d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
+        collagenase[i] = collagenase[i-1] + dt * d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
+        zymogen[i] = zymogen[i-1] + dt * d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
+        timp[i] = timp[i-1] + dt * d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
+        latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
+                                                                              fibroblast[i-1], collagenase[i-1], lambda_c_max, lambda_att_max, params) 
+        active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max, lambda_att_max, params) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
