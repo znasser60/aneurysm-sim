@@ -10,6 +10,7 @@ class ArterialParameters:
 
         # Stretches
         self.c_lambda_z = 1.3
+        self.c_lambda_sys = 1.3 
         self.c_lambda_elastin = 1.3 
         self.c_lambda_muscle = 1.15
         self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
@@ -138,7 +139,7 @@ class ArterialParameters:
         self.r_z3 = 1.0      # Combined baseline zymogen degradation and modification rates (years^-1)
 
         # Collagenase rates
-        self.r_ca = 0.5      # Baseline active collagenase maturation rate (years^-1)
+        self.r_ca1 = 0.5      # Baseline active collagenase maturation rate (years^-1)
         self.r_ca2 = 0.25    # Collagenase inactivation rate by TIMPs (years^-1)
         self.r_ca3 = 0.25    # Inhibitor–collagenase complex formation rate (years^-1)
 
@@ -150,7 +151,7 @@ class ArterialParameters:
 
         # TGF-Beta rates
         self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
-        self.r_betal2 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
+        self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
         self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
         self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
         self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1
@@ -165,10 +166,20 @@ class ArterialParameters:
         self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
 
         # Set initial values for variables 
+        self.alpha_init = 1.15
         self.init_fibroblast = 1.0
-        self.init_collagen = 1.0
+        self.init_collagen_ad = 1.0
+        self.init_collagen_me = 1.0
+        self.init_elastin_ad = 1.0
+        self.init_elastin_me = 1.0
         self.init_procollagen = 1.0
         self.init_collagenase = 1.0
+        self.init_zymogen = 1.0
+        self.init_timp = 1.0
+        self.init_collagenases = 0.0
+        self.init_elastases = 0.0
+        self.init_latent_tgf_beta = 1e-3
+        self.init_active_tgf_beta = 1.0
 
 
     def to_dict(self):

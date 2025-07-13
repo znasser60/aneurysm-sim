@@ -87,4 +87,53 @@ def plot_elastin_degradation(results_dict, n_zoom=120):
     plt.tight_layout()
     plt.show()
 
+def plot_normalised_densities(results, n_zoom=120):
+    """
+    Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
+    """
+    time = results["time"]
+
+    sv_collagen_me = results["collagen_me"]
+    sv_elastin_me = results["elastin_me"]
+    sv_elastases = results["elastases"]
+    sv_collagenases = results["collagenases"]
+    sv_immune_cells = results["immune_cells"]
+    sv_fibroblast = results["fibroblast"]
+    sv_collagen_ad = results["collagen_ad"]
+    sv_procollagen = results["procollagen"]
+    sv_collagenase = results["collagenase"]
+    sv_zymogen = results["zymogen"]
+    sv_timp = results["timp"]
+    sv_latent_tgf = results["latent_tgf_beta"]
+    sv_active_tgf = results["active_tgf_beta"]
+
+
+    plt.figure(figsize=(12, 8))
+    plt.plot(time, sv_collagen_me, color='brown', linestyle=':', label='Medial Collagen', linewidth=1)
+    plt.plot(time, sv_elastin_me, color='brown', linestyle=':', label='Medial Elastin', linewidth=1)
+    plt.plot(time, sv_elastases, color='red', marker='o', markevery=300, label='Elastases', linewidth=1)
+    plt.plot(time, sv_collagenases, color='red', marker='o', markevery=300, label='Collagenases', linewidth=1)
+    plt.plot(time, sv_fibroblast, color = 'brown', label='Fibroblasts', linewidth=3)
+    plt.plot(time, sv_collagen_ad, color = 'brown', label='Adventitial Collagen', linewidth=1)
+    plt.plot(time, sv_procollagen, color = 'brown', label='Procollagen', linewidth=3)
+    plt.plot(time, sv_collagenase, color='magenta', marker ='^', markevery=300, linestyle = '-', label='Collagenase', linewidth=1)
+    plt.plot(time, sv_zymogen, color='magenta', marker ='^', markevery=300, linestyle = '--', label='Zymogen', linewidth=1)
+    plt.plot(time, sv_timp, color='gold', linestyle='-', marker='v', markevery=300, label='TIMP', linewidth=1)
+    plt.plot(time, sv_immune_cells, color='red', marker='o', markevery=300, label='Immune Cells', linewidth=3)
+    plt.plot(time, sv_latent_tgf, color='green', linestyle='--', marker='s', markevery=300, label='Latent TGF-Beta', linewidth=1)
+    plt.plot(time, sv_active_tgf, color='green', linestyle='-', marker='s', markevery=300, label='Active TGF-Beta', linewidth=1)
+    plt.title('Normalised Densities Over Time', fontsize=16, weight='bold')
+    plt.xlabel('Time (s)', fontsize=14)
+    plt.ylabel('Normalised Density', fontsize=14)
+    plt.axvline(40, color='black', linestyle='--', linewidth=1.5)
+    plt.axvline(50, color='black', linestyle=':',  linewidth=1.5)
+    plt.legend(loc='upper right', fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.xlim(38, 75)
+    plt.ylim(0,2)
+    plt.tight_layout()
+    plt.show()
+
+
+
 
