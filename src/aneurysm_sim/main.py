@@ -14,9 +14,11 @@ def main():
     # plots.plot_elastin_degradation(degredation_results)
 
     # Plot normalised densities
-    results = simulate_aneurysm(params, genotype="TT")
-    plots.plot_normalised_densities(results)
-    results = simulate_aneurysm(params, genotype="TC")
-    plots.plot_normalised_densities(results)
-    results = simulate_aneurysm(params, genotype="CC")
-    plots.plot_normalised_densities(results)
+    results_tt = simulate_aneurysm(params, genotype="TT")
+    plots.plot_normalised_densities(results_tt)
+    results_tc = simulate_aneurysm(params, genotype="TC")
+    plots.plot_normalised_densities(results_tc)
+    results_cc = simulate_aneurysm(params, genotype="CC")
+    plots.plot_normalised_densities(results_cc)
+    # plots.plot_systolic_pressure_over_time(results_tt, results_tc, results_cc)
+

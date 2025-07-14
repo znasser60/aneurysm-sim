@@ -63,9 +63,7 @@ def simulate_arterial_stress_and_pressure(params):
         sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(stretch, params), 0)
         sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i]
 
-        sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]
-
-                                                                   
+        sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]                                            
         
     return {
         # Diameter variable
@@ -159,6 +157,7 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
     lambda_rec_max = np.zeros(steps)
     lambda_rec_min = np.zeros(steps)
     lambda_rec_mode = np.zeros(steps)
+    lambda_sys_array = np.zeros(steps)
 
     # Initialize variables
     collagen_me[0] = params.init_collagen_me
@@ -184,19 +183,19 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
     lambda_rec_max[0]  = params.c_lambda_sys / lambda_att_min[0]
     lambda_rec_min[0]  = params.c_lambda_sys / lambda_att_max[0]
     lambda_rec_mode[0] = params.c_lambda_sys / lambda_att_mode[0]
-    lambda_c_max[0] = lambda_rec_max[0]
-    lambda_c_min[0] = lambda_rec_min[0]
-    lambda_c_mode[0] = lambda_rec_mode[0]
+    lambda_c_max[0] = params.c_lambda_sys / lambda_rec_max[0]
+    lambda_c_min[0] = params.c_lambda_sys / lambda_rec_min[0]
+    lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
     diameter[0] = 2*params.c_radius_tzero*lambda_att_max[0]*1e3
-
-    lambd_c_max_history = [lambda_c_max[0]] # Store history of lambda_c_max for max attachment stretch calculation
+    lambda_sys_array[0] = lambda_c_max[0]
+    lambd_c_max_history = [lambda_c_max[0]] 
 
     for i in range(1, steps): 
         t = time[i]
 
         # Calculate the lambda_sys using fsolve to find the root of the force balance equation
-        lambda_sys = fsolve(force_balance_equation, [lambda_c_max[i-1]], args=(params,))[0]
-
+        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(params,))[0]
+        lambda_sys_array[i] = lambda_sys
 
         if t <= params.t_i0:
             collagen_me[i] = collagen_me[0]
@@ -228,10 +227,10 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
             latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
                                                                                 fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i-1], lambda_att_max[i-1], params) 
             active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i-1], lambda_att_max[i-1], params)
-
+            
         alpha = alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
 
-        lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1] # This eq. is from the paper, lambda = lambda_C * lambda_rec
+        lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1] # From paper: lambda = lambda_C * lambda_rec
         lambda_c_min[i] = lambda_sys / lambda_rec_max[i-1]
         lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i-1]
         lambd_c_max_history.append(lambda_c_max[i])
@@ -271,7 +270,8 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
         'lambda_rec_max': lambda_rec_max,
         'lambda_rec_min': lambda_rec_min,
         'lambda_rec_mode': lambda_rec_mode,
-        'lambd_c_max_history': lambd_c_max_history
+        'lambd_c_max_history': lambd_c_max_history,
+        'lambda_sys': lambda_sys_array,
     }
 
 

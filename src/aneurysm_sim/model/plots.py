@@ -107,7 +107,6 @@ def plot_normalised_densities(results, n_zoom=120):
     sv_latent_tgf = results["latent_tgf_beta"]
     sv_active_tgf = results["active_tgf_beta"]
 
-
     plt.figure(figsize=(12, 8))
     plt.plot(time, sv_collagen_me, color='brown', linestyle=':', label='Medial Collagen', linewidth=1)
     plt.plot(time, sv_elastin_me, color='brown', linestyle=':', label='Medial Elastin', linewidth=1)
@@ -133,7 +132,18 @@ def plot_normalised_densities(results, n_zoom=120):
     plt.ylim(0,2)
     plt.tight_layout()
     plt.show()
-
-
-
+    
+def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
+    plt.figure(figsize=(12, 8))
+    plt.plot(results_tt["time"], results_tt["lambda_sys"] / 1e3, label="TT", color='red')
+    plt.plot(results_tc["time"], results_tc["lambda_sys"] / 1e3, label="TC", color='brown')
+    plt.plot(results_cc["time"], results_cc["lambda_sys"] / 1e3, label="CC", color='gold')
+    
+    plt.title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
+    plt.xlabel("Time (years)", fontsize=14)
+    plt.ylabel("Systolic Stretch (kPa)", fontsize=14)
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+    plt.show()
 
