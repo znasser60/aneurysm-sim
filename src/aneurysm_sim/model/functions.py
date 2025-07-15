@@ -123,6 +123,24 @@ def v_pressure_collagen_ad(x, params):
     return v_pres_prefactor(x, params) * v_sigma_collagen_ad(x, params)
 
 # New equations from Aparicio et al. start here: 
+# Force balance equation 
+def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, params):             
+    """
+    Force balance equation for transmural pressure.
+    Returns difference between calculated and target pressure.
+    """
+    lambda_sys = lambda_sys_guess[0]
+
+    # Individual stresses
+    stress_elastin = v_sigma_elastin(lambda_sys, params)
+    stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
+    stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
+    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
+    mass_density_mult = ((mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + stress_muscle) 
+    calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+
+    # Return residual from target pressure
+    return calculated_pressure - params.c_pressure_sys 
 
 # Medial degeneration (by immune cells)
 def calculate_immune_cell_level(t, params): 
@@ -164,6 +182,8 @@ def f_lambda_fibroblast(lambda_c_max, lambda_att_max):
     """
     Increased stretch of fibroblast cells above homeostatic values leads ot increased production of latent TGF-beta. This models that.
     """
+    if lambda_c_max <= lambda_att_max:
+        return 0.0
     return (lambda_c_max - lambda_att_max) / lambda_att_max
 
 def d_fibroblast_dt(tgf_beta, fibroblast, params): 

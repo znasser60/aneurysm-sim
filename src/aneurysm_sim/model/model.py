@@ -12,7 +12,7 @@ from aneurysm_sim.model.functions import (
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch
+    calculate_mode_attachment_stretch, force_balance_equation
 )
 
 def simulate_arterial_stress_and_pressure(params):
@@ -103,27 +103,7 @@ def simulate_elastin_degredation(params, degredation_factors):
         results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
     return results_dict
 
-def force_balance_equation(lambda_sys_guess, params):
-    """
-    Force balance equation for transmural pressure.
-    Returns difference between calculated and target pressure.
-    """
-    lambda_sys = lambda_sys_guess[0]  
-
-    # Individual stresses
-    stress_elastin = v_sigma_elastin(lambda_sys, params)
-    stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
-    stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
-
-    calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * (
-        stress_elastin + stress_collagen_me + stress_collagen_ad + stress_muscle
-    )
-
-    # Return residual from target pressure
-    return calculated_pressure - params.c_pressure_sys 
-
-def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in years, step independence achieved
+def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
     """
     steps = int(params.t_sim / dt) + 1
@@ -172,9 +152,8 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
     zymogen[0] = params.init_zymogen
     timp[0] = params.init_timp
     tgf_beta_level = get_tgf_beta1_protein_level(genotype) 
-    latent_tgf_beta[0] = params.init_latent_tgf_beta
-    active_tgf_beta[0] = params.init_active_tgf_beta * tgf_beta_level
-
+    latent_tgf_beta[0] = params.init_latent_tgf_beta * tgf_beta_level
+    active_tgf_beta[0] = params.init_active_tgf_beta 
 
     # Initialize collagen attachment and recruitment stretch parameters
     lambda_att_max[0]  = params.c_att_max_ad
@@ -183,8 +162,8 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
     lambda_rec_max[0]  = params.c_lambda_sys / lambda_att_min[0]
     lambda_rec_min[0]  = params.c_lambda_sys / lambda_att_max[0]
     lambda_rec_mode[0] = params.c_lambda_sys / lambda_att_mode[0]
-    lambda_c_max[0] = params.c_lambda_sys / lambda_rec_max[0]
-    lambda_c_min[0] = params.c_lambda_sys / lambda_rec_min[0]
+    lambda_c_max[0] = params.c_lambda_sys / lambda_rec_min[0]
+    lambda_c_min[0] = params.c_lambda_sys / lambda_rec_max[0]
     lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
     diameter[0] = 2*params.c_radius_tzero*lambda_att_max[0]*1e3
     lambda_sys_array[0] = lambda_c_max[0]
@@ -194,8 +173,25 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
         t = time[i]
 
         # Calculate the lambda_sys using fsolve to find the root of the force balance equation
-        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(params,))[0]
+        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], params,))[0]
         lambda_sys_array[i] = lambda_sys
+        lambda_c_max[i] = lambda_sys_array[i-1] / lambda_rec_min[i-1]
+        lambda_c_min[i] = lambda_sys_array[i-1] / lambda_rec_max[i-1]
+        lambda_c_mode[i] = lambda_sys_array[i-1] / lambda_rec_mode[i-1]
+        lambd_c_max_history.append(lambda_c_max[i])
+
+        lambda_att_max[i] = calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
+        lambda_att_min[i] = calculate_min_attachment_stretch(lambda_att_max[i], params)
+        lambda_att_mode[i] = calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
+
+        alpha = alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
+
+        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])
+        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
+        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
+
+        diameter[i] = 2 * params.c_radius_tzero * lambda_att_max[i] * 1e3
+        # print(f"Time {i}, lambda_sys = {lambda_sys}")
 
         if t <= params.t_i0:
             collagen_me[i] = collagen_me[0]
@@ -225,26 +221,9 @@ def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in 
             zymogen[i] = zymogen[i-1] + dt * d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
             timp[i] = timp[i-1] + dt * d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
             latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
-                                                                                fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i-1], lambda_att_max[i-1], params) 
-            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i-1], lambda_att_max[i-1], params)
+                                                                                fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], lambda_att_max[i-1], params) 
+            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
             
-        alpha = alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
-
-        lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1] # From paper: lambda = lambda_C * lambda_rec
-        lambda_c_min[i] = lambda_sys / lambda_rec_max[i-1]
-        lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i-1]
-        lambd_c_max_history.append(lambda_c_max[i])
-
-        lambda_att_max[i] = calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
-        lambda_att_min[i] = calculate_min_attachment_stretch(lambda_att_max[i], params)
-        lambda_att_mode[i] = calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
-
-        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])
-        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
-        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
-
-        diameter[i] = 2 * params.c_radius_tzero * lambda_att_max[i] * 1e3
-
     return {
         'time': time,
         'elastin_me': elastin_me,

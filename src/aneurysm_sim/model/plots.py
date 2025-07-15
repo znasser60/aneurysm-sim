@@ -21,8 +21,6 @@ def plot_pressure_vs_stretch(results, n_zoom=120):
     plt.plot(sv_stretch_var[:n_zoom], sv_pressure_var[:n_zoom]/1e3, linewidth=2, label='Total')
     plt.plot(sv_stretch_var[32:n_zoom], sv_pressure_var_elastin[32:n_zoom]/1e3, '--', linewidth=2, label='Elastin')
     plt.plot(sv_stretch_var[64:n_zoom], sv_pressure_var_collagen[64:n_zoom]/1e3, '-.', linewidth=2, label='Collagen')
-    # plt.plot(sv_stretch_var[64:n_zoom], sv_pressure_var_collagen_me[64:n_zoom]/1e3, '--', linewidth=2, label='Collagen Media')
-    # plt.plot(sv_stretch_var[64:n_zoom], sv_pressure_var_collagen_ad[64:n_zoom]/1e3, '--', linewidth=2, label='Collagen Adventitia')
     plt.plot(sv_stretch_var[44:n_zoom], sv_pressure_var_muscle_p[44:n_zoom]/1e3, '--', linewidth=2, label='Muscle Passive')
     plt.plot(sv_stretch_var[:n_zoom], sv_pressure_var_muscle_a[:n_zoom]/1e3, '--', linewidth=2, label='Muscle Active')
     plt.title('Pressure vs Stretch')
@@ -132,17 +130,19 @@ def plot_normalised_densities(results, n_zoom=120):
     plt.ylim(0,2)
     plt.tight_layout()
     plt.show()
-    
+
 def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     plt.figure(figsize=(12, 8))
-    plt.plot(results_tt["time"], results_tt["lambda_sys"] / 1e3, label="TT", color='red')
-    plt.plot(results_tc["time"], results_tc["lambda_sys"] / 1e3, label="TC", color='brown')
-    plt.plot(results_cc["time"], results_cc["lambda_sys"] / 1e3, label="CC", color='gold')
+    plt.plot(results_tt["time"], results_tt["lambda_sys"], label="TT", color='red')
+    plt.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
+    plt.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
     
     plt.title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
     plt.xlabel("Time (years)", fontsize=14)
     plt.ylabel("Systolic Stretch (kPa)", fontsize=14)
     plt.grid(True, linestyle='--', alpha=0.4)
+    plt.xlim(38, 75)
+    plt.ylim(1.35,1.45)
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.show()

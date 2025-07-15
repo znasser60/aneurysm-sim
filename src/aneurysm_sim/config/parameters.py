@@ -3,8 +3,8 @@ import numpy as np
 class ArterialParameters:
     def __init__(self):
         # Geometric and pressure
-        self.c_diam_tzero_mm = 2.9
-        self.c_radius_tzero = (self.c_diam_tzero_mm * 1e-3) / (2 * 1.3)
+        self.c_diam_tzero_mm = 2.9 # Originally 2.9
+        self.c_radius_tzero = 10 # (self.c_diam_tzero_mm * 1e-3) / (2 * 1.3)
         self.c_thickness_tzero = self.c_radius_tzero / 5
         self.c_pressure_sys = 16000
 
@@ -121,12 +121,12 @@ class ArterialParameters:
 
         # Fibroblast rates
         self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
-        self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
+        self.r_f2 = 1.0      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
-        self.r_p2 = 0.5      # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
+        self.r_p2 = 1.0      # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
         self.r_p3 = 1.0      # Combined baseline procollagen degradation and modification rate (years^-1)
 
         # Adventitial collagen rates
@@ -135,7 +135,7 @@ class ArterialParameters:
 
         # Zymogen rates
         self.r_z1 = 1.0      # Baseline zymogen secretion rate by fibroblasts (years^-1)
-        self.r_z2 = 0.5      # Fibroblast zymogen secretion sensitivity to TGF-Beta (years^-1)
+        self.r_z2 = 1.0      # Fibroblast zymogen secretion sensitivity to TGF-Beta (years^-1)
         self.r_z3 = 1.0      # Combined baseline zymogen degradation and modification rates (years^-1)
 
         # Collagenase rates
@@ -145,17 +145,17 @@ class ArterialParameters:
 
         # Inhibitor rates
         self.r_i1 = 1.0       # Baseline inhibitor secretion rate (years^-1)
-        self.r_i2 = 0.5       # Fibroblast collagenase inhibitor secretion sensitivity to TGF-β (years^-1)
+        self.r_i2 = 1.0       # Fibroblast collagenase inhibitor secretion sensitivity to TGF-β (years^-1)
         self.r_i3 = 0.75      # Baseline collagenase inhibitor degradation rate (years^-1)
         self.r_i4 = 0.25      # Inhibitor–collagenase complex formation rate (duplicate of r_ca3) (years^-1)
 
         # TGF-Beta rates
-        self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
+        self.r_betal1 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
         self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
         self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
         self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
         self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1
-        self.r_beta1 = 0.5           # Baseline latent TGF-Beta activation rate
+        self.r_beta1 = 1.0           # Baseline latent TGF-Beta activation rate
         self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
         self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
 
@@ -178,8 +178,8 @@ class ArterialParameters:
         self.init_timp = 1.0
         self.init_collagenases = 0.0
         self.init_elastases = 0.0
-        self.init_latent_tgf_beta = 1e-3
-        self.init_active_tgf_beta = 1.0
+        self.init_latent_tgf_beta = 2e-2
+        self.init_active_tgf_beta = 1e-3
 
 
     def to_dict(self):
