@@ -103,7 +103,7 @@ def simulate_elastin_degredation(params, degredation_factors):
         results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
     return results_dict
 
-def simulate_aneurysm(params, genotype, treatment = None, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
+def simulate_aneurysm(params, genotype = None, treatment = None, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
     """
     steps = int(params.t_sim / dt) + 1
