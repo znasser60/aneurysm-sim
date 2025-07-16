@@ -139,10 +139,10 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     
     plt.title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
     plt.xlabel("Time (years)", fontsize=14)
-    plt.ylabel("Systolic Stretch (kPa)", fontsize=14)
+    plt.ylabel("Systolic Stretch", fontsize=14)
     plt.grid(True, linestyle='--', alpha=0.4)
-    plt.xlim(38, 75)
-    plt.ylim(1.35,1.45)
+    plt.xlim(40, 75)
+    plt.ylim(1.3,1.45)
     plt.legend(fontsize=12)
     plt.tight_layout()
     plt.show()
