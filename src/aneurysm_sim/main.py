@@ -24,3 +24,6 @@ def main():
     # plots.plot_normalised_densities(results_cc)
     plots.plot_systolic_stretch_over_time(results_tt, results_tc, results_cc)
 
+    results_treat = simulate_aneurysm(params, treatment = True)
+    plots.plot_normalised_densities(results_treat)
+

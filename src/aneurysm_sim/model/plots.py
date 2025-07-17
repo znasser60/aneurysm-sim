@@ -127,7 +127,7 @@ def plot_normalised_densities(results, n_zoom=120):
     plt.legend(loc='upper right', fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.4)
     plt.xlim(38, 75)
-    plt.ylim(0,2)
+    plt.ylim(0,4)
     plt.tight_layout()
     plt.show()
 
@@ -147,3 +147,10 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     plt.tight_layout()
     plt.show()
 
+def plot_tgf_beta_treatment():
+    """
+    Placeholder for TGF-Beta treatment plot.
+    """
+    # This function is a placeholder for future implementation.
+    # It should plot the effects of TGF-Beta treatment on arterial parameters.
+    pass

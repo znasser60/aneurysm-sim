@@ -6,13 +6,13 @@ from aneurysm_sim.model.functions import (
     v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
     v_pressure_elastin, v_pressure_collagen, v_pressure_collagen_me,
     v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p,
-    v_pressure_muscle, get_tgf_beta1_protein_level, calculate_min_attachment_stretch, 
+    v_pressure_muscle, calculate_min_attachment_stretch, 
     calculate_mode_attachment_stretch, d_fibroblast_dt, d_active_tgf_beta_dt, 
     d_collagen_dt, d_collagen_max_recruitment_stretch_ad_dt, d_collagen_min_recruitment_stretch_ad_dt, 
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, f_lambda_fibroblast
+    calculate_mode_attachment_stretch, force_balance_equation, f_lambda_fibroblast, get_latent_tgf_beta_level
 )
 
 def simulate_arterial_stress_and_pressure(params):
@@ -103,7 +103,7 @@ def simulate_elastin_degredation(params, degredation_factors):
         results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
     return results_dict
 
-def simulate_aneurysm(params, genotype = None, treatment = None, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
+def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
     """
     steps = int(params.t_sim / dt) + 1
@@ -150,10 +150,10 @@ def simulate_aneurysm(params, genotype = None, treatment = None, dt = 0.0069): #
     procollagen[0] = params.init_procollagen
     collagenase[0] = params.init_collagenase
     zymogen[0] = params.init_zymogen
-    timp[0] = params.init_timp
-    tgf_beta_level = get_tgf_beta1_protein_level(genotype) 
+    timp[0] = params.init_timp 
     latent_tgf_beta[0] = params.init_latent_tgf_beta 
     active_tgf_beta[0] = params.init_active_tgf_beta 
+    tgf_beta_level = get_latent_tgf_beta_level(params, genotype)
 
     # Initialize collagen attachment and recruitment stretch parameters
     lambda_att_max[0]  = params.c_att_max_ad
@@ -228,6 +228,9 @@ def simulate_aneurysm(params, genotype = None, treatment = None, dt = 0.0069): #
                                                                                 fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], lambda_att_max[i-1], tgf_beta_level, params)
             
             active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
+
+            if treatment and abs(t - params.t_treat) < dt:
+                active_tgf_beta[i] += params.tgf_spike_amount
 
 
     return {

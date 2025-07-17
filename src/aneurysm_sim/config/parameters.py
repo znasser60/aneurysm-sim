@@ -111,6 +111,7 @@ class ArterialParameters:
         self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
         self.r_cm = 1.0      # Medial collagen degradation rate by immune cell proteases (years^-1)
         self.t_i0 = 40       # Time for onset of immune cell infiltration (years)
+        self.t_treat = 45    # Time for TGF-Beta treatment (years)
         self.i_0 = 0         # Initial level of immune cells in the arterial wall
         self.i_max = 1.0     # Maximum level of immune cells in the arterial wall
         self.k_i = 1.25      # Time for immune cell levels to reach half of maximum level (years)
@@ -180,6 +181,10 @@ class ArterialParameters:
         self.init_elastases = 0.0
         self.init_latent_tgf_beta = 1e-3
         self.init_active_tgf_beta = 1e-3
+
+        # TGF-Beta levels for different genotypes, and treatment effects
+        self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
+        self.tgf_spike_amount = 1.0
 
 
     def to_dict(self):

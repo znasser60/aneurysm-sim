@@ -308,10 +308,13 @@ def d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode, lambda_att_m
     return alpha * (lambda_c_mode - lambda_att_mode) / lambda_att_mode
 
 # Add TGF-beta1 protein level function
-def get_tgf_beta1_protein_level(genotype = None, treatment = None):
-    levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
+def get_latent_tgf_beta_level(params, genotype = None):
+    levels = params.tgf_beta_levels
     if genotype is None:
-        return 1.0  # Default level if no genotype is provided
+        return 1.0
     return levels.get(genotype.upper(), 1.0)
 
-
+# def get_active_tgf_beta_level(t, params, tgf_beta, treatment = False): 
+#     if treatment and t >= params.t_treat: 
+#         tgf_beta += params.tgf_spike_amount
+#     return tgf_beta
