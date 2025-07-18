@@ -131,6 +131,7 @@ def plot_normalised_densities(results):
     ax.set_xlim(38, 75)
     ax.set_ylim(0, 4)
     fig.tight_layout()
+    plt.show()
 
     return fig
 
@@ -146,11 +147,30 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     ax.set_ylabel("Systolic Stretch", fontsize=14)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.set_xlim(40, 75)
-    ax.set_ylim(1.3, 1.45)
+    ax.set_ylim(1.3, 1.5)
     ax.legend(fontsize=12)
     fig.tight_layout()
+    plt.show()
     
     return fig
+
+def plot_max_collagen_stretch(results):
+    time = results["time"]
+    sv_lambda_c_max = results["lambd_c_max_history"]
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.plot(time, sv_lambda_c_max, color='blue', label='Max Collagen Stretch', linewidth=2)
+    ax.set_title('Max Collagen Stretch Over Time', fontsize=16, weight='bold')
+    ax.set_xlabel('Time (years)', fontsize=14)
+    ax.set_ylabel('Max Collagen Stretch', fontsize=14)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.set_xlim(40, 75)
+    # ax.set_ylim(1.0, 1.2)
+    ax.legend(fontsize=12)
+    fig.tight_layout()
+    plt.show()
+    
+    return fig
+    
 
 def plot_tgf_beta_treatment():
     """

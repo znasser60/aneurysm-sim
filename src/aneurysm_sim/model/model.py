@@ -157,9 +157,9 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     lambda_att_max[0]  = params.c_att_max_ad
     lambda_att_min[0]  = params.c_att_min_ad
     lambda_att_mode[0] = params.c_att_mod_ad
-    lambda_rec_max[0]  = params.c_lambda_sys / lambda_att_min[0]
-    lambda_rec_min[0]  = params.c_lambda_sys / lambda_att_max[0]
-    lambda_rec_mode[0] = params.c_lambda_sys / lambda_att_mode[0]
+    lambda_rec_max[0]  = params.c_rec_max_ad # params.c_lambda_sys / lambda_att_min[0]
+    lambda_rec_min[0]  = params.c_rec_min_ad # params.c_lambda_sys / lambda_att_max[0]
+    lambda_rec_mode[0] = params.c_rec_mod_ad # params.c_lambda_sys / lambda_att_mode[0]
     lambda_c_max[0] = params.c_lambda_sys / lambda_rec_min[0]
     lambda_c_min[0] = params.c_lambda_sys / lambda_rec_max[0]
     lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
@@ -174,9 +174,9 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], params,))[0]
         lambda_sys_array[i] = lambda_sys
         
-        lambda_c_max[i] = lambda_sys_array[i-1] / lambda_rec_min[i-1]
-        lambda_c_min[i] = lambda_sys_array[i-1] / lambda_rec_max[i-1]
-        lambda_c_mode[i] = lambda_sys_array[i-1] / lambda_rec_mode[i-1]
+        lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1]
+        lambda_c_min[i] = lambda_sys / lambda_rec_max[i-1]
+        lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i-1]
         lambd_c_max_history.append(lambda_c_max[i])
 
         lambda_att_max[i] = calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
@@ -190,9 +190,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
 
         diameter[i] = 2 * params.c_radius_tzero * lambda_att_max[i] * 1e3
-        # f_lambda = f_lambda_fibroblast(lambda_c_max[i], lambda_att_max[i])
-        # print(f"t={t:.2f} | lambda_c_max = {lambda_c_max[i]:.4f}, lambda_att_max = {lambda_att_max[i]:.4f}, f = {f_lambda}")
-        # print(f"Time {i}, lambda_sys = {lambda_sys}")
 
         if t < params.t_i0:
             collagen_me[i] = collagen_me[0]
