@@ -2,17 +2,15 @@ import numpy as np
 from scipy.optimize import fsolve
 
 from aneurysm_sim.model.functions import (
-    v_sigma_elastin, v_sigma_collagen_me, v_sigma_collagen_ad,
-    v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
+    v_sigma_elastin, v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
     v_pressure_elastin, v_pressure_collagen, v_pressure_collagen_me,
-    v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p,
-    v_pressure_muscle, calculate_min_attachment_stretch, 
+    v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p, calculate_min_attachment_stretch, 
     calculate_mode_attachment_stretch, d_fibroblast_dt, d_active_tgf_beta_dt, 
     d_collagen_dt, d_collagen_max_recruitment_stretch_ad_dt, d_collagen_min_recruitment_stretch_ad_dt, 
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, f_lambda_fibroblast, get_latent_tgf_beta_level
+    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level
 )
 
 def simulate_arterial_stress_and_pressure(params):

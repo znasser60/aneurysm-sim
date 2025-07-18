@@ -85,7 +85,7 @@ def plot_elastin_degradation(results_dict, n_zoom=120):
     plt.tight_layout()
     plt.show()
 
-def plot_normalised_densities(results, n_zoom=120):
+def plot_normalised_densities(results):
     """
     Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
     """
@@ -105,47 +105,52 @@ def plot_normalised_densities(results, n_zoom=120):
     sv_latent_tgf = results["latent_tgf_beta"]
     sv_active_tgf = results["active_tgf_beta"]
 
-    plt.figure(figsize=(12, 8))
-    plt.plot(time, sv_collagen_me, color='brown', linestyle=':', label='Medial Collagen', linewidth=1)
-    plt.plot(time, sv_elastin_me, color='brown', linestyle=':', label='Medial Elastin', linewidth=1)
-    plt.plot(time, sv_elastases, color='red', marker='o', markevery=300, label='Elastases', linewidth=1)
-    plt.plot(time, sv_collagenases, color='red', marker='o', markevery=300, label='Collagenases', linewidth=1)
-    plt.plot(time, sv_fibroblast, color = 'brown', label='Fibroblasts', linewidth=3)
-    plt.plot(time, sv_collagen_ad, color = 'brown', label='Adventitial Collagen', linewidth=1)
-    plt.plot(time, sv_procollagen, color = 'brown', label='Procollagen', linewidth=3)
-    plt.plot(time, sv_collagenase, color='magenta', marker ='^', markevery=300, linestyle = '-', label='Collagenase', linewidth=1)
-    plt.plot(time, sv_zymogen, color='magenta', marker ='^', markevery=300, linestyle = '--', label='Zymogen', linewidth=1)
-    plt.plot(time, sv_timp, color='gold', linestyle='-', marker='v', markevery=300, label='TIMP', linewidth=1)
-    plt.plot(time, sv_immune_cells, color='red', marker='o', markevery=300, label='Immune Cells', linewidth=3)
-    plt.plot(time, sv_latent_tgf, color='green', linestyle='--', marker='s', markevery=300, label='Latent TGF-Beta', linewidth=1)
-    plt.plot(time, sv_active_tgf, color='green', linestyle='-', marker='s', markevery=300, label='Active TGF-Beta', linewidth=1)
-    plt.title('Normalised Densities Over Time', fontsize=16, weight='bold')
-    plt.xlabel('Time (s)', fontsize=14)
-    plt.ylabel('Normalised Density', fontsize=14)
-    plt.axvline(40, color='black', linestyle='--', linewidth=1.5)
-    plt.axvline(50, color='black', linestyle=':',  linewidth=1.5)
-    plt.legend(loc='upper right', fontsize=12)
-    plt.grid(True, linestyle='--', alpha=0.4)
-    plt.xlim(38, 75)
-    plt.ylim(0,4)
-    plt.tight_layout()
-    plt.show()
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    ax.plot(time, sv_collagen_me, color='brown', linestyle=':', label='Medial Collagen', linewidth=1)
+    ax.plot(time, sv_elastin_me, color='brown', linestyle=':', label='Medial Elastin', linewidth=1)
+    ax.plot(time, sv_elastases, color='red', marker='o', markevery=300, label='Elastases', linewidth=1)
+    ax.plot(time, sv_collagenases, color='red', marker='o', markevery=300, label='Collagenases', linewidth=1)
+    ax.plot(time, sv_fibroblast, color='brown', label='Fibroblasts', linewidth=3)
+    ax.plot(time, sv_collagen_ad, color='brown', label='Adventitial Collagen', linewidth=1)
+    ax.plot(time, sv_procollagen, color='brown', label='Procollagen', linewidth=3)
+    ax.plot(time, sv_collagenase, color='magenta', marker='^', markevery=300, linestyle='-', label='Collagenase', linewidth=1)
+    ax.plot(time, sv_zymogen, color='magenta', marker='^', markevery=300, linestyle='--', label='Zymogen', linewidth=1)
+    ax.plot(time, sv_timp, color='gold', linestyle='-', marker='v', markevery=300, label='TIMP', linewidth=1)
+    ax.plot(time, sv_immune_cells, color='red', marker='o', markevery=300, label='Immune Cells', linewidth=3)
+    ax.plot(time, sv_latent_tgf, color='green', linestyle='--', marker='s', markevery=300, label='Latent TGF-Beta', linewidth=1)
+    ax.plot(time, sv_active_tgf, color='green', linestyle='-', marker='s', markevery=300, label='Active TGF-Beta', linewidth=1)
+
+    ax.set_title('Normalised Densities Over Time', fontsize=16, weight='bold')
+    ax.set_xlabel('Time (years)', fontsize=14)
+    ax.set_ylabel('Normalised Density', fontsize=14)
+    ax.axvline(40, color='black', linestyle='--', linewidth=1.5)
+    ax.axvline(50, color='black', linestyle=':', linewidth=1.5)
+    ax.legend(loc='upper right', fontsize=12)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.set_xlim(38, 75)
+    ax.set_ylim(0, 4)
+    fig.tight_layout()
+
+    return fig
 
 def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
-    plt.figure(figsize=(12, 8))
-    plt.plot(results_tt["time"], results_tt["lambda_sys"], label="TT", color='red')
-    plt.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
-    plt.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
+    fig, ax = plt.subplots(figsize=(12, 8))
     
-    plt.title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
-    plt.xlabel("Time (years)", fontsize=14)
-    plt.ylabel("Systolic Stretch", fontsize=14)
-    plt.grid(True, linestyle='--', alpha=0.4)
-    plt.xlim(40, 75)
-    plt.ylim(1.3,1.45)
-    plt.legend(fontsize=12)
-    plt.tight_layout()
-    plt.show()
+    ax.plot(results_tt["time"], results_tt["lambda_sys"], label="TT", color='red')
+    ax.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
+    ax.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
+    
+    ax.set_title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
+    ax.set_xlabel("Time (years)", fontsize=14)
+    ax.set_ylabel("Systolic Stretch", fontsize=14)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.set_xlim(40, 75)
+    ax.set_ylim(1.3, 1.45)
+    ax.legend(fontsize=12)
+    fig.tight_layout()
+    
+    return fig
 
 def plot_tgf_beta_treatment():
     """

@@ -1,6 +1,7 @@
 from aneurysm_sim.config.parameters import ArterialParameters
 from aneurysm_sim.model.model import simulate_arterial_stress_and_pressure, simulate_elastin_degredation, simulate_aneurysm
 from aneurysm_sim.model import plots
+from dashboard import main as dashboard_main
 
 def main():
     params = ArterialParameters()
@@ -26,4 +27,9 @@ def main():
 
     results_treat = simulate_aneurysm(params, treatment = True)
     plots.plot_normalised_densities(results_treat)
+
+    # Run the Streamlit dashboard
+    dashboard_main()
+
+
 
