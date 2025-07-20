@@ -325,3 +325,26 @@ def get_latent_tgf_beta_level(params, genotype = None):
 #     if treatment and t >= params.t_treat: 
 #         tgf_beta += params.tgf_spike_amount
 #     return tgf_beta
+
+# Calculate ABR risk score 
+def calculate_abr(lambda_sys, elastin, collagen_me, collagen_ad, muscle_cells, params): 
+    stress_elastin = v_sigma_elastin(lambda_sys, params)
+    stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
+    stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
+    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
+
+    STRENGTH_ELASTIN = 160000    # kPa
+    STRENGTH_COLLAGEN = 160000  # kPa
+    STRENGTH_MUSCLE = 160000     # kPa
+
+    # Strength is capacity, weighted by volume/density (approx)
+    wall_strength = (
+        STRENGTH_ELASTIN * elastin +
+        STRENGTH_COLLAGEN * (collagen_me + collagen_ad) +
+        STRENGTH_MUSCLE * muscle_cells
+    )
+
+    wall_stress = stress_elastin * elastin + stress_collagen_me * collagen_me + stress_collagen_ad * collagen_ad + stress_muscle * muscle_cells
+
+    abr = wall_stress / wall_strength if wall_strength > 0 else 0
+    return abr

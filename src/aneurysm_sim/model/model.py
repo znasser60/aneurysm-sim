@@ -10,7 +10,8 @@ from aneurysm_sim.model.functions import (
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, d_muscle_cells_dt
+    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, d_muscle_cells_dt, 
+    calculate_abr
 )
 
 def simulate_arterial_stress_and_pressure(params):
@@ -230,7 +231,9 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
 
             if treatment and abs(t - params.t_treat) < dt:
                 active_tgf_beta[i] += params.tgf_spike_amount
-
+        
+    abr_score = calculate_abr(lambda_sys_array[-1], collagen_me[-1], elastin_me[-1], collagen_ad[-1], muscle_cells[-1], params)
+    print(abr_score)
 
     return {
         'time': time,
@@ -260,5 +263,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         'lambda_rec_mode': lambda_rec_mode,
         'lambd_c_max_history': lambd_c_max_history,
         'lambda_sys': lambda_sys_array,
+        'abr_score': abr_score
     }
 

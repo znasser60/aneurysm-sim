@@ -1,8 +1,33 @@
 import streamlit as st
+import plotly.graph_objects as go
 
 from aneurysm_sim.model.model import simulate_aneurysm
 from aneurysm_sim.config.parameters import ArterialParameters
 from aneurysm_sim.model import plots
+
+def circular_gauge(abr_score):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=abr_score,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "ABR (Wall Stress / Strength)", 'font': {'size': 18}},
+        gauge={
+            'axis': {'range': [0, 2], 'tickwidth': 1, 'tickcolor': "darkgray"},
+            'bar': {'color': "darkblue"},
+            'steps': [
+                {'range': [0, 0.4], 'color': "lightgreen"},
+                {'range': [0.41, 0.7], 'color': "gold"},
+                {'range': [0.71, 10.0], 'color': "red"},
+            ],
+            'threshold': {
+                'line': {'color': "black", 'width': 4},
+                'thickness': 0.75,
+                'value': 1.0
+            }
+        }
+    ))
+    fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+    return fig
 
 @st.cache_resource
 def run_simulation(genotype, treatment):
@@ -38,13 +63,12 @@ def main():
         plt2 = plots.plot_systolic_stretch_over_time(results_tt, results_tc, results_cc)
         st.pyplot(plt2)
 
-    # # Risk Score
-    # st.markdown("---")
-    # st.subheader("Risk Evaluation")
-    # gauge_col1, gauge_col2, gauge_col3 = st.columns([1, 2, 1])
-    # with gauge_col2:
-    #     gauge = circular_gauge(risk_score)
-    #     st.pyplot(gauge)
+    # Risk Score
+    st.subheader("Aneurysm Risk Score (ABR)")
+    abr_score = results["abr_score"]  # Assuming abr_score is part of the results
+    st.plotly_chart(circular_gauge(abr_score), use_container_width=True)
+    st.write(f"**ABR Score:** {abr_score:.2f}")
+
 
 if __name__ == "__main__":
     main()
