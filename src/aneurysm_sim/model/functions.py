@@ -124,7 +124,7 @@ def v_pressure_collagen_ad(x, params):
 
 # New equations from Aparicio et al. start here: 
 # Force balance equation 
-def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, params):             
+def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
     """
     Force balance equation for transmural pressure.
     Returns difference between calculated and target pressure.
@@ -135,8 +135,8 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, params):
     stress_elastin = v_sigma_elastin(lambda_sys, params)
     stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
     stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    # stress_muscle = v_sigma_muscle_t(lambda_sys, params)
-    mass_density_mult = ((mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad)) 
+    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
+    mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
     calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
 
     # Return residual from target pressure
@@ -192,6 +192,13 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
     Fibroblasts are the cells that produce collagen and elastin in the ECM.
     """
     return (params.r_f1 + params.r_f2 * tgf_beta) * fibroblast - params.r_f3 * fibroblast 
+
+def d_muscle_cells_dt(muscle_cells, tgf_beta, immune_cells, lambda_sys, params): 
+    """
+    Derived ODE for smooth muscle cells.
+    """
+    stretch = max(0, lambda_sys - params.c_lambda_sys)
+    return (params.r_m1 + params.r_m2 * tgf_beta + params.r_m3 * stretch) * muscle_cells - (params.r_m4 * immune_cells + params.r_m5) * muscle_cells
 
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """

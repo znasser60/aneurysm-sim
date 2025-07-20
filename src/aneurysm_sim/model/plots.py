@@ -97,6 +97,7 @@ def plot_normalised_densities(results):
     sv_collagenases = results["collagenases"]
     sv_immune_cells = results["immune_cells"]
     sv_fibroblast = results["fibroblast"]
+    sv_muscle_cells = results["muscle_cells"]
     sv_collagen_ad = results["collagen_ad"]
     sv_procollagen = results["procollagen"]
     sv_collagenase = results["collagenase"]
@@ -112,6 +113,7 @@ def plot_normalised_densities(results):
     ax.plot(time, sv_elastases, color='red', marker='o', markevery=300, label='Elastases', linewidth=1)
     ax.plot(time, sv_collagenases, color='red', marker='o', markevery=300, label='Collagenases', linewidth=1)
     ax.plot(time, sv_fibroblast, color='brown', label='Fibroblasts', linewidth=3)
+    ax.plot(time, sv_muscle_cells, color='red', marker='v', markevery=300, label='Muscle Cells', linewidth=1)
     ax.plot(time, sv_collagen_ad, color='brown', label='Adventitial Collagen', linewidth=1)
     ax.plot(time, sv_procollagen, color='brown', label='Procollagen', linewidth=3)
     ax.plot(time, sv_collagenase, color='magenta', marker='^', markevery=300, linestyle='-', label='Collagenase', linewidth=1)
@@ -129,7 +131,6 @@ def plot_normalised_densities(results):
     ax.legend(loc='upper right', fontsize=12)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.set_xlim(38, 75)
-    ax.set_ylim(0, 4)
     fig.tight_layout()
     plt.show()
 

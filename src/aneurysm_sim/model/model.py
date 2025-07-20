@@ -10,7 +10,7 @@ from aneurysm_sim.model.functions import (
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level
+    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, d_muscle_cells_dt
 )
 
 def simulate_arterial_stress_and_pressure(params):
@@ -116,6 +116,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
 
     # Adventitial collagen, fibroblast, procollagen, collagenase, zymogen, TIMP, and TGF-beta                            
     fibroblast = np.zeros(steps)
+    muscle_cells = np.zeros(steps)
     collagen_ad = np.zeros(steps)
     procollagen = np.zeros(steps)
     collagenase = np.zeros(steps)
@@ -144,6 +145,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     elastases[0] = params.init_elastases
     immune_cells[0] = params.i_0 
     fibroblast[0] = params.init_fibroblast
+    muscle_cells[0] = params.init_muscle_cells
     collagen_ad[0] = params.init_collagen_ad
     procollagen[0] = params.init_procollagen
     collagenase[0] = params.init_collagenase
@@ -171,7 +173,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         t = time[i]
 
         # Calculate the lambda_sys using fsolve to find the root of the force balance equation
-        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], params,))[0]
+        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], muscle_cells[i-1], params,))[0]
         lambda_sys_array[i] = lambda_sys
         
         lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1]
@@ -198,6 +200,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             elastases[i] = elastases[0]
             immune_cells[i] = immune_cells[0]
             fibroblast[i] = fibroblast[0]
+            muscle_cells[i] = muscle_cells[0]
             collagen_ad[i] = collagen_ad[0]
             procollagen[i] = procollagen[0]
             collagenase[i] = collagenase[0]
@@ -214,6 +217,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             elastases[i] = elastases[i-1] + dt * d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
 
             fibroblast[i] = fibroblast[i-1] + dt * d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
+            muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt(muscle_cells[i-1], active_tgf_beta[i-1], immune_cells[i-1], lambda_sys, params)
             collagen_ad[i] = collagen_ad[i-1] + dt * d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
             procollagen[i] = procollagen[i-1] + dt * d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
             collagenase[i] = collagenase[i-1] + dt * d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
@@ -236,6 +240,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         'collagenases': collagenases,
         'immune_cells': immune_cells,
         'fibroblast': fibroblast,
+        'muscle_cells': muscle_cells,
         'collagen_ad': collagen_ad,
         'procollagen': procollagen,
         'collagenase': collagenase,

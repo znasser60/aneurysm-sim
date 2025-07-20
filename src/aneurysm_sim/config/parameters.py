@@ -125,6 +125,13 @@ class ArterialParameters:
         self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
+        # Muscle cell rates 
+        self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
+        self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
+        self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
+        self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
+        self.r_m5 = 0# 1.0      # Muscle cell death rate (years^-1)
+
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
         self.r_p2 = 0.5      # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
@@ -141,8 +148,8 @@ class ArterialParameters:
 
         # Collagenase rates
         self.r_ca1 = 0.5      # Baseline active collagenase maturation rate (years^-1)
-        self.r_ca2 = 0.25    # Collagenase inactivation rate by TIMPs (years^-1)
-        self.r_ca3 = 0.25    # Inhibitor–collagenase complex formation rate (years^-1)
+        self.r_ca2 = 0.25     # Collagenase inactivation rate by TIMPs (years^-1)
+        self.r_ca3 = 0.25     # Inhibitor–collagenase complex formation rate (years^-1)
 
         # Inhibitor rates
         self.r_i1 = 1.0       # Baseline inhibitor secretion rate (years^-1)
@@ -169,6 +176,7 @@ class ArterialParameters:
         # Set initial values for variables 
         self.alpha_init = 1.15
         self.init_fibroblast = 1.0
+        self.init_muscle_cells = 0 # 1.0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
         self.init_elastin_ad = 1.0
