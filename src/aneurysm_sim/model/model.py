@@ -233,7 +233,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
                 active_tgf_beta[i] += params.tgf_spike_amount
         
     abr_score = calculate_abr(lambda_sys_array[-1], collagen_me[-1], elastin_me[-1], collagen_ad[-1], muscle_cells[-1], params)
-    print(abr_score)
 
     return {
         'time': time,

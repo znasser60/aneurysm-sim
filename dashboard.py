@@ -10,7 +10,7 @@ def circular_gauge(abr_score):
         mode="gauge+number",
         value=abr_score,
         domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "ABR (Wall Stress / Strength)", 'font': {'size': 18}},
+        title={'text': "ABR (Wall Stress / Strength)", 'font': {'size': 14}},  # smaller title
         gauge={
             'axis': {'range': [0, 2], 'tickwidth': 1, 'tickcolor': "darkgray"},
             'bar': {'color': "darkblue"},
@@ -26,7 +26,11 @@ def circular_gauge(abr_score):
             }
         }
     ))
-    fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+    fig.update_layout(
+        margin=dict(t=10, b=10, l=10, r=10),
+        width=300,   # set smaller width
+        height=250   # set smaller height
+    )
     return fig
 
 @st.cache_resource

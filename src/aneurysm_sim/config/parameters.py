@@ -6,7 +6,7 @@ class ArterialParameters:
         self.c_diam_tzero_mm = 2.9 # Originally 2.9
         self.c_radius_tzero = self.c_diam_tzero_mm / 2 
         self.c_thickness_tzero = self.c_radius_tzero / 5
-        self.c_pressure_sys = 16000
+        self.c_pressure_sys = 16000 # Pa 
 
         # Stretches
         self.c_lambda_z = 1.3
