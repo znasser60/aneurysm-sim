@@ -10,7 +10,7 @@ from aneurysm_sim.model.functions import (
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, d_muscle_cells_dt, 
+    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, 
     calculate_abr
 )
 
@@ -193,7 +193,9 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
 
         diameter[i] = 2 * params.c_radius_tzero * lambda_att_max[i] * 1e3
-        tau = params.tau_homeo * (params.c_diam_tzero_mm / diameter[i-1])**3
+        # tau = params.tau_homeo * (params.c_diam_tzero_mm / diameter[i-1])**3
+        # eta = 1.0
+        # smc_concentration = calculate_vasodilator_concentration_ratio(eta, tau, params)
 
         if t < params.t_i0:
             collagen_me[i] = collagen_me[0]
@@ -219,7 +221,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             elastases[i] = elastases[i-1] + dt * d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
 
             fibroblast[i] = fibroblast[i-1] + dt * d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
-            muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt()
+            # muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt(muscle_cells[i-1], lambda_sys, smc_concentration, tau, params)
             collagen_ad[i] = collagen_ad[i-1] + dt * d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
             procollagen[i] = procollagen[i-1] + dt * d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
             collagenase[i] = collagenase[i-1] + dt * d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)

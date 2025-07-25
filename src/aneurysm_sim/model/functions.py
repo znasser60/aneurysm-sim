@@ -193,17 +193,17 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
     """
     return (params.r_f1 + params.r_f2 * tgf_beta) * fibroblast - params.r_f3 * fibroblast 
 
-def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, params): 
-    """
-    Muscle cell ODE: Equation 2.22 in Mandaltsi et al (PhD thesis).
-    Muscle cells are the cells that produce the muscle layer in the arterial wall.
-    """
-    # stretch = max(0, lambda_sys - params.c_lambda_sys)
-    # return (params.r_m1 + params.r_m2 * tgf_beta + params.r_m3 * stretch) * muscle_cells - (params.r_m4 * immune_cells + params.r_m5) * muscle_cells
-    term1 = muscle_cells * (params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att))
-    term2 = params.beta2_smc*((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
-    term3 = params.beta_wss_smc * (tau - params.tau_homeo) / params.tau_homeo
-    return term1 + term2 + term3
+# def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, params): 
+#     """
+#     Muscle cell ODE: Equation 2.22 in Mandaltsi et al (PhD thesis).
+#     Muscle cells are the cells that produce the muscle layer in the arterial wall.
+#     """
+#     # stretch = max(0, lambda_sys - params.c_lambda_sys)
+#     # return (params.r_m1 + params.r_m2 * tgf_beta + params.r_m3 * stretch) * muscle_cells - (params.r_m4 * immune_cells + params.r_m5) * muscle_cells
+#     term1 = muscle_cells * (params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att))
+#     term2 = params.beta2_smc*((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
+#     term3 = params.beta_wss_smc * (tau - params.tau_homeo) / params.tau_homeo
+#     return term1 + term2 + term3
 
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """
@@ -332,11 +332,11 @@ def get_latent_tgf_beta_level(params, genotype = None):
 #     return tgf_beta
 
 # Calculate the concentration ratio of vasodilators (C)
-def calculate_vasodilator_concentration_ratio(eta, tau, params):
-    """
-    Equation 2.19 from Mandaltsi et al. (PhD thesis).
-    """
-    return eta * (params.c_vasodil_conc_basal - params.c_vasodil_conc_shear * ((tau - params.tau_homeo) / params.tau_homeo))
+# def calculate_vasodilator_concentration_ratio(eta, tau, params):
+#     """
+#     Equation 2.19 from Mandaltsi et al. (PhD thesis).
+#     """
+#     return eta * params.
 
 # Calculate ABR risk score 
 def calculate_abr(lambda_sys, elastin, collagen_me, collagen_ad, muscle_cells, params): 
