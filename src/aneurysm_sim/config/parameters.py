@@ -13,10 +13,13 @@ class ArterialParameters:
         self.c_lambda_sys = 1.3
         self.c_lambda_elastin = 1.3 
         self.c_lambda_muscle = 1.15
+        self.c_lambda_muscle_att = 1.1
         self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
         self.c_musc_mean = 1.1
         self.c_musc_min = 0.4
         self.c_vasodil_conc = 0.68
+        self.c_vasodil_conc_basal = 0.68
+        self.c_vasodil_conc_shear = 1.36
         self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0
 
         # Collagen ratio
@@ -124,6 +127,13 @@ class ArterialParameters:
         self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
         self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
+
+        # Smooth muscle cell rates
+        self.beta1_smc = 1.0
+        self.beta2_smc = 1.0
+        self.beta_wss_smc = 500
+        self.tau_homeo = 1.0 
+
 
         # Muscle cell rates 
         self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
