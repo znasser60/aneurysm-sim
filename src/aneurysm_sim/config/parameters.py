@@ -131,9 +131,8 @@ class ArterialParameters:
         # Smooth muscle cell rates
         self.beta1_smc = 1.0
         self.beta2_smc = 1.0
-        self.beta_wss_smc = 500
+        self.beta_wss_smc = 1.0
         self.tau_homeo = 1.0 
-
 
         # Muscle cell rates 
         self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
