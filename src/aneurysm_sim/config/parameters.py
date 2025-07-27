@@ -3,10 +3,12 @@ import numpy as np
 class ArterialParameters:
     def __init__(self):
         # Geometric and pressure
-        self.c_diam_tzero_mm = 2.9 # Originally 2.9
+        self.c_diam_tzero_mm = 2.9 # Diameter at t=0 in mm
         self.c_radius_tzero = self.c_diam_tzero_mm / 2 
         self.c_thickness_tzero = self.c_radius_tzero / 5
         self.c_pressure_sys = 16000 # Pa 
+        self.c_flow_rate = 1.9635e-5 # m^3/s
+        self.c_blood_viscosity = 0.003 # Pa.s
 
         # Stretches
         self.c_lambda_z = 1.3
@@ -132,14 +134,14 @@ class ArterialParameters:
         self.beta1_smc = 1.0
         self.beta2_smc = 1.0
         self.beta_wss_smc = 1.0
-        self.tau_homeo = 1.0 
+        self.tau_homeo = 1.13e-17
 
-        # Muscle cell rates 
-        self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
-        self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
-        self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
-        self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
-        self.r_m5 = 0# 1.0      # Muscle cell death rate (years^-1)
+        # # Muscle cell rates 
+        # self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
+        # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
+        # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
+        # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
+        # self.r_m5 = 0 # 1.0      # Muscle cell death rate (years^-1)
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
@@ -185,7 +187,7 @@ class ArterialParameters:
         # Set initial values for variables 
         self.alpha_init = 1.15
         self.init_fibroblast = 1.0
-        self.init_muscle_cells = 0 # 1.0
+        self.init_muscle_cells = 1.0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
         self.init_elastin_ad = 1.0

@@ -135,7 +135,7 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_elastin = v_sigma_elastin(lambda_sys, params)
     stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
     stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
+    stress_muscle = v_sigma_muscle_p(lambda_sys, params)
     mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
     calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
 
@@ -193,17 +193,18 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
     """
     return (params.r_f1 + params.r_f2 * tgf_beta) * fibroblast - params.r_f3 * fibroblast 
 
-def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, params): 
+def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, tau_homeo, params): 
     """
     Muscle cell ODE: Equation 2.22 in Mandaltsi et al (PhD thesis).
     Muscle cells are the cells that produce the muscle layer in the arterial wall.
     """
     # stretch = max(0, lambda_sys - params.c_lambda_sys)
     # return (params.r_m1 + params.r_m2 * tgf_beta + params.r_m3 * stretch) * muscle_cells - (params.r_m4 * immune_cells + params.r_m5) * muscle_cells
-    term1 = muscle_cells * (params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att))
-    term2 = params.beta2_smc*((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
-    term3 = params.beta_wss_smc * (tau - params.tau_homeo) / params.tau_homeo
-    return term1 + term2 + term3
+    term1 = params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att)
+    term2 = params.beta2_smc * ((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
+    term3 = params.beta_wss_smc * (tau - tau_homeo) / tau_homeo
+    print(f"Muscle cell term1: {term1}, term2: {term2}, term3: {term3}")
+    return max(0, muscle_cells*(term1 + term2 + term3))
 
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """
