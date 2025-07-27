@@ -179,4 +179,35 @@ def plot_max_collagen_stretch(results):
     plt.show()
     
     return fig
+
+def plot_diameter_treatment_times(results_tt_list, results_tc_list, results_cc_list, t_treat_list):
+    """
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    time = results_tt_list[0]["time"]
+    for i, t_treat in enumerate(t_treat_list): 
+        axes[0].plot(time, results_tt_list[i]["diameter"]/1e3, label=f"{t_treat} Years")
+        axes[1].plot(time, results_tc_list[i]["diameter"]/1e3, label=f"{t_treat} Years")
+        axes[2].plot(time, results_cc_list[i]["diameter"]/1e3, label=f"{t_treat} Years")
+
+    axes[0].set_title('Genotype: TT')
+    axes[1].set_title('Genotype: TC')
+    axes[2].set_title('Genotype: CC')
+
+    for ax in axes: 
+        ax.set_xlabel('Time (years)', fontsize=12)
+        ax.set_ylabel('Diameter (mm)', fontsize=12)
+        ax.set_xlim(40, 75)
+        ax.grid(True, linestyle='--', alpha=0.4)
+        ax.legend(title='TGF-β Treatment Time', fontsize=10)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, title='t₀ (years)', loc='lower center', ncol=5, bbox_to_anchor=(0.5, -0.05), fontsize=11)
+    plt.subplots_adjust(bottom=0.2, top=0.88)
+    fig.suptitle('Diameter Over Time with TGF-β Treatment', fontsize=16, weight='bold')
+    plt.show()
+
+    return fig
+
+
     

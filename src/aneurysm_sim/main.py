@@ -32,3 +32,24 @@ def main():
     results_treat_tc = simulate_aneurysm(params, genotype="TC", treatment=True)
     results_treat_cc = simulate_aneurysm(params, genotype="CC", treatment=True)
     plots.plot_normalised_densities_by_genotype(results_treat_tt, results_treat_tc, results_treat_cc)
+
+    t_treat_list = [45, 50, 55, 60, 65]
+
+    results_tt_list = []
+    results_tc_list = []
+    results_cc_list = []
+
+    for t_treat in t_treat_list:
+        params = ArterialParameters()
+        params.t_treat = t_treat
+        results_tt_list.append(simulate_aneurysm(params, genotype="TT", treatment=True))
+
+        params = ArterialParameters()
+        params.t_treat = t_treat
+        results_tc_list.append(simulate_aneurysm(params, genotype="TC", treatment=True))
+
+        params = ArterialParameters()
+        params.t_treat = t_treat
+        results_cc_list.append(simulate_aneurysm(params, genotype="CC", treatment=True))
+
+    plots.plot_diameter_treatment_times(results_tt_list, results_tc_list, results_cc_list, t_treat_list)

@@ -166,7 +166,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     lambda_c_max[0] = params.c_lambda_sys / lambda_rec_min[0]
     lambda_c_min[0] = params.c_lambda_sys / lambda_rec_max[0]
     lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
-    diameter[0] = 2*params.c_radius_tzero*lambda_att_max[0]*1e3
+    diameter[0] = 2*params.c_radius_tzero*params.c_lambda_sys
     lambda_sys_array[0] = params.c_lambda_sys
     lambd_c_max_history = [lambda_c_max[0]] 
 
@@ -192,7 +192,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_rec_max[i] = lambda_rec_max[i-1] + dt * d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
         lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
 
-        diameter[i] = 2 * params.c_radius_tzero * lambda_att_max[i] * 1e3
+        diameter[i] = 2 * params.c_radius_tzero * lambda_sys
         # tau = params.tau_homeo * (params.c_diam_tzero_mm / diameter[i-1])**3
         # eta = 1.0
         # smc_concentration = calculate_vasodilator_concentration_ratio(eta, tau, params)
