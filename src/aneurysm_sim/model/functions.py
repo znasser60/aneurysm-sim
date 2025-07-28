@@ -203,8 +203,8 @@ def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, tau_home
     term1 = params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att)
     term2 = params.beta2_smc * ((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
     term3 = params.beta_wss_smc * (tau - tau_homeo) / tau_homeo
-    print(f"Muscle cell term1: {term1}, term2: {term2}, term3: {term3}")
-    return max(0, muscle_cells*(term1 + term2 + term3))
+    # print(f"Muscle cell term1: {term1}, term2: {term2}, term3: {term3}")
+    return muscle_cells*(term1 + term2 + term3)
 
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """

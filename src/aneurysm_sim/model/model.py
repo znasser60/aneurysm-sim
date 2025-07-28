@@ -168,7 +168,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     lambda_c_min[0] = params.c_lambda_sys / lambda_rec_max[0]
     lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
     diameter[0] = 2*params.c_radius_tzero*params.c_lambda_sys
-    tau[0] = 4 * params.c_flow_rate * params.c_blood_viscosity / (np.pi * (diameter[0]/2)**3)  # Shear stress in Pa
+    tau[0] = 4 * params.c_flow_rate * params.c_blood_viscosity / (np.pi * (params.c_radius_tzero * 1e3 * params.c_lambda_sys)**3)  # Shear stress in Pa
     tau_homeo = tau[0]
     lambda_sys_array[0] = params.c_lambda_sys
     lambd_c_max_history = [lambda_c_max[0]] 
