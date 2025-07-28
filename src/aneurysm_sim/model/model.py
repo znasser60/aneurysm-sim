@@ -225,7 +225,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             elastases[i] = elastases[i-1] + dt * d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
 
             fibroblast[i] = fibroblast[i-1] + dt * d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
-            muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt(muscle_cells[i-1], lambda_sys, smc_concentration, tau[i], tau_homeo, params)
+            muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt(muscle_cells[i-1], immune_cells[i-1], active_tgf_beta[i-1], lambda_sys, smc_concentration, tau[i], tau_homeo, params)
             collagen_ad[i] = collagen_ad[i-1] + dt * d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
             procollagen[i] = procollagen[i-1] + dt * d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
             collagenase[i] = collagenase[i-1] + dt * d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)

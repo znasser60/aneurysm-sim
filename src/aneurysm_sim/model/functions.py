@@ -193,7 +193,7 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
     """
     return (params.r_f1 + params.r_f2 * tgf_beta) * fibroblast - params.r_f3 * fibroblast 
 
-def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, tau_homeo, params): 
+def d_muscle_cells_dt(muscle_cells, immune_cells, tgf_beta, lambda_smc, smc_concentration, tau, tau_homeo, params): 
     """
     Muscle cell ODE: Equation 2.22 in Mandaltsi et al (PhD thesis).
     Muscle cells are the cells that produce the muscle layer in the arterial wall.
@@ -203,8 +203,10 @@ def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, tau_home
     term1 = params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att)
     term2 = params.beta2_smc * ((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
     term3 = params.beta_wss_smc * (tau - tau_homeo) / tau_homeo
+    term4 = -params.r_m4 * immune_cells
+    term5 = params.r_m2 * tgf_beta
     # print(f"Muscle cell term1: {term1}, term2: {term2}, term3: {term3}")
-    return muscle_cells*(term1 + term2 + term3)
+    return muscle_cells*(term1 + term2 + term3 + term4 + term5)
 
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """

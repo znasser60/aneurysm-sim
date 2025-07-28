@@ -138,9 +138,9 @@ class ArterialParameters:
 
         # # Muscle cell rates 
         # self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
-        # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
+        self.r_m2 = 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
         # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
-        # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
+        self.r_m4 = 0.6     # Immune cell degradation of muscle cells (years^-1)
         # self.r_m5 = 0 # 1.0      # Muscle cell death rate (years^-1)
 
         # Procollagen rates
