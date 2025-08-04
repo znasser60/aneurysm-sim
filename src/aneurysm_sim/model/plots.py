@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
@@ -85,13 +86,16 @@ def plot_elastin_degradation(results_dict, n_zoom=120):
     plt.tight_layout()
     plt.show()
 
-def plot_normalised_densities(results, ax=None, title=None, legend=False):
+def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel=False, ylabel=False):
     """
     Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta
     into the supplied Axes (or create one if none provided).
     """
+
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
+        xlabel, ylabel = True, True
+
 
     time = results["time"]
 
@@ -112,9 +116,12 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False):
 
     if title:
         ax.set_title(title, fontsize=14, weight='bold')
+    
+    if xlabel:
+        ax.set_xlabel('Time (years)', fontsize=14)
+    if ylabel:
+        ax.set_ylabel('Normalized Density', fontsize=14)
 
-    ax.set_xlabel('Time (years)', fontsize=12)
-    ax.set_ylabel('Normalized Density', fontsize=12)
     ax.set_xlim(38, 75)
     ax.axvline(40, color='black', linestyle='--', linewidth=1.5)
     ax.axvline(50, color='black', linestyle=':',  linewidth=1.5)
@@ -125,23 +132,40 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False):
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     """
-    Compare TT, TC, and CC genotypes side by side in a single row.
+    Arrange 3 genotype plots in a 2x2 grid with the top-right
+    subplot reserved for the legend box.
     """
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    plot_normalised_densities(results_tt, axes[0], title="Genotype: TT")
-    plot_normalised_densities(results_tc, axes[1], title="Genotype: TC")
-    plot_normalised_densities(results_cc, axes[2], title="Genotype: CC")
+    fig = plt.figure(figsize=(16, 12))
+    gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1], width_ratios=[1, 1])
 
-    # axes[1].set_xlabel("Time (years)", fontsize=12)
-    # axes[0].set_ylabel("Normalised Density", fontsize=12)
+    ax1 = fig.add_subplot(gs[0, 0])  # Top-left: TT
+    ax_legend = fig.add_subplot(gs[0, 1])  # Top-right: Legend placeholder
+    ax2 = fig.add_subplot(gs[1, 0])  # Bottom-left: TC
+    ax3 = fig.add_subplot(gs[1, 1])  # Bottom-right: CC
 
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01), fontsize=11)
-    plt.subplots_adjust(bottom=0.25, top=0.9)
-    fig.suptitle("Normalised Densities by TGF-β Genotype", fontsize=16, weight='bold')
-    # fig.tight_layout(rect=[0, 0, 1, 0.95])
+    # Plotting without legends on subplots
+    plot_normalised_densities(results_tt, ax1, title="Genotype: TT", ylabel=True, xlabel=False, legend=False)
+    plot_normalised_densities(results_tc, ax2, title="Genotype: TC", ylabel=True, xlabel=True, legend=False)
+    plot_normalised_densities(results_cc, ax3, title="Genotype: CC", ylabel=False, xlabel=True, legend=False)
+
+    # Remove axes for legend box
+    ax_legend.axis('off')
+
+    # Get legend handles/labels from one of the plots
+    handles, labels = ax1.get_legend_handles_labels()
+
+    # Add legend to the empty subplot area
+    ax_legend.legend(handles, labels, loc='lower left', fontsize=10)
+
+    # Shared axis labels for the figure
+    # fig.text(0.5, 0.04, 'Time (years)', ha='center', fontsize=16)
+    # fig.text(0.07, 0.5, 'Normalized Density', va='center', rotation='vertical', fontsize=16)
+
+    plt.subplots_adjust(hspace=0.3, wspace=0.3, left=0.12, right=0.95, bottom=0.1, top=0.95)
     plt.show()
+
     return fig
+
     
 
 def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
@@ -151,13 +175,14 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     ax.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
     ax.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
     
-    ax.set_title("Systolic Stretch Over Time by Genotype", fontsize=16, weight='bold')
-    ax.set_xlabel("Time (years)", fontsize=14)
-    ax.set_ylabel("Systolic Stretch", fontsize=14)
+    # ax.set_title("Systolic Stretch Over Time by Genotype (with treatment)", fontsize=16, weight='bold')
+    ax.set_xlabel("Time (years)", fontsize=16)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$", fontsize=16)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.set_xlim(40, 75)
     ax.set_ylim(1.3, 1.5)
     ax.legend(fontsize=12)
+    ax.axvline(45, color='black', linestyle='--', linewidth=1.5)
     fig.tight_layout()
     plt.show()
     
@@ -168,9 +193,9 @@ def plot_max_collagen_stretch(results):
     sv_lambda_c_max = results["lambd_c_max_history"]
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.plot(time, sv_lambda_c_max, color='blue', label='Max Collagen Stretch', linewidth=2)
-    ax.set_title('Max Collagen Stretch Over Time', fontsize=16, weight='bold')
-    ax.set_xlabel('Time (years)', fontsize=14)
-    ax.set_ylabel('Max Collagen Stretch', fontsize=14)
+    # ax.set_title('Max Collagen Stretch Over Time', fontsize=16, weight='bold')
+    ax.set_xlabel('Time (years)', fontsize=16)
+    ax.set_ylabel('Max Collagen Stretch', fontsize=16)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.set_xlim(40, 75)
     # ax.set_ylim(1.0, 1.2)
@@ -195,8 +220,8 @@ def plot_diameter_treatment_times(results_tt_list, results_tc_list, results_cc_l
     axes[2].set_title('Genotype: CC')
 
     for ax in axes: 
-        ax.set_xlabel('Time (years)', fontsize=12)
-        ax.set_ylabel('Diameter (mm)', fontsize=12)
+        ax.set_xlabel('Time (years)', fontsize=16)
+        ax.set_ylabel('Diameter (mm)', fontsize=16)
         ax.set_xlim(40, 75)
         ax.grid(True, linestyle='--', alpha=0.4)
         ax.legend(title='TGF-β Treatment Time', fontsize=10)
@@ -204,10 +229,101 @@ def plot_diameter_treatment_times(results_tt_list, results_tc_list, results_cc_l
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, title='t₀ (years)', loc='lower center', ncol=5, bbox_to_anchor=(0.5, -0.05), fontsize=11)
     plt.subplots_adjust(bottom=0.2, top=0.88)
-    fig.suptitle('Diameter Over Time with TGF-β Treatment', fontsize=16, weight='bold')
+    # fig.suptitle('Diameter Over Time with TGF-β Treatment', fontsize=16, weight='bold')
+    plt.show()
+
+    return fig
+
+def plot_tgf_vs_fibroblasts(results_tt, results_tc, results_cc):
+    fig, ax = plt.subplots(figsize=(7,7))
+
+    # Package results for iteration
+    all_results = {
+        "TT": results_tt,
+        "TC": results_tc,
+        "CC": results_cc
+    }
+
+    for genotype, data in all_results.items():
+        active_tgf = data['active_tgf_beta']
+        fibroblasts = data['fibroblast']
+
+        ax.plot(active_tgf, fibroblasts, label=genotype, lw=2)
+        # mark start (o) and end (x) points
+        ax.scatter(active_tgf[0], fibroblasts[0], marker="o", color=ax.lines[-1].get_color(), s=60)
+        ax.scatter(active_tgf[-1], fibroblasts[-1], marker="x", color=ax.lines[-1].get_color(), s=80)
+
+    ax.set_xlabel("Active TGF-β", fontsize=14)
+    ax.set_ylabel("Fibroblasts", fontsize=14)
+    # ax.set_title("Active TGF-β vs Fibroblasts (Phase Plane)", fontsize=16)
+    ax.legend(title="Genotype")
+    ax.grid(True)
+
+    plt.show()
+
+def compute_auc(time, y):
+    """Compute area under the curve using trapezoidal rule."""
+    return np.trapz(y, time)
+
+def extract_aucs(results_dict, components, treatment_labels):
+    """Return AUC values for each component and treatment condition."""
+    aucs = []
+    for var_key, _ in components:
+        auc_vals = []
+        for cond in treatment_labels:
+            time = results_dict[cond]["time"]
+            y = results_dict[cond][var_key]
+            auc_vals.append(compute_auc(time, y))
+        aucs.append(auc_vals)
+    return np.array(aucs)
+
+def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labels=("No Treatment", "Treatment")):
+    """
+    Plot bar charts of AUC values for selected normalised densities, comparing
+    treatment vs. no-treatment, for each genotype (TT, TC, CC), with a truly shared y-axis.
+    """
+
+    components = [
+        ("fibroblast", "Fibroblasts"),
+        ("collagen_ad", "Adventitial Collagen"),
+        ("latent_tgf_beta", "Latent TGF-β"),
+        ("active_tgf_beta", "Active TGF-β"),
+    ]
+
+    aucs_tt = extract_aucs(results_tt, components, treatment_labels)
+    aucs_tc = extract_aucs(results_tc, components, treatment_labels)
+    aucs_cc = extract_aucs(results_cc, components, treatment_labels)
+
+    fig, axes = plt.subplots(1, 3, figsize=(22, 7), sharey=True)
+
+    for ax, aucs, title in zip(
+        axes, [aucs_tt, aucs_tc, aucs_cc], ["Genotype: TT", "Genotype: TC", "Genotype: CC"]
+    ):
+        x = np.arange(len(components))
+        width = 0.35
+
+        ax.bar(x - width/2, aucs[:, 0], width, label=treatment_labels[0], color="skyblue")
+        ax.bar(x + width/2, aucs[:, 1], width, label=treatment_labels[1], color="salmon")
+
+        ax.set_title(title, fontsize=14, weight="bold")
+        ax.set_xticks(x)
+        ax.set_xticklabels([label for _, label in components], rotation=45, ha="right", fontsize=11)
+        ax.grid(axis="y", linestyle="--", alpha=0.6)
+
+    # Hide redundant y-axes (middle and right panels)
+    for ax in axes[1:]:
+        ax.tick_params(labelleft=False)
+        ax.spines['left'].set_visible(False)
+
+    # Shared y-label for the entire figure
+    fig.text(0.02, 0.5, "AUC", va="center", rotation="vertical", fontsize=14)
+
+    axes[0].legend(loc="upper right", fontsize=11)
+    plt.tight_layout(rect=[0.05, 0, 1, 1])  # leave space for shared ylabel
     plt.show()
 
     return fig
 
 
-    
+
+
