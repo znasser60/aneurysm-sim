@@ -301,9 +301,21 @@ def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labe
     ):
         x = np.arange(len(components))
         width = 0.35
+        bars1 = ax.bar(x - width/2, aucs[:, 0], width, label=treatment_labels[0], color="skyblue")
+        bars2 = ax.bar(x + width/2, aucs[:, 1], width, label=treatment_labels[1], color="salmon")
 
-        ax.bar(x - width/2, aucs[:, 0], width, label=treatment_labels[0], color="skyblue")
-        ax.bar(x + width/2, aucs[:, 1], width, label=treatment_labels[1], color="salmon")
+        # for bars in [bars1, bars2]:
+        #     for bar in bars:
+        #         height = bar.get_height()
+        #         ax.annotate(
+        #             f"{height:.2f}",
+        #             xy=(bar.get_x() + bar.get_width() / 2, height),
+        #             xytext=(0, 3),  # 3 points above the bar
+        #             textcoords="offset points",
+        #             ha="center",
+        #             va="bottom",
+        #             fontsize=8,
+        #         )
 
         ax.set_title(title, fontsize=14, weight="bold")
         ax.set_xticks(x)
