@@ -1,11 +1,11 @@
 import numpy as np 
 
-# Vasospasm mechanical equations
+# Vasospasm mechanical equations, converted from original vasospasm code in "Original" folder
 def v_lambda_collagen(x, params): 
-    return x / params.c_lambda_elastin # TODO: Original code says c_rec_collagen, but constant does not exist. 
+    return x / params.c_lambda_elastin 
 
 def v_lambda_muscle(x, params):
-    return x / params.c_rec_muscle # TODO: Should this be c_lambda_muscle?
+    return x / params.c_rec_muscle 
 
 def v_m(x, params): 
     return x / params.c_rec_muscle
@@ -193,18 +193,6 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
     """
     return (params.r_f1 + params.r_f2 * tgf_beta) * fibroblast - params.r_f3 * fibroblast 
 
-# def d_muscle_cells_dt(muscle_cells, lambda_smc, smc_concentration, tau, params): 
-#     """
-#     Muscle cell ODE: Equation 2.22 in Mandaltsi et al (PhD thesis).
-#     Muscle cells are the cells that produce the muscle layer in the arterial wall.
-#     """
-#     # stretch = max(0, lambda_sys - params.c_lambda_sys)
-#     # return (params.r_m1 + params.r_m2 * tgf_beta + params.r_m3 * stretch) * muscle_cells - (params.r_m4 * immune_cells + params.r_m5) * muscle_cells
-#     term1 = muscle_cells * (params.beta1_smc * ((lambda_smc - params.c_lambda_muscle_att)/ params.c_lambda_muscle_att))
-#     term2 = params.beta2_smc*((smc_concentration - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal)
-#     term3 = params.beta_wss_smc * (tau - params.tau_homeo) / params.tau_homeo
-#     return term1 + term2 + term3
-
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """
     Procollagen ODE: Equation 11 from Apricio et al. 2016.
@@ -325,33 +313,3 @@ def get_latent_tgf_beta_level(params, genotype = None):
     if genotype is None:
         return 1.0
     return levels.get(genotype.upper(), 1.0)
-
-# def get_active_tgf_beta_level(t, params, tgf_beta, treatment = False): 
-#     if treatment and t >= params.t_treat: 
-#         tgf_beta += params.tgf_spike_amount
-#     return tgf_beta
-
-# Calculate the concentration ratio of vasodilators (C)
-# def calculate_vasodilator_concentration_ratio(eta, tau, params):
-#     """
-#     Equation 2.19 from Mandaltsi et al. (PhD thesis).
-#     """
-#     return eta * params.
-
-# Calculate ABR risk score 
-def calculate_abr(lambda_sys, elastin, collagen_me, collagen_ad, muscle_cells, params): 
-    stress_elastin = v_sigma_elastin(lambda_sys, params)
-    stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
-    stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
-
-    wall_strength = (
-        elastin +
-        (collagen_me + collagen_ad) +
-        muscle_cells
-    ) * 160000 # Not correct, see https://link.springer.com/article/10.1007/s10439-006-9132-6#Sec1
-
-    wall_stress = stress_elastin * elastin + stress_collagen_me * collagen_me + stress_collagen_ad * collagen_ad + stress_muscle * muscle_cells
-
-    abr = wall_stress / wall_strength if wall_strength > 0 else 0
-    return abr

@@ -66,6 +66,30 @@ def plot_pressure_vs_diameter(results, n_zoom=120):
     plt.grid(True)
     plt.show()
 
+def plot_stretch_vs_stress(results, n_zoom=120):
+    """
+    Plot the stretch vs stress with a zoomed-in view.
+    """
+
+    sv_stretch_var = results["sv_stretch_var"]
+    sv_stress_var_elastin = results["sv_stress_var_elastin"]
+    sv_stress_var_collagen_me = results["sv_stress_var_collagen_me"]
+    sv_stress_var_collagen_ad = results["sv_stress_var_collagen_ad"]
+    sv_stress_var_collagen = results["sv_stress_var_collagen"]
+    sv_stress_var_total = results["sv_stress_var_total"]
+
+    plt.figure(figsize=(12, 8))
+    plt.plot(sv_stretch_var[32:n_zoom], sv_stress_var_elastin[32:n_zoom], '--', linewidth=2, label='Elastin')
+    plt.plot(sv_stretch_var[64:n_zoom], sv_stress_var_collagen[64:n_zoom], '-.', linewidth=2, label='Collagen Total')
+    plt.plot(sv_stretch_var[44:n_zoom], sv_stress_var_collagen_me[44:n_zoom], '+', linewidth=2, markersize=8, label='Collagen ME')
+    plt.plot(sv_stretch_var[:n_zoom], sv_stress_var_collagen_ad[:n_zoom], '.', linewidth=2, markersize=8, label='Collagen AD')
+    plt.plot(sv_stretch_var[:n_zoom], sv_stress_var_total[:n_zoom], '-', linewidth=3, label='Total Stress')
+    plt.xlabel(r'Stretch $\lambda$', fontsize=14)
+    plt.ylabel(r'Stress $\sigma$', fontsize=14)
+    plt.legend(loc='upper left')
+    plt.grid(True)
+    plt.show()
+
 def plot_elastin_degradation(results_dict, n_zoom=120):
     """
     Plot pressure-stretch curves for different elastin degradation levels.
@@ -335,6 +359,51 @@ def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labe
     plt.show()
 
     return fig
+
+def plot_att_dist(lambda_att_min, lambda_att_mode, lambda_att_max): 
+    """
+    Plot triangular distribution of attachment stretch.
+    """
+    x = np.linspace(lambda_att_min, lambda_att_max, 1000)
+    y = np.where(
+        (x >= lambda_att_min) & (x <= lambda_att_mode),
+        2 * (x - lambda_att_min) / ((lambda_att_mode - lambda_att_min) * (lambda_att_max - lambda_att_min)),
+        np.where(
+            (x > lambda_att_mode) & (x <= lambda_att_max),
+            2 * (lambda_att_max - x) / ((lambda_att_max - lambda_att_mode) * (lambda_att_max - lambda_att_min)),
+            0
+        )
+    )
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y, label='Attachment Stretch Distribution', color='blue')
+    plt.xlabel(r'Attachment Stretch $\lambda_A^{AT}$', fontsize=14)
+    plt.ylabel('PDF', fontsize=14)
+    plt.grid(True)
+    plt.show()
+
+def plot_rec_dist(lambda_rec_min, lambda_rec_mode, lambda_rec_max): 
+    """
+    Plot triangular distribution of recruitment stretch.
+    """
+    x = np.linspace(lambda_rec_min, lambda_rec_max, 1000)
+    y = np.where(
+        (x >= lambda_rec_min) & (x <= lambda_rec_mode),
+        2 * (x - lambda_rec_min) / ((lambda_rec_mode - lambda_rec_min) * (lambda_rec_max - lambda_rec_min)),
+        np.where(
+            (x > lambda_rec_mode) & (x <= lambda_rec_max),
+            2 * (lambda_rec_max - x) / ((lambda_rec_max - lambda_rec_mode) * (lambda_rec_max - lambda_rec_min)),
+            0
+        )
+    )
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, y, label='Recruitment Stretch Distribution', color='blue')
+    plt.xlabel(r'Recruitment Stretch $\lambda_A^R$', fontsize=14)
+    plt.ylabel('PDF', fontsize=14)
+    plt.grid(True)
+    plt.show()
+
 
 
 

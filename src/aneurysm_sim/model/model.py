@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import fsolve
 
 from aneurysm_sim.model.functions import (
-    v_sigma_elastin, v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
+    v_sigma_elastin, v_sigma_collagen_ad, v_sigma_collagen_me, v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
     v_pressure_elastin, v_pressure_collagen, v_pressure_collagen_me,
     v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p, calculate_min_attachment_stretch, 
     calculate_mode_attachment_stretch, d_fibroblast_dt, d_active_tgf_beta_dt, 
@@ -10,8 +10,7 @@ from aneurysm_sim.model.functions import (
     d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
     d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
     d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level, 
-    calculate_abr
+    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level
 )
 
 def simulate_arterial_stress_and_pressure(params):
@@ -20,6 +19,8 @@ def simulate_arterial_stress_and_pressure(params):
     sv_stretch_var = 0.55 + 0.01 * np.arange(n) # Stretch variable for simulation
 
     sv_stress_var_elastin = np.zeros(n)
+    sv_stress_var_collagen_me = np.zeros(n)
+    sv_stress_var_collagen_ad = np.zeros(n)
     sv_stress_var_collagen = np.zeros(n)
     sv_stress_var_muscle_a = np.zeros(n)
     sv_stress_var_muscle_p = np.zeros(n)
@@ -43,15 +44,16 @@ def simulate_arterial_stress_and_pressure(params):
         # Stresses
         sv_stress_var_elastin[i] = v_sigma_elastin(stretch, params)
         sv_stress_var_collagen[i] = v_sigma_collagen(stretch, params)
+        sv_stress_var_collagen_me[i] = v_sigma_collagen_me(stretch, params)
+        sv_stress_var_collagen_ad[i] = v_sigma_collagen_ad(stretch, params)
         sv_stress_var_muscle_a[i] = v_sigma_muscle_a(stretch, params)
         sv_stress_var_muscle_p[i] = v_sigma_muscle_p(stretch, params)
         sv_stress_var_muscle_t[i] = v_sigma_muscle_t(stretch, params)
 
-        sv_stress_var_total[i] = (
+        sv_stress_var_total[i] = max((
             sv_stress_var_elastin[i]
             + sv_stress_var_collagen[i]
-            + sv_stress_var_muscle_t[i]
-        )
+        ), 0)
 
         # Pressures
         sv_pressure_var_elastin[i] = max(v_pressure_elastin(stretch, params), 0)
@@ -73,6 +75,8 @@ def simulate_arterial_stress_and_pressure(params):
         
         # Stress variables
         'sv_stress_var_elastin': sv_stress_var_elastin,
+        'sv_stress_var_collagen_me': sv_stress_var_collagen_me,
+        'sv_stress_var_collagen_ad': sv_stress_var_collagen_ad,
         'sv_stress_var_collagen': sv_stress_var_collagen,
         'sv_stress_var_muscle_a': sv_stress_var_muscle_a, 
         'sv_stress_var_muscle_p': sv_stress_var_muscle_p,
@@ -160,10 +164,10 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     lambda_att_max[0]  = params.c_att_max_ad
     lambda_att_min[0]  = params.c_att_min_ad
     lambda_att_mode[0] = params.c_att_mod_ad
-    lambda_rec_max[0]  = params.c_rec_max_ad # params.c_lambda_sys / lambda_att_min[0]
-    lambda_rec_min[0]  = params.c_rec_min_ad # params.c_lambda_sys / lambda_att_max[0]
-    lambda_rec_mode[0] = params.c_rec_mod_ad # params.c_lambda_sys / lambda_att_mode[0]
-    lambda_c_max[0] = params.c_lambda_sys / lambda_rec_min[0]
+    lambda_rec_max[0]  = params.c_rec_max_ad 
+    lambda_rec_min[0]  = params.c_rec_min_ad
+    lambda_rec_mode[0] = params.c_rec_mod_ad 
+    lambda_c_max[0] = params.c_lambda_sys / lambda_rec_min[0] 
     lambda_c_min[0] = params.c_lambda_sys / lambda_rec_max[0]
     lambda_c_mode[0] = params.c_lambda_sys/  lambda_rec_mode[0]
     diameter[0] = 2*params.c_radius_tzero*params.c_lambda_sys
@@ -193,9 +197,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
 
         diameter[i] = 2 * params.c_radius_tzero * lambda_sys
-        # tau = params.tau_homeo * (params.c_diam_tzero_mm / diameter[i-1])**3
-        # eta = 1.0
-        # smc_concentration = calculate_vasodilator_concentration_ratio(eta, tau, params)
 
         if t < params.t_i0:
             collagen_me[i] = collagen_me[0]
@@ -234,8 +235,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
 
             if treatment and abs(t - params.t_treat) < dt:
                 active_tgf_beta[i] += params.tgf_spike_amount
-        
-    abr_score = calculate_abr(lambda_sys_array[-1], collagen_me[-1], elastin_me[-1], collagen_ad[-1], muscle_cells[-1], params)
 
     return {
         'time': time,
@@ -265,6 +264,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         'lambda_rec_mode': lambda_rec_mode,
         'lambd_c_max_history': lambd_c_max_history,
         'lambda_sys': lambda_sys_array,
-        'abr_score': abr_score
+        'final_lambda_sys': lambda_sys_array[-1],
     }
 
