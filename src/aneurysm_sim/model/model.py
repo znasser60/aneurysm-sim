@@ -1,17 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 
-from aneurysm_sim.model.functions import (
-    v_sigma_elastin, v_sigma_collagen_ad, v_sigma_collagen_me, v_sigma_collagen, v_sigma_muscle_a, v_sigma_muscle_p, v_sigma_muscle_t,
-    v_pressure_elastin, v_pressure_collagen, v_pressure_collagen_me,
-    v_pressure_collagen_ad, v_pressure_muscle_a, v_pressure_muscle_p, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, d_fibroblast_dt, d_active_tgf_beta_dt, 
-    d_collagen_dt, d_collagen_max_recruitment_stretch_ad_dt, d_collagen_min_recruitment_stretch_ad_dt, 
-    d_collagen_mode_recruitment_stretch_ad_dt, d_collagenase_dt, d_zymogen_dt, d_latent_tgf_beta_dt, 
-    d_timp_dt, d_procollagen_dt, calculate_immune_cell_level, d_medial_elastin_dt, d_medial_collagen_dt, 
-    d_collagenases_dt, d_elastases_dt, alpha_rate, calculate_max_attachment_stretch, calculate_min_attachment_stretch, 
-    calculate_mode_attachment_stretch, force_balance_equation, get_latent_tgf_beta_level
-)
+from aneurysm_sim.model import functions
 
 def simulate_arterial_stress_and_pressure(params):
 
@@ -42,13 +32,13 @@ def simulate_arterial_stress_and_pressure(params):
         stretch = sv_stretch_var[i]
 
         # Stresses
-        sv_stress_var_elastin[i] = v_sigma_elastin(stretch, params)
-        sv_stress_var_collagen[i] = v_sigma_collagen(stretch, params)
-        sv_stress_var_collagen_me[i] = v_sigma_collagen_me(stretch, params)
-        sv_stress_var_collagen_ad[i] = v_sigma_collagen_ad(stretch, params)
-        sv_stress_var_muscle_a[i] = v_sigma_muscle_a(stretch, params)
-        sv_stress_var_muscle_p[i] = v_sigma_muscle_p(stretch, params)
-        sv_stress_var_muscle_t[i] = v_sigma_muscle_t(stretch, params)
+        sv_stress_var_elastin[i] = functions.v_sigma_elastin(stretch, params)
+        sv_stress_var_collagen[i] = functions.v_sigma_collagen(stretch, params)
+        sv_stress_var_collagen_me[i] = functions.v_sigma_collagen_me(stretch, params)
+        sv_stress_var_collagen_ad[i] = functions.v_sigma_collagen_ad(stretch, params)
+        sv_stress_var_muscle_a[i] = functions.v_sigma_muscle_a(stretch, params)
+        sv_stress_var_muscle_p[i] = functions.v_sigma_muscle_p(stretch, params)
+        sv_stress_var_muscle_t[i] = functions.v_sigma_muscle_t(stretch, params)
 
         sv_stress_var_total[i] = max((
             sv_stress_var_elastin[i]
@@ -56,12 +46,12 @@ def simulate_arterial_stress_and_pressure(params):
         ), 0)
 
         # Pressures
-        sv_pressure_var_elastin[i] = max(v_pressure_elastin(stretch, params), 0)
-        sv_pressure_var_collagen[i] = v_pressure_collagen(stretch, params)
-        sv_pressure_var_collagen_me[i] = v_pressure_collagen_me(stretch, params)
-        sv_pressure_var_collagen_ad[i] = v_pressure_collagen_ad(stretch, params)
-        sv_pressure_var_muscle_p[i] = max(v_pressure_muscle_p(stretch, params), 0)
-        sv_pressure_var_muscle_a[i] = max(v_pressure_muscle_a(stretch, params), 0)
+        sv_pressure_var_elastin[i] = max(functions.v_pressure_elastin(stretch, params), 0)
+        sv_pressure_var_collagen[i] = functions.v_pressure_collagen(stretch, params)
+        sv_pressure_var_collagen_me[i] = functions.v_pressure_collagen_me(stretch, params)
+        sv_pressure_var_collagen_ad[i] = functions.v_pressure_collagen_ad(stretch, params)
+        sv_pressure_var_muscle_p[i] = max(functions.v_pressure_muscle_p(stretch, params), 0)
+        sv_pressure_var_muscle_a[i] = max(functions.v_pressure_muscle_a(stretch, params), 0)
         sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i]
 
         sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]                                            
@@ -93,18 +83,6 @@ def simulate_arterial_stress_and_pressure(params):
         'sv_pressure_var_collagen_me': sv_pressure_var_collagen_me,
         'sv_pressure_var_collagen_ad': sv_pressure_var_collagen_ad,
     }
-
-def simulate_elastin_degredation(params, degredation_factors):
-    """
-    TEST FUNCTION to simulate elastin degradation and its effect on arterial stress and pressure.
-    """
-    results_dict = {}
-    for degradation_factor in degredation_factors:
-        params.c_lambda_elastin *= degradation_factor
-        params.c_k_elastin *= degradation_factor
-        results = simulate_arterial_stress_and_pressure(params)
-        results_dict[f"{int(degradation_factor * 100)}% Elastin"] = results
-    return results_dict
 
 def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
@@ -158,7 +136,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     timp[0] = params.init_timp 
     latent_tgf_beta[0] = params.init_latent_tgf_beta 
     active_tgf_beta[0] = params.init_active_tgf_beta 
-    tgf_beta_level = get_latent_tgf_beta_level(params, genotype)
+    tgf_beta_level = functions.get_latent_tgf_beta_level(params, genotype)
 
     # Initialize collagen attachment and recruitment stretch parameters
     lambda_att_max[0]  = params.c_att_max_ad
@@ -178,7 +156,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         t = time[i]
 
         # Calculate the lambda_sys using fsolve to find the root of the force balance equation
-        lambda_sys = fsolve(force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], muscle_cells[i-1], params,))[0]
+        lambda_sys = fsolve(functions.force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], muscle_cells[i-1], params,))[0]
         lambda_sys_array[i] = lambda_sys
         
         lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1]
@@ -186,15 +164,15 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i-1]
         lambd_c_max_history.append(lambda_c_max[i])
 
-        lambda_att_max[i] = calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
-        lambda_att_min[i] = calculate_min_attachment_stretch(lambda_att_max[i], params)
-        lambda_att_mode[i] = calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
+        lambda_att_max[i] = functions.calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
+        lambda_att_min[i] = functions.calculate_min_attachment_stretch(lambda_att_max[i], params)
+        lambda_att_mode[i] = functions.calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
 
-        alpha = alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
+        alpha = functions.alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
 
-        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])
-        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
-        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
+        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * functions.d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])
+        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * functions.d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
+        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * functions.d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
 
         diameter[i] = 2 * params.c_radius_tzero * lambda_sys
 
@@ -215,23 +193,21 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             active_tgf_beta[i] = active_tgf_beta[0]
             lambda_sys_array[i] = lambda_sys_array[0]
         else: 
-            immune_cells[i] = calculate_immune_cell_level(t, params)
-            collagen_me[i] = collagen_me[i-1] + dt * d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)
-            elastin_me[i] = elastin_me[i-1] + dt * d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
-            collagenases[i] = collagenases[i-1] + dt * d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
-            elastases[i] = elastases[i-1] + dt * d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
+            immune_cells[i] = functions.calculate_immune_cell_level(t, params)
+            collagen_me[i] = collagen_me[i-1] + dt * functions.d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)
+            elastin_me[i] = elastin_me[i-1] + dt * functions.d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
+            collagenases[i] = collagenases[i-1] + dt * functions.d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
+            elastases[i] = elastases[i-1] + dt * functions.d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
 
-            fibroblast[i] = fibroblast[i-1] + dt * d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
-            # muscle_cells[i] = muscle_cells[i-1] + dt * d_muscle_cells_dt(muscle_cells[i-1], lambda_sys, smc_concentration, tau, params)
-            collagen_ad[i] = collagen_ad[i-1] + dt * d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
-            procollagen[i] = procollagen[i-1] + dt * d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
-            collagenase[i] = collagenase[i-1] + dt * d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
-            zymogen[i] = zymogen[i-1] + dt * d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
-            timp[i] = timp[i-1] + dt * d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
-            latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
+            fibroblast[i] = fibroblast[i-1] + dt * functions.d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
+            collagen_ad[i] = collagen_ad[i-1] + dt * functions.d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
+            procollagen[i] = procollagen[i-1] + dt * functions.d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
+            collagenase[i] = collagenase[i-1] + dt * functions.d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
+            zymogen[i] = zymogen[i-1] + dt * functions.d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
+            timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
+            latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
                                                                                 fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], lambda_att_max[i-1], tgf_beta_level, params)
-            
-            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
+            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
 
             if treatment and abs(t - params.t_treat) < dt:
                 active_tgf_beta[i] += params.tgf_spike_amount
