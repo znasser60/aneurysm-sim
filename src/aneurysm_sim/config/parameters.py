@@ -23,7 +23,7 @@ class ArterialParameters:
         self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0
 
         # Collagen ratio
-        self.c_collagen_ratio_ad_me = 8
+        self.c_collagen_ratio_ad_me = 8.0
 
         # Media attachment stretches
         self.c_att_min_me = 1.00001
@@ -183,7 +183,7 @@ class ArterialParameters:
         self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
 
         # Set initial values for variables 
-        self.alpha_init = 1.15
+        self.alpha_init = 1.15 # Initial rate 
         self.init_fibroblast = 1.0
         self.init_muscle_cells = 0 # 1.0
         self.init_collagen_ad = 1.0
@@ -196,8 +196,8 @@ class ArterialParameters:
         self.init_timp = 1.0
         self.init_collagenases = 0.0
         self.init_elastases = 0.0
-        self.init_latent_tgf_beta = 1e-3
-        self.init_active_tgf_beta = 1e-3
+        self.init_latent_tgf_beta = 0
+        self.init_active_tgf_beta = 0
 
         # TGF-Beta levels for different genotypes, and treatment effects
         self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}

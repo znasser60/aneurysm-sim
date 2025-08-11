@@ -174,6 +174,7 @@ def d_collagenases_dt(immune_cells, collagenases, params):
 def d_elastases_dt(immune_cells, elastases, params):
     """
     Elastases ODE: Equation 9 from Aparicio et al. 2016.
+    Immune cells will come from calculate_immune_cell_level(t, params).
     """
     return params.r_pc1 * immune_cells - params.r_pc2 * elastases
 
@@ -249,7 +250,7 @@ def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, la
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
     """
     Numerical implementation of Equation 18 from Aparício et al. (2016)
-    - Uses a moving average over T_at years (N steps)
+    Uses a moving average over T_at years (N steps)
     """
     N = int(params.remodel_time / dt)
     if t_idx < N:
@@ -291,24 +292,33 @@ def alpha_rate(fibroblast, collagen, collagenase, params):
 
 def d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max, lambda_att_max):
     """
-    Equation 21
+    Equation 21 from Aparicio et al. 2016.
+    This calculates the rate of change of the minimum recruitment stretch for collagen in the adventitia.
     """
     return alpha * (lambda_c_max - lambda_att_max) / lambda_att_max
 
 def d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min, lambda_att_min):
     """
-    Equation 22
+    Equation 22 from Aparicio et al. 2016.
+    This calculates the rate of change of the maximum recruitment stretch for collagen in the adventitia.
     """
     return alpha * (lambda_c_min - lambda_att_min) / lambda_att_min
 
 def d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode, lambda_att_mode):
     """
-    Equation 23
+    Equation 23 from Aparicio et al. 2016.
+    This calculates the rate of change of the mode recruitment stretch for collagen in the adventitia.
     """
     return alpha * (lambda_c_mode - lambda_att_mode) / lambda_att_mode
 
 # Add TGF-beta1 protein level function
 def get_latent_tgf_beta_level(params, genotype = None):
+    """
+    Returns the TGF-beta1 protein level based on the genotype.
+
+    Args:
+        genotype (str, optional): The genotype of the patient, e.g., "TT", "TC", "CC".
+    """
     levels = params.tgf_beta_levels
     if genotype is None:
         return 1.0

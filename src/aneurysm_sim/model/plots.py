@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
-    Plot the pressure vs stretch with a zoomed-in view.
+    Plot the pressure vs stretch of the artery with a zoomed-in view.
     """
 
     sv_stretch_var = results["sv_stretch_var"]
@@ -30,7 +30,8 @@ def plot_pressure_vs_stretch(results, n_zoom=120):
 
 def plot_pressure_vs_diameter(results, n_zoom=120): 
     """
-    Plot the pressure vs diameter with a zoomed-in view."""
+    Plot the pressure vs diameter of the artery with a zoomed-in view.
+    """
 
     sv_diam_var = results["sv_diam_var"]
     sv_pressure_var = results["sv_pressure_var"]
@@ -85,8 +86,7 @@ def plot_stretch_vs_stress(results, n_zoom=120):
 
 def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel=False, ylabel=False):
     """
-    Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta
-    into the supplied Axes (or create one if none provided).
+    Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
     """
 
     if ax is None:
@@ -128,8 +128,7 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     """
-    Arrange 3 genotype plots in a 2x2 grid with the top-right
-    subplot reserved for the legend box.
+    Plot normalised densities for each genotype (TT, TC, CC) in a 2x2 grid.
     """
     fig = plt.figure(figsize=(16, 12))
     gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1], width_ratios=[1, 1])
@@ -152,6 +151,9 @@ def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     return fig
 
 def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
+    """
+    Plot the systolic stretch over time for each genotype.
+    """
     fig, ax = plt.subplots(figsize=(12, 8))
     
     ax.plot(results_tt["time"], results_tt["lambda_sys"], label="TT", color='red')
@@ -159,11 +161,13 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     ax.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
     
     # ax.set_title("Systolic Stretch Over Time by Genotype (with treatment)", fontsize=16, weight='bold')
-    ax.set_xlabel("Time (years)", fontsize=16)
-    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$", fontsize=16)
+    ax.set_xlabel("Time (years)", fontsize=20)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$", fontsize=20)
     ax.grid(True, linestyle='--', alpha=0.4)
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
     ax.set_xlim(40, 75)
-    ax.set_ylim(1.3, 1.5)
+    # ax.set_ylim(1.3, 1.5)
     ax.legend(fontsize=12)
     ax.axvline(45, color='black', linestyle='--', linewidth=1.5)
     fig.tight_layout()
@@ -190,7 +194,7 @@ def extract_aucs(results_dict, components, treatment_labels):
 def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labels=("No Treatment", "Treatment")):
     """
     Plot bar charts of AUC values for selected normalised densities, comparing
-    treatment vs. no-treatment, for each genotype (TT, TC, CC), with a truly shared y-axis.
+    treatment vs. no-treatment, for each genotype (TT, TC, CC).
     """
 
     components = [
@@ -203,6 +207,9 @@ def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labe
     aucs_tt = extract_aucs(results_tt, components, treatment_labels)
     aucs_tc = extract_aucs(results_tc, components, treatment_labels)
     aucs_cc = extract_aucs(results_cc, components, treatment_labels)
+    print("AUCs (TT):", aucs_tt)
+    print("AUCs (TC):", aucs_tc)
+    print("AUCs (CC):", aucs_cc)
 
     fig, axes = plt.subplots(1, 3, figsize=(22, 7), sharey=True)
 
