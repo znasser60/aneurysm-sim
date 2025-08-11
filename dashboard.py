@@ -1,3 +1,5 @@
+'''This is a work in progress Streamlit dashboard for aneurysm simulation.'''
+
 import streamlit as st
 import plotly.graph_objects as go
 
