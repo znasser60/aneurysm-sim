@@ -207,9 +207,6 @@ def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labe
     aucs_tt = extract_aucs(results_tt, components, treatment_labels)
     aucs_tc = extract_aucs(results_tc, components, treatment_labels)
     aucs_cc = extract_aucs(results_cc, components, treatment_labels)
-    print("AUCs (TT):", aucs_tt)
-    print("AUCs (TC):", aucs_tc)
-    print("AUCs (CC):", aucs_cc)
 
     fig, axes = plt.subplots(1, 3, figsize=(22, 7), sharey=True)
 
