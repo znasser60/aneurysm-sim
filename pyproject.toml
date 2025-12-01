@@ -1,9 +1,9 @@
 [project]
 name = "aneurysm-sim"
 version = "0.1.0"
-description = "A simulation project for arterial aneurysms."
+description = "A simulation project for intracranial aneurysms."
 authors = [
-    { name="Zainab Nasser", email="youremail@example.com" }
+    { name="Zainab Nasser", email="znnasser01@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.8"

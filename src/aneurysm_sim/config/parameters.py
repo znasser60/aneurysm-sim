@@ -199,8 +199,10 @@ class ArterialParameters:
         self.init_latent_tgf_beta = 0
         self.init_active_tgf_beta = 0
 
-        # TGF-Beta levels for different genotypes, and treatment effects
+        # TGF-Beta levels for different genotypes (experimentally derived - provided by the UMC Utrecht)
         self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
+
+        # TGF-Beta treatment spike
         self.tgf_spike_amount = 1.0
 
 
