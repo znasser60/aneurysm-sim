@@ -130,7 +130,7 @@ class ArterialParameters:
         # Smooth muscle cell rates
         self.beta1_smc = 1.0
         self.beta2_smc = 1.0
-        self.beta_wss_smc = 10 # or 10
+        self.beta_wss_smc = 10 # or 500
         self.tau_homeo = 1.0 
 
         # # Muscle cell rates 
@@ -191,7 +191,7 @@ class ArterialParameters:
         # Set initial values for variables 
         self.alpha_init = 1.15 # Initial rate 
         self.init_fibroblast = 1.0
-        self.init_muscle_cells = 0
+        self.init_muscle_cells = 1.0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
         self.init_elastin_ad = 1.0

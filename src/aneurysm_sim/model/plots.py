@@ -1,14 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from aneurysm_sim.model import model
-from aneurysm_sim.config.parameters import ArterialParameters as params
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
     Plot the pressure vs stretch of the artery with a zoomed-in view.
     """
-
     sv_stretch_var = results["sv_stretch_var"]
     sv_pressure_var = results["sv_pressure_var"]
     sv_pressure_var_elastin = results["sv_pressure_var_elastin"]
@@ -94,7 +91,6 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
         xlabel, ylabel = True, True
-
 
     time = results["time"]
 
