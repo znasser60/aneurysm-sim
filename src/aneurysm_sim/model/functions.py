@@ -21,6 +21,7 @@ def v_ge(x, params):
 
 def v_sigma_elastin(x, params):
     return x**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * x**4)))
+# ----------------- TODO: CHANGE THESE USING MANDALTSI PHD 
 
 def v_sigma_muscle_p(x, params):
     return v_lambda_muscle(x, params)**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * v_lambda_muscle(x, params)**4))
@@ -30,6 +31,67 @@ def v_sigma_muscle_a(x, params):
 
 def v_sigma_muscle_t(x, params):
     return v_sigma_muscle_a(x, params) + v_sigma_muscle_p(x, params)
+
+# ------------------
+# From Mandaltsi (to be improved)
+def calculate_wss_for_stretch(x, params):
+    """
+    Helper to calculate WSS (tau) at a specific stretch x.
+    Formula: tau = 4 * mu * Q / (pi * r^3)
+    """
+    current_radius = params.c_radius_tzero * x
+    Q = getattr(params, 'Q', 1.9635e-5) 
+    mu = getattr(params, 'mu', 0.003)  
+    
+    return (4 * Q * mu) / (np.pi * current_radius**3)
+
+def calculate_vasodiltor_conc_ratio(tau, tau_homeo, params): 
+    damage_ratio = np.random.rand()
+    return damage_ratio * (params.c_vasodil_conc_basal - params.c_vasodil_conc_shear * (tau-tau_homeo)/tau_homeo)
+
+def calculate_muscle_activation(c, params): 
+    '''
+    Represented as T(C) in Mandaltsi PhD
+    '''
+    return params.k_active_smc * (1 - np.exp**(-c**2))
+
+def sigma_active_muscle(lam_smc, tau, tau_homeo, params):
+    '''
+    From Mandaltsi PhD pg 43
+
+    Page 49: K_SMC^active = 0.12MPa -> material parameter for the active response of SMCs
+    K_SMC^passive = 11.8kPa
+    '''
+    c = calculate_vasodiltor_conc_ratio(tau, tau_homeo, params)
+    t_c = calculate_muscle_activation(c, params)
+    if lam_smc >= params.lambda_smc_zero:
+        return 0.0
+    
+    length_term = 1 - ((params.lambda_smc_max - lam_smc) / (params.lambda_smc_zero - lam_smc))**2
+
+    return c * t_c * length_term
+
+def sigma_passive_muscle(lam_smc, params):
+    """
+    Passive SMC Stress (Neo-Hookean)
+    = K * lambda^2 * (1 - 1/(lambda_z^2 * lambda^4))
+    Based on Mandaltsi Page 45 (referencing Eq 2.4 structure).
+    """
+    term1 = params.k_passive_smc * (lam_smc**2)
+    term2 = 1 - (1 / (params.c_lambda_z**2 * lam_smc**4))
+    return term1 * term2
+
+def sigma_muscle_total(x, params): 
+    
+    lam_smc = v_lambda_muscle(x, params)
+    sigma_p = sigma_passive_muscle(lam_smc, params)
+    tau_current = calculate_wss_for_stretch(x, params)
+    tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
+    sigma_a = sigma_active_muscle(lam_smc, tau_current, tau_homeo, params)
+    
+    return sigma_p + sigma_a
+
+# -----------------
 
 def v_sigma_collagen_me_0(x):
     return 0 * x

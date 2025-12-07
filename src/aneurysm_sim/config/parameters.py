@@ -176,6 +176,14 @@ class ArterialParameters:
         self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
         self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
 
+        # Smooth muscle cell rates 
+        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
+        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
+        self.lambda_smc_max = 1.4    # Stretch where active force is max
+        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
+        
+
+
         # Mechanical model parameters
         self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
         self.t_sim = 90              # Simulation time in years
