@@ -130,16 +130,15 @@ class ArterialParameters:
         # Smooth muscle cell rates
         self.beta1_smc = 1.0
         self.beta2_smc = 1.0
-        self.beta_wss_smc = 500
+        self.beta_wss_smc = 10 # or 10
         self.tau_homeo = 1.0 
 
-
-        # Muscle cell rates 
-        self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
-        self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
-        self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
-        self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
-        self.r_m5 = 0# 1.0      # Muscle cell death rate (years^-1)
+        # # Muscle cell rates 
+        # self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
+        # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
+        # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
+        # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
+        # self.r_m5 = 0 # 1.0      # Muscle cell death rate (years^-1)
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
@@ -181,8 +180,7 @@ class ArterialParameters:
         self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
         self.lambda_smc_max = 1.4    # Stretch where active force is max
         self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
-        
-
+        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
 
         # Mechanical model parameters
         self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
@@ -193,7 +191,7 @@ class ArterialParameters:
         # Set initial values for variables 
         self.alpha_init = 1.15 # Initial rate 
         self.init_fibroblast = 1.0
-        self.init_muscle_cells = 0 # 1.0
+        self.init_muscle_cells = 0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
         self.init_elastin_ad = 1.0

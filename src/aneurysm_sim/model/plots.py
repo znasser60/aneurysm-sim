@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from aneurysm_sim.model import model
+from aneurysm_sim.config.parameters import ArterialParameters as params
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
@@ -109,6 +111,7 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     ax.plot(time, results["immune_cells"],  color='red',     marker='o',  markevery=300, label='Immune Cells',   linewidth=3)
     ax.plot(time, results["latent_tgf_beta"], color='green', linestyle='--', marker='s', markevery=300, label='Latent TGF-β',linewidth=1)
     ax.plot(time, results["active_tgf_beta"], color='green', linestyle='-',  marker='s', markevery=300, label='Active TGF-β',linewidth=1)
+    ax.plot(time, results["muscle_cells"], color='black', linestyle='-', markevery=300, label='Muscle Cells',linewidth=1)
 
     if title:
         ax.set_title(title, fontsize=14, weight='bold')
@@ -278,8 +281,4 @@ def plot_rec_dist(lambda_rec_min, lambda_rec_mode, lambda_rec_max):
     plt.ylabel('PDF', fontsize=14)
     plt.grid(True)
     plt.show()
-
-
-
-
 

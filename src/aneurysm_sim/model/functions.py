@@ -53,7 +53,7 @@ def calculate_muscle_activation(c, params):
     '''
     Represented as T(C) in Mandaltsi PhD
     '''
-    return params.k_active_smc * (1 - np.exp**(-c**2))
+    return params.k_active_smc * (1 - np.exp(-c**2))
 
 def sigma_active_muscle(lam_smc, tau, tau_homeo, params):
     '''
@@ -82,7 +82,6 @@ def sigma_passive_muscle(lam_smc, params):
     return term1 * term2
 
 def sigma_muscle_total(x, params): 
-    
     lam_smc = v_lambda_muscle(x, params)
     sigma_p = sigma_passive_muscle(lam_smc, params)
     tau_current = calculate_wss_for_stretch(x, params)
@@ -91,6 +90,16 @@ def sigma_muscle_total(x, params):
     
     return sigma_p + sigma_a
 
+def d_muscle_cells_dt(x, muscle_cells, params): 
+    lam_smc = v_lambda_muscle(x, params)
+    tau_current = calculate_wss_for_stretch(x, params)
+    tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
+    c = calculate_vasodiltor_conc_ratio(tau_current, tau_homeo, params)
+    term1 = params.beta1_smc * (lam_smc - params.c_lambda_muscle_att)/params.c_lambda_muscle_att
+    term2 = params.beta2_smc * (c - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal
+    term3 = params.beta_wss_smc * (tau_current-tau_homeo)/tau_homeo
+    return muscle_cells*(term1 + term2 + term3)
+    
 # -----------------
 
 def v_sigma_collagen_me_0(x):
@@ -197,7 +206,7 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_elastin = v_sigma_elastin(lambda_sys, params)
     stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
     stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    stress_muscle = v_sigma_muscle_t(lambda_sys, params)
+    stress_muscle = sigma_muscle_total(lambda_sys, params)
     mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
     calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
 
