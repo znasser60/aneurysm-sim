@@ -192,6 +192,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             latent_tgf_beta[i] = latent_tgf_beta[0]
             active_tgf_beta[i] = active_tgf_beta[0]
             lambda_sys_array[i] = lambda_sys_array[0]
+
         else: 
             immune_cells[i] = functions.calculate_immune_cell_level(t, params)
             collagen_me[i] = collagen_me[i-1] + dt * functions.d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)

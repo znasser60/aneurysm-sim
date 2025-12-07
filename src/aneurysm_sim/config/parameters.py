@@ -138,7 +138,7 @@ class ArterialParameters:
         # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
         # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
         # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
-        # self.r_m5 = 0 # 1.0      # Muscle cell death rate (years^-1)
+        self.r_m5 = 0.5      # Muscle cell death rate (years^-1)
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
@@ -189,7 +189,7 @@ class ArterialParameters:
         self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
 
         # Set initial values for variables 
-        self.alpha_init = 1.15 # Initial rate 
+        self.alpha_init = 1.15 
         self.init_fibroblast = 1.0
         self.init_muscle_cells = 1.0
         self.init_collagen_ad = 1.0
