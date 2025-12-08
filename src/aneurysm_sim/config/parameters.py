@@ -86,6 +86,7 @@ class ArterialParameters:
         )
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
+        # self.c_k_collagen = 11.95e6
 
         # Media collagen Cauchy stress
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
@@ -130,15 +131,13 @@ class ArterialParameters:
         # Smooth muscle cell rates
         self.beta1_smc = 1.0
         self.beta2_smc = 1.0
-        self.beta_wss_smc = 10 # or 500
+        self.beta_wss_smc = 1.0 # or 500
         self.tau_homeo = 1.0 
-
-        # # Muscle cell rates 
-        # self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
-        # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
-        # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
-        # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
-        self.r_m5 = 0.5      # Muscle cell death rate (years^-1)
+        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
+        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
+        self.lambda_smc_max = 1.4    # Stretch where active force is max
+        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
+        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
@@ -174,13 +173,6 @@ class ArterialParameters:
         self.r_beta1 = 0.5           # Baseline latent TGF-Beta activation rate
         self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
         self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
-
-        # Smooth muscle cell rates 
-        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
-        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
-        self.lambda_smc_max = 1.4    # Stretch where active force is max
-        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
-        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
 
         # Mechanical model parameters
         self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 

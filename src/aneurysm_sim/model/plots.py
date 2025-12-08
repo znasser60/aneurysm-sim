@@ -107,7 +107,7 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     ax.plot(time, results["immune_cells"],  color='red',     marker='o',  markevery=300, label='Immune Cells',   linewidth=3)
     ax.plot(time, results["latent_tgf_beta"], color='green', linestyle='--', marker='s', markevery=300, label='Latent TGF-β',linewidth=1)
     ax.plot(time, results["active_tgf_beta"], color='green', linestyle='-',  marker='s', markevery=300, label='Active TGF-β',linewidth=1)
-    ax.plot(time, results["muscle_cells"], color='black', linestyle='-', markevery=300, label='Muscle Cells',linewidth=1)
+    ax.plot(time, results["muscle_cells"], color='black', linestyle='-', markevery=300, label='Muscle Cells',linewidth=3)
 
     if title:
         ax.set_title(title, fontsize=14, weight='bold')
@@ -161,7 +161,7 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     
     # ax.set_title("Systolic Stretch Over Time by Genotype (with treatment)", fontsize=16, weight='bold')
     ax.set_xlabel("Time (years)", fontsize=20)
-    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$", fontsize=20)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$ (mm)", fontsize=20)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.tick_params(axis='x', labelsize=16)
     ax.tick_params(axis='y', labelsize=16)

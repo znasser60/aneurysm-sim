@@ -178,13 +178,13 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
 
         if t < params.t_i0:
             collagen_me[i] = collagen_me[0]
+            collagen_ad[i] = collagen_ad[0]
             elastin_me[i] = elastin_me[0]
             collagenases[i] = collagenases[0]
             elastases[i] = elastases[0]
             immune_cells[i] = immune_cells[0]
             fibroblast[i] = fibroblast[0]
             muscle_cells[i] = muscle_cells[0]
-            collagen_ad[i] = collagen_ad[0]
             procollagen[i] = procollagen[0]
             collagenase[i] = collagenase[0]
             zymogen[i] = zymogen[0]
@@ -196,12 +196,12 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         else: 
             immune_cells[i] = functions.calculate_immune_cell_level(t, params)
             collagen_me[i] = collagen_me[i-1] + dt * functions.d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)
+            collagen_ad[i] = collagen_ad[i-1] + dt * functions.d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
             elastin_me[i] = elastin_me[i-1] + dt * functions.d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
             collagenases[i] = collagenases[i-1] + dt * functions.d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
             elastases[i] = elastases[i-1] + dt * functions.d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
             muscle_cells[i] = muscle_cells[i-1] + dt * functions.d_muscle_cells_dt(lambda_sys, muscle_cells[i-1], params)
             fibroblast[i] = fibroblast[i-1] + dt * functions.d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
-            collagen_ad[i] = collagen_ad[i-1] + dt * functions.d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
             procollagen[i] = procollagen[i-1] + dt * functions.d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
             collagenase[i] = collagenase[i-1] + dt * functions.d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
             zymogen[i] = zymogen[i-1] + dt * functions.d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)

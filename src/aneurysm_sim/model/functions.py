@@ -101,7 +101,6 @@ def d_muscle_cells_dt(x, muscle_cells, params):
     return muscle_cells*(term1 + term2 + term3)
     
 # -----------------
-
 def sigma_collagen_me_0(x):
     return 0 * x
 
