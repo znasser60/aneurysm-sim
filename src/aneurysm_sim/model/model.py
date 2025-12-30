@@ -38,7 +38,7 @@ def simulate_arterial_stress_and_pressure(params):
         sv_stress_var_collagen_ad[i] = functions.sigma_collagen_ad(stretch, params)
         # sv_stress_var_muscle_a[i] = functions.sigma_muscle_a(stretch, params)
         # sv_stress_var_muscle_p[i] = functions.sigma_muscle_p(stretch, params)
-        sv_stress_var_muscle_t[i] = functions.sigma_muscle_total(stretch, params)
+        sv_stress_var_muscle_t[i] = functions.sigma_muscle_t(stretch, params)
 
         sv_stress_var_total[i] = max((
             sv_stress_var_elastin[i]
@@ -167,7 +167,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         lambda_att_max[i] = functions.calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
         lambda_att_min[i] = functions.calculate_min_attachment_stretch(lambda_att_max[i], params)
         lambda_att_mode[i] = functions.calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
-
         alpha = functions.alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
 
         lambda_rec_min[i] = lambda_rec_min[i-1] + dt * functions.d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])

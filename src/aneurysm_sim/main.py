@@ -40,8 +40,9 @@ def main():
 
     # Run only the selected plots
     if not args.plot:
-        print("No plot selected. Use --plot to specify one or more plots.")
-        return
+        plots.plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc)
+        # print("No plot selected. Use --plot to specify one or more plots.")
+        # return
 
     for plot_name in args.plot:
         if plot_name == "stretch_vs_stress":
