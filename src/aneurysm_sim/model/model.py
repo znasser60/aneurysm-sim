@@ -199,15 +199,17 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             elastin_me[i] = elastin_me[i-1] + dt * functions.d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
             collagenases[i] = collagenases[i-1] + dt * functions.d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
             elastases[i] = elastases[i-1] + dt * functions.d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
-            muscle_cells[i] = muscle_cells[i-1] + dt * functions.d_muscle_cells_dt(lambda_sys, muscle_cells[i-1], params)
+            muscle_cells[i] = muscle_cells[i-1] + dt * functions.d_muscle_cells_dt(lambda_sys, muscle_cells[i-1], elastin_me[i-1], immune_cells[i-1], params)
             fibroblast[i] = fibroblast[i-1] + dt * functions.d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
             procollagen[i] = procollagen[i-1] + dt * functions.d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
             collagenase[i] = collagenase[i-1] + dt * functions.d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
             zymogen[i] = zymogen[i-1] + dt * functions.d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
             timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
             latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
-                                                                                fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], lambda_att_max[i-1], tgf_beta_level, params)
-            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
+                                                                                fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], 
+                                                                                lambda_att_max[i-1], tgf_beta_level, params)
+            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], 
+                                                                                            fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
 
             if treatment and abs(t - params.t_treat) < dt:
                 active_tgf_beta[i] += params.tgf_spike_amount

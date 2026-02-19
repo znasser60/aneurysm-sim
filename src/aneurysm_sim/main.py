@@ -13,8 +13,8 @@ def main():
         help="Which plot(s) to run. Options: stretch_vs_stress, att_dist, rec_dist, "
              "norm_density, stretch_time, norm_density_treat, stretch_time_treat, auc_bars"
     )
+    
     args = parser.parse_args()
-
     params = ArterialParameters()
 
     results = model.simulate_arterial_stress_and_pressure(params)
@@ -40,7 +40,7 @@ def main():
 
     # Run only the selected plots
     if not args.plot:
-        plots.plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc)
+        plots.plot_normalised_densities_by_genotype(results_treat_tt, results_treat_tc, results_treat_cc)
         # print("No plot selected. Use --plot to specify one or more plots.")
         # return
 

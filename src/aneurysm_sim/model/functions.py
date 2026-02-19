@@ -7,6 +7,9 @@ def lambda_collagen(x, params):
 def lambda_muscle(x, params):
     return x / params.c_lambda_muscle 
 
+def lambda_elastin(x, params):
+    return x / params.c_lambda_elastin
+
 def v_m(x, params): 
     return x / params.c_rec_muscle
 
@@ -19,14 +22,20 @@ def ge_muscle(x, params):
 def v_ge(x, params):
     return (x**2 - 1) / 2
 
+# def sigma_elastin(x, params):
+#     return x**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * x**4)))
+
 def sigma_elastin(x, params):
-    return x**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * x**4)))
+    return lambda_elastin(x, params)**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * lambda_elastin(x, params)**4)))
 
 def sigma_muscle_p(x, params):
     return lambda_muscle(x, params)**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * lambda_muscle(x, params)**4))
 
+# def sigma_muscle_p(x, params):
+#     return x**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * x**4))
+
 def sigma_muscle_a(x, params):
-    return params.c_vasodil_conc * params.c_k_muscle_a * v_m(x, params) * (1 - ((params.c_musc_mean - v_m(x, params)) / (params.c_musc_mean - params.c_musc_min))**2)
+    return params.c_vasodil_conc * params.c_k_muscle_a * lambda_muscle(x, params) * (1 - ((params.c_musc_mean - lambda_muscle(x, params)) / (params.c_musc_mean - params.c_musc_min))**2)
 
 def sigma_muscle_t(x, params):
     return (sigma_muscle_a(x, params) + sigma_muscle_p(x, params))
@@ -193,6 +202,26 @@ def pressure_collagen_ad(x, params):
 
 # New equations from Aparicio et al. start here: 
 # Force balance equation 
+# def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
+#     """
+#     Force balance equation for transmural pressure.
+#     Returns difference between calculated and target pressure
+#     to be able to minimize the difference between the two 
+#     using fsolve().
+#     """
+#     lambda_sys = lambda_sys_guess[0]
+
+#     # Individual stresses
+#     stress_elastin = sigma_elastin(lambda_sys, params)
+#     stress_collagen_me = sigma_collagen_me(lambda_sys, params)
+#     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
+#     stress_muscle = sigma_muscle_t(lambda_sys, params)
+#     mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
+#     calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+
+#     # Return residual from target pressure
+#     return calculated_pressure - params.c_pressure_sys 
+
 def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
     """
     Force balance equation for transmural pressure.
@@ -207,8 +236,8 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_collagen_me = sigma_collagen_me(lambda_sys, params)
     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
     stress_muscle = sigma_muscle_t(lambda_sys, params)
-    mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
-    calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+    mass_density_mult = params.c_thickness_me*(mE_M * stress_elastin) + params.c_thickness_me*(mC_M * stress_collagen_me) + params.c_thickness_ad*(mC_A * stress_collagen_ad) + params.c_thickness_me*(mM * stress_muscle)
+    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
 
     # Return residual from target pressure
     return calculated_pressure - params.c_pressure_sys 
@@ -238,7 +267,7 @@ def d_medial_collagen_dt(collagenases, collagen_me, params):
 def d_collagenases_dt(immune_cells, collagenases, params): 
     """
     Collagenases ODE: Equation 9 from Aparicio et al. 2016
-    Immune cells will come from calculate_immune_cell_level(t, params)
+    Immune cells will come from calculate_immune_cell_level(t, params) 
     """
     return params.r_pc1 * immune_cells - params.r_pc2 * collagenases
 
@@ -317,15 +346,16 @@ def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, la
     """
     return (params.r_beta1  + params.r_beta2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast) * latent_tgf_beta - params.r_beta3 * tgf_beta
 
-def d_muscle_cells_dt(x, mM, params):
-    # x is the current stretch from the force balance
+def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
+    """
+    Smooth Muscle Cells ODE: Simplified from Mandaltsi paper 
+    SMCs proliferate with increased stretch, and degrade when medial elastin degrades
+    """ 
     lam_m = lambda_muscle(x, params)
-    
-    # Deviation from the 'attachment' or 'homeostatic' stretch
-    epsilon = (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att
-    
-    # Mathematical Law: dm/dt = growth_constant * error * current_mass
-    return -params.beta1_smc * epsilon * mM
+    epsilon_stretch = (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att
+    epsilon_elastin = (elastin_me - params.init_elastin_me)/params.init_elastin_me
+    epsilon_immune = - (immune_cells - params.i_0)
+    return muscle_cells * (params.beta1_smc * epsilon_stretch + params.beta2_smc * epsilon_elastin + params.beta3_smc * epsilon_immune)
 
 # Collagen remodeling I: 
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
@@ -404,3 +434,29 @@ def get_latent_tgf_beta_level(params, genotype = None):
     if genotype is None:
         return 1.0
     return levels.get(genotype.upper(), 1.0)
+
+# def get_smc_level(params, polygenic_score = None): 
+#     '''
+#     From loadborne proportions in Parameters: 
+#     ORIGINAL MODEL: Elastin: 50%, Muscle P: 20%, Muscle A: 20%, Collagen: 10%
+
+#     Args: 
+#         polygenic_score (int, optional): The SMC polygenic score of the patient (0, 1, 2, 3, 4+)
+#     '''
+#     smc_frac = params.smc_mean_fraction
+#     base_smc_frac = smc_frac.get(0)
+#     if polygenic_score is None: 
+#         return base_smc_frac
+#     return smc_frac.get(min(polygenic_score, 4))
+
+# def calculate_load_borne_proportions(params, polygenic_score = None): 
+#     """
+#     As a placeholder, I am assuming that the collagen:elastin ratio is 2:1. 
+#     It is documented that cerebral arteries have less elastin than other arteries or 
+#     vessels in the body. Currently searching for data or papers to support this. 
+#     """
+#     load_borne_muscle_p = get_smc_level(params, polygenic_score) / 2
+#     load_borne_muscle_a = get_smc_level(params, polygenic_score) / 2
+#     load_borne_elastin = (1/3) * (1 - (load_borne_muscle_p + load_borne_muscle_a)) 
+#     load_borne_collagen = 2 * load_borne_elastin
+#     return [load_borne_muscle_p, load_borne_muscle_a, load_borne_elastin, load_borne_collagen]
