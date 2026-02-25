@@ -22,94 +22,17 @@ def ge_muscle(x, params):
 def v_ge(x, params):
     return (x**2 - 1) / 2
 
-# def sigma_elastin(x, params):
-#     return x**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * x**4)))
-
 def sigma_elastin(x, params):
     return lambda_elastin(x, params)**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * lambda_elastin(x, params)**4)))
 
 def sigma_muscle_p(x, params):
     return lambda_muscle(x, params)**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * lambda_muscle(x, params)**4))
 
-# def sigma_muscle_p(x, params):
-#     return x**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * x**4))
-
 def sigma_muscle_a(x, params):
     return params.c_vasodil_conc * params.c_k_muscle_a * lambda_muscle(x, params) * (1 - ((params.c_musc_mean - lambda_muscle(x, params)) / (params.c_musc_mean - params.c_musc_min))**2)
 
 def sigma_muscle_t(x, params):
     return (sigma_muscle_a(x, params) + sigma_muscle_p(x, params))
-
-# # ------------------
-# # From Mandaltsi (to be improved)
-# def calculate_wss_for_stretch(x, params):
-#     """
-#     Helper to calculate WSS (tau) at a specific stretch x.
-#     Formula: tau = 4 * mu * Q / (pi * r^3)
-#     """
-#     #TODO: Potentially go 
-#     current_radius = params.c_radius_tzero * x
-#     Q = getattr(params, 'Q', 1.9635e-5) 
-#     mu = getattr(params, 'mu', 0.003)  
-    
-#     return (4 * Q * mu) / (np.pi * current_radius**3)
-
-# def calculate_vasodiltor_conc_ratio(tau, tau_homeo, params): 
-#     damage_ratio = np.random.rand()
-#     return damage_ratio * (params.c_vasodil_conc_basal - params.c_vasodil_conc_shear * (tau-tau_homeo)/tau_homeo)
-
-# def calculate_muscle_activation(c, params): 
-#     '''
-#     Represented as T(C) in Mandaltsi PhD
-#     '''
-#     return params.k_active_smc * (1 - np.exp(-c**2))
-
-# def sigma_active_muscle(lam_smc, tau, tau_homeo, params):
-#     '''
-#     From Mandaltsi PhD pg 43
-
-#     Page 49: K_SMC^active = 0.12MPa -> material parameter for the active response of SMCs
-#     K_SMC^passive = 11.8kPa
-#     '''
-#     c = calculate_vasodiltor_conc_ratio(tau, tau_homeo, params)
-#     t_c = calculate_muscle_activation(c, params)
-#     if lam_smc >= params.lambda_smc_zero:
-#         return 0.0
-    
-#     length_term = 1 - ((params.lambda_smc_max - lam_smc) / (params.lambda_smc_zero - lam_smc))**2
-
-#     return c * t_c * length_term
-
-# def sigma_passive_muscle(lam_smc, params):
-#     """
-#     Passive SMC Stress (Neo-Hookean)
-#     = K * lambda^2 * (1 - 1/(lambda_z^2 * lambda^4))
-#     Based on Mandaltsi Page 45 (referencing Eq 2.4 structure).
-#     """
-#     term1 = params.k_passive_smc * (lam_smc**2)
-#     term2 = 1 - (1 / (params.c_lambda_z**2 * lam_smc**4))
-#     return term1 * term2
-
-# def sigma_muscle_t(x, params): 
-#     lam_smc = lambda_muscle(x, params)
-#     sigma_p = sigma_passive_muscle(lam_smc, params)
-#     tau_current = calculate_wss_for_stretch(x, params)
-#     tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
-#     sigma_a = sigma_active_muscle(lam_smc, tau_current, tau_homeo, params)
-    
-#     return sigma_p + sigma_a
-
-# def d_muscle_cells_dt(x, muscle_cells, params): 
-#     lam_smc = lambda_muscle(x, params)
-#     tau_current = calculate_wss_for_stretch(x, params)
-#     tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
-#     c = calculate_vasodiltor_conc_ratio(tau_current, tau_homeo, params)
-#     term1 = params.beta1_smc * (lam_smc - params.c_lambda_muscle_att)/params.c_lambda_muscle_att
-#     term2 = params.beta2_smc * (c - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal
-#     term3 = params.beta_wss_smc * (tau_current-tau_homeo)/tau_homeo
-#     return muscle_cells*(term1 + term2 + term3)
-    
-# # -----------------
 
 def sigma_collagen_me_0(x):
     return 0 * x
@@ -191,9 +114,6 @@ def pressure_muscle(x, params):
 def pressure_muscle_a(x, params):
     return pres_prefactor(x, params) * sigma_muscle_t(x, params)
 
-# def pressure_muscle_p(x, params):
-#     return pres_prefactor(x, params) * sigma_muscle_p(x, params)
-
 def pressure_collagen_me(x, params):
     return pres_prefactor(x, params) * sigma_collagen_me(x, params)
 
@@ -201,27 +121,6 @@ def pressure_collagen_ad(x, params):
     return pres_prefactor(x, params) * sigma_collagen_ad(x, params)
 
 # New equations from Aparicio et al. start here: 
-# Force balance equation 
-# def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
-#     """
-#     Force balance equation for transmural pressure.
-#     Returns difference between calculated and target pressure
-#     to be able to minimize the difference between the two 
-#     using fsolve().
-#     """
-#     lambda_sys = lambda_sys_guess[0]
-
-#     # Individual stresses
-#     stress_elastin = sigma_elastin(lambda_sys, params)
-#     stress_collagen_me = sigma_collagen_me(lambda_sys, params)
-#     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
-#     stress_muscle = sigma_muscle_t(lambda_sys, params)
-#     mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
-#     calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
-
-#     # Return residual from target pressure
-#     return calculated_pressure - params.c_pressure_sys 
-
 def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
     """
     Force balance equation for transmural pressure.
@@ -434,29 +333,3 @@ def get_latent_tgf_beta_level(params, genotype = None):
     if genotype is None:
         return 1.0
     return levels.get(genotype.upper(), 1.0)
-
-# def get_smc_level(params, polygenic_score = None): 
-#     '''
-#     From loadborne proportions in Parameters: 
-#     ORIGINAL MODEL: Elastin: 50%, Muscle P: 20%, Muscle A: 20%, Collagen: 10%
-
-#     Args: 
-#         polygenic_score (int, optional): The SMC polygenic score of the patient (0, 1, 2, 3, 4+)
-#     '''
-#     smc_frac = params.smc_mean_fraction
-#     base_smc_frac = smc_frac.get(0)
-#     if polygenic_score is None: 
-#         return base_smc_frac
-#     return smc_frac.get(min(polygenic_score, 4))
-
-# def calculate_load_borne_proportions(params, polygenic_score = None): 
-#     """
-#     As a placeholder, I am assuming that the collagen:elastin ratio is 2:1. 
-#     It is documented that cerebral arteries have less elastin than other arteries or 
-#     vessels in the body. Currently searching for data or papers to support this. 
-#     """
-#     load_borne_muscle_p = get_smc_level(params, polygenic_score) / 2
-#     load_borne_muscle_a = get_smc_level(params, polygenic_score) / 2
-#     load_borne_elastin = (1/3) * (1 - (load_borne_muscle_p + load_borne_muscle_a)) 
-#     load_borne_collagen = 2 * load_borne_elastin
-#     return [load_borne_muscle_p, load_borne_muscle_a, load_borne_elastin, load_borne_collagen]
