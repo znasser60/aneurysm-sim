@@ -1,3 +1,4 @@
+import pandas as pd
 import argparse
 
 from aneurysm_sim.config.parameters import ArterialParameters
@@ -16,6 +17,7 @@ def main():
 
     args = parser.parse_args()
     params = ArterialParameters()
+    patient_data = pd.read_csv("data/syn_patient_data.csv")
 
     results = model.simulate_arterial_stress_and_pressure(params)
     results_tt = model.simulate_aneurysm(params, genotype="TT")
