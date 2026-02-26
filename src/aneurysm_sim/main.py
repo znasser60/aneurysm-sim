@@ -13,7 +13,7 @@ def main():
         help="Which plot(s) to run. Options: stretch_vs_stress, att_dist, rec_dist, "
              "norm_density, stretch_time, norm_density_treat, stretch_time_treat, auc_bars"
     )
-    
+
     args = parser.parse_args()
     params = ArterialParameters()
 
