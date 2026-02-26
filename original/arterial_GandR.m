@@ -71,7 +71,7 @@ c_pressure_sys       = 16000;                                        % systolic 
     c_musc_mean = 1.1;
     c_musc_min = 0.4;
     c_vasodil_conc = 0.68;   % Concentration of vasodilators to vasoconstrictors at homeostasis
-                             % see Humphrey's vasospasm paper (part II)
+                             % see Humphreys vasospasm paper (part II)
 
     c_ge_muscle         = (c_lambda_muscle^2 - 1.0) / 2.0;      % from stretch to green strain
   
@@ -81,7 +81,7 @@ c_pressure_sys       = 16000;                                        % systolic 
         % Assign load bearing proportions to each constituent
         % then solve force-balance equation for k_(.)
         % using systolic blood pressure for P
-        % and attachment stretches for lambda's
+        % and attachment stretches for lambdas
         %
         % for example for muscle passive
         % c_load_borne_muscle_p * P = 

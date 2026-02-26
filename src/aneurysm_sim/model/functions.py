@@ -1,214 +1,142 @@
 import numpy as np 
 
 # Vasospasm mechanical equations, converted from original vasospasm code in "Original" folder
-def v_lambda_collagen(x, params): 
+def lambda_collagen(x, params): 
     return x / params.c_lambda_elastin 
 
-def v_lambda_muscle(x, params):
-    return x / params.c_rec_muscle 
+def lambda_muscle(x, params):
+    return x / params.c_lambda_muscle 
+
+def lambda_elastin(x, params):
+    return x / params.c_lambda_elastin
 
 def v_m(x, params): 
     return x / params.c_rec_muscle
 
-def v_ge_collagen(x, params):
-    return (v_lambda_collagen(x, params)**2 - 1) / 2
+def ge_collagen(x, params):
+    return (lambda_collagen(x, params)**2 - 1) / 2
 
-def v_ge_muscle(x, params):
-    return (v_lambda_muscle(x, params)**2 - 1) / 2
+def ge_muscle(x, params):
+    return (lambda_muscle(x, params)**2 - 1) / 2
 
 def v_ge(x, params):
     return (x**2 - 1) / 2
 
-def v_sigma_elastin(x, params):
-    return x**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * x**4)))
-# ----------------- TODO: CHANGE THESE USING MANDALTSI PHD 
+def sigma_elastin(x, params):
+    return lambda_elastin(x, params)**2 * params.c_k_elastin * (1 - (1 / (params.c_lambda_z**2 * lambda_elastin(x, params)**4)))
 
-def v_sigma_muscle_p(x, params):
-    return v_lambda_muscle(x, params)**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * v_lambda_muscle(x, params)**4))
+def sigma_muscle_p(x, params):
+    return lambda_muscle(x, params)**2 * params.c_k_muscle_p * (1 - 1 / (params.c_lambda_z**2 * lambda_muscle(x, params)**4))
 
-def v_sigma_muscle_a(x, params):
-    return params.c_vasodil_conc * params.c_k_muscle_a * v_m(x, params) * (1 - ((params.c_musc_mean - v_m(x, params)) / (params.c_musc_mean - params.c_musc_min))**2)
+def sigma_muscle_a(x, params):
+    return params.c_vasodil_conc * params.c_k_muscle_a * lambda_muscle(x, params) * (1 - ((params.c_musc_mean - lambda_muscle(x, params)) / (params.c_musc_mean - params.c_musc_min))**2)
 
-def v_sigma_muscle_t(x, params):
-    return v_sigma_muscle_a(x, params) + v_sigma_muscle_p(x, params)
+def sigma_muscle_t(x, params):
+    return (sigma_muscle_a(x, params) + sigma_muscle_p(x, params))
 
-# ------------------
-# From Mandaltsi (to be improved)
-def calculate_wss_for_stretch(x, params):
-    """
-    Helper to calculate WSS (tau) at a specific stretch x.
-    Formula: tau = 4 * mu * Q / (pi * r^3)
-    """
-    current_radius = params.c_radius_tzero * x
-    Q = getattr(params, 'Q', 1.9635e-5) 
-    mu = getattr(params, 'mu', 0.003)  
-    
-    return (4 * Q * mu) / (np.pi * current_radius**3)
-
-def calculate_vasodiltor_conc_ratio(tau, tau_homeo, params): 
-    damage_ratio = np.random.rand()
-    return damage_ratio * (params.c_vasodil_conc_basal - params.c_vasodil_conc_shear * (tau-tau_homeo)/tau_homeo)
-
-def calculate_muscle_activation(c, params): 
-    '''
-    Represented as T(C) in Mandaltsi PhD
-    '''
-    return params.k_active_smc * (1 - np.exp(-c**2))
-
-def sigma_active_muscle(lam_smc, tau, tau_homeo, params):
-    '''
-    From Mandaltsi PhD pg 43
-
-    Page 49: K_SMC^active = 0.12MPa -> material parameter for the active response of SMCs
-    K_SMC^passive = 11.8kPa
-    '''
-    c = calculate_vasodiltor_conc_ratio(tau, tau_homeo, params)
-    t_c = calculate_muscle_activation(c, params)
-    if lam_smc >= params.lambda_smc_zero:
-        return 0.0
-    
-    length_term = 1 - ((params.lambda_smc_max - lam_smc) / (params.lambda_smc_zero - lam_smc))**2
-
-    return c * t_c * length_term
-
-def sigma_passive_muscle(lam_smc, params):
-    """
-    Passive SMC Stress (Neo-Hookean)
-    = K * lambda^2 * (1 - 1/(lambda_z^2 * lambda^4))
-    Based on Mandaltsi Page 45 (referencing Eq 2.4 structure).
-    """
-    term1 = params.k_passive_smc * (lam_smc**2)
-    term2 = 1 - (1 / (params.c_lambda_z**2 * lam_smc**4))
-    return term1 * term2
-
-def sigma_muscle_total(x, params): 
-    lam_smc = v_lambda_muscle(x, params)
-    sigma_p = sigma_passive_muscle(lam_smc, params)
-    tau_current = calculate_wss_for_stretch(x, params)
-    tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
-    sigma_a = sigma_active_muscle(lam_smc, tau_current, tau_homeo, params)
-    
-    return sigma_p + sigma_a
-
-def d_muscle_cells_dt(x, muscle_cells, params): 
-    lam_smc = v_lambda_muscle(x, params)
-    tau_current = calculate_wss_for_stretch(x, params)
-    tau_homeo = calculate_wss_for_stretch(params.c_lambda_sys, params) 
-    c = calculate_vasodiltor_conc_ratio(tau_current, tau_homeo, params)
-    term1 = params.beta1_smc * (lam_smc - params.c_lambda_muscle_att)/params.c_lambda_muscle_att
-    term2 = params.beta2_smc * (c - params.c_vasodil_conc_basal)/params.c_vasodil_conc_basal
-    term3 = params.beta_wss_smc * (tau_current-tau_homeo)/tau_homeo
-    return muscle_cells*(term1 + term2 + term3)
-    
-# -----------------
-
-def v_sigma_collagen_me_0(x):
+def sigma_collagen_me_0(x):
     return 0 * x
 
-def v_sigma_collagen_me_ac(x, params):
+def sigma_collagen_me_ac(x, params):
     return x * params.v_gamma_me * 2 * ((x + params.v_a_me) * np.log(x / params.v_a_me) + 2 * (params.v_a_me - x))
 
-def v_sigma_collagen_me_cb(x, params):
+def sigma_collagen_me_cb(x, params):
     term1 = (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
     term2 = (x + params.v_b_me) * np.log(x / params.v_c_me) + params.v_b_me + params.v_c_me - ((params.v_b_me + params.v_c_me) / params.v_c_me) * x
     return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
 
-def v_sigma_collagen_me_b(x, params):
+def sigma_collagen_me_b(x, params):
     term1 = (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me) + params.v_a_me - params.v_c_me + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
     term2 = (x + params.v_b_me) * np.log(params.v_b_me / params.v_c_me) - params.v_b_me + params.v_c_me - ((params.v_b_me - params.v_c_me) / params.v_c_me) * x
     return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
 
-def v_sigma_collagen_me(x, params):
+def sigma_collagen_me(x, params):
     if x < params.v_a_me:
-        return v_sigma_collagen_me_0(x)
+        return sigma_collagen_me_0(x)
     elif x < params.v_c_me:
-        return v_sigma_collagen_me_ac(x, params)
+        return sigma_collagen_me_ac(x, params)
     elif x <= params.v_b_me:
-        return v_sigma_collagen_me_cb(x, params)
+        return sigma_collagen_me_cb(x, params)
     else:
-        return v_sigma_collagen_me_b(x, params)
+        return sigma_collagen_me_b(x, params)
 
-def v_sigma_collagen_ad_0(x):
+def sigma_collagen_ad_0(x):
     return 0 * x
 
-def v_sigma_collagen_ad_ac(x, params):
+def sigma_collagen_ad_ac(x, params):
     return x * params.v_gamma_ad * 2 * ((x + params.v_a_ad) * np.log(x / params.v_a_ad) + 2 * (params.v_a_ad - x))
 
-def v_sigma_collagen_ad_cb(x, params):
+def sigma_collagen_ad_cb(x, params):
     term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
     term2 = (x + params.v_b_ad) * np.log(x / params.v_c_ad) + params.v_b_ad + params.v_c_ad - ((params.v_b_ad + params.v_c_ad) / params.v_c_ad) * x
     return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
 
-def v_sigma_collagen_ad_b(x, params):
+def sigma_collagen_ad_b(x, params):
     term1 = (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad) + params.v_a_ad - params.v_c_ad + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
     term2 = (x + params.v_b_ad) * np.log(params.v_b_ad / params.v_c_ad) - params.v_b_ad + params.v_c_ad - ((params.v_b_ad - params.v_c_ad) / params.v_c_ad) * x
     return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
 
-def v_sigma_collagen_ad(x, params): 
+def sigma_collagen_ad(x, params): 
     if x < params.v_a_ad:
-        return v_sigma_collagen_ad_0(x)
+        return sigma_collagen_ad_0(x)
     elif x < params.v_c_ad:
-        return v_sigma_collagen_ad_ac(x, params)
+        return sigma_collagen_ad_ac(x, params)
     elif x <= params.v_b_ad:
-        return v_sigma_collagen_ad_cb(x, params)
+        return sigma_collagen_ad_cb(x, params)
     else:
-        return v_sigma_collagen_ad_b(x, params)
+        return sigma_collagen_ad_b(x, params)
 
-def v_sigma_collagen(x, params):
-    return v_sigma_collagen_me(x, params) + v_sigma_collagen_ad(x, params)
+def sigma_collagen(x, params):
+    return sigma_collagen_me(x, params) + sigma_collagen_ad(x, params)
 
-def v_pres_prefactor(x, params): 
+def pres_prefactor(x, params): 
     return params.c_thickness_tzero / (params.c_radius_tzero * params.c_lambda_z * x**2)
 
-def v_pressure_ECM(x, params): 
-    return v_pres_prefactor(x, params) * (v_sigma_elastin(x, params) + v_sigma_collagen_me(x, params) + v_sigma_collagen_ad(x, params) + v_sigma_muscle_t(x, params))
+def pressure_ECM(x, params): 
+    return pres_prefactor(x, params) * (sigma_elastin(x, params) + sigma_collagen_me(x, params) + sigma_collagen_ad(x, params) + sigma_muscle_t
+(x, params))
 
-def v_pressure_EC(x, params):
-    return v_pres_prefactor(x, params) * (v_sigma_elastin(x, params) + v_sigma_collagen_me(x, params) + v_sigma_collagen_ad(x, params))
+def pressure_EC(x, params):
+    return pres_prefactor(x, params) * (sigma_elastin(x, params) + sigma_collagen_me(x, params) + sigma_collagen_ad(x, params))
 
-def v_pressure_EM(x, params):
-    return v_pres_prefactor(x, params) * (v_sigma_elastin(x, params) + v_sigma_muscle_t(x, params))
+def pressure_EM(x, params):
+    return pres_prefactor(x, params) * (sigma_elastin(x, params) + sigma_muscle_t(x, params))
 
-def v_pressure_E(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_elastin(x, params)
+def pressure_elastin(x, params):
+    return pres_prefactor(x, params) * sigma_elastin(x, params)
 
-def v_pressure_elastin(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_elastin(x, params)
+def pressure_collagen(x, params):
+    return pres_prefactor(x, params) * sigma_collagen(x, params)
 
-def v_pressure_collagen(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_collagen(x, params)
+def pressure_muscle(x, params):
+    return pres_prefactor(x, params) * sigma_muscle_t(x, params)
 
-def v_pressure_muscle(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_muscle_t(x, params)
+def pressure_muscle_a(x, params):
+    return pres_prefactor(x, params) * sigma_muscle_t(x, params)
 
-def v_pressure_muscle_a(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_muscle_a(x, params)
+def pressure_collagen_me(x, params):
+    return pres_prefactor(x, params) * sigma_collagen_me(x, params)
 
-def v_pressure_muscle_p(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_muscle_p(x, params)
-
-def v_pressure_collagen_me(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_collagen_me(x, params)
-
-def v_pressure_collagen_ad(x, params):
-    return v_pres_prefactor(x, params) * v_sigma_collagen_ad(x, params)
+def pressure_collagen_ad(x, params):
+    return pres_prefactor(x, params) * sigma_collagen_ad(x, params)
 
 # New equations from Aparicio et al. start here: 
-# Force balance equation 
 def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):             
     """
     Force balance equation for transmural pressure.
-    Returns difference between calculated and target pressure.
+    Returns difference between calculated and target pressure
+    to be able to minimize the difference between the two 
+    using fsolve().
     """
     lambda_sys = lambda_sys_guess[0]
 
     # Individual stresses
-    stress_elastin = v_sigma_elastin(lambda_sys, params)
-    stress_collagen_me = v_sigma_collagen_me(lambda_sys, params)
-    stress_collagen_ad = v_sigma_collagen_ad(lambda_sys, params)
-    stress_muscle = sigma_muscle_total(lambda_sys, params)
-    mass_density_mult = (mE_M * stress_elastin) + (mC_M * stress_collagen_me) + (mC_A * stress_collagen_ad) + (mM * stress_muscle)
-    calculated_pressure = (params.c_thickness_tzero / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+    stress_elastin = sigma_elastin(lambda_sys, params)
+    stress_collagen_me = sigma_collagen_me(lambda_sys, params)
+    stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
+    stress_muscle = sigma_muscle_t(lambda_sys, params)
+    mass_density_mult = params.c_thickness_me*(mE_M * stress_elastin) + params.c_thickness_me*(mC_M * stress_collagen_me) + params.c_thickness_ad*(mC_A * stress_collagen_ad) + params.c_thickness_me*(mM * stress_muscle)
+    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
 
     # Return residual from target pressure
     return calculated_pressure - params.c_pressure_sys 
@@ -238,7 +166,7 @@ def d_medial_collagen_dt(collagenases, collagen_me, params):
 def d_collagenases_dt(immune_cells, collagenases, params): 
     """
     Collagenases ODE: Equation 9 from Aparicio et al. 2016
-    Immune cells will come from calculate_immune_cell_level(t, params)
+    Immune cells will come from calculate_immune_cell_level(t, params) 
     """
     return params.r_pc1 * immune_cells - params.r_pc2 * collagenases
 
@@ -316,6 +244,17 @@ def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, la
     Active TGF-beta is the active form of TGF-beta, which stimulates fibroblast proliferation and collagen production.
     """
     return (params.r_beta1  + params.r_beta2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast) * latent_tgf_beta - params.r_beta3 * tgf_beta
+
+def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
+    """
+    Smooth Muscle Cells ODE: Simplified from Mandaltsi paper 
+    SMCs proliferate with increased stretch, and degrade when medial elastin degrades
+    """ 
+    lam_m = lambda_muscle(x, params)
+    epsilon_stretch = (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att
+    epsilon_elastin = (elastin_me - params.init_elastin_me)/params.init_elastin_me
+    epsilon_immune = - (immune_cells - params.i_0)
+    return muscle_cells * (params.beta1_smc * epsilon_stretch + params.beta2_smc * epsilon_elastin + params.beta3_smc * epsilon_immune)
 
 # Collagen remodeling I: 
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):

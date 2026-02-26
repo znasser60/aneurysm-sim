@@ -1,11 +1,13 @@
 import numpy as np
 
 class ArterialParameters:
-    def __init__(self):
+    def __init__(self, polygenic_score = None):
         # Geometric and pressure
-        self.c_diam_tzero_mm = 2.9 # Originally 2.9
+        self.c_diam_tzero_mm = 2.9 
         self.c_radius_tzero = self.c_diam_tzero_mm / 2 
         self.c_thickness_tzero = self.c_radius_tzero / 5
+        self.c_thickness_ad = 0.104 # 0.267 mm 
+        self.c_thickness_me = 0.216 # 0.533 mm 
         self.c_pressure_sys = 16000 # Pa 
 
         # Stretches
@@ -51,15 +53,35 @@ class ArterialParameters:
         self.v_b_ad = self.c_rec_max_ad
         self.v_c_ad = self.c_rec_mod_ad
 
-        # Load-borne proportions
-        self.c_load_borne_elastin = 0.50
-        self.c_load_borne_muscle_p = 0.20
-        self.c_load_borne_muscle_a = 0.20
+        # Load-borne proportions (calculated based on 2:1 C:E ratio and genetic data)
+        self.smc_mean_fraction = {
+            0: 0.7262666, 
+            1: 0.7132891, 
+            2: 0.6736118, 
+            3: 0.7635375, 
+            4: 0.4898171,
+            }
+        
+        if polygenic_score is None or polygenic_score < 0:
+            polygenic_score = 0
+
+        self.c_load_borne_muscle_p = self.smc_mean_fraction.get(int(min(polygenic_score, 4))) / 2
+        self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
+        self.c_load_borne_elastin = (1/3) * (1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a))
         self.c_load_borne_collagen = 1.0 - (
             self.c_load_borne_elastin
             + self.c_load_borne_muscle_p
             + self.c_load_borne_muscle_a
         )
+
+        # self.c_load_borne_elastin = 0.50
+        # self.c_load_borne_muscle_p = 0.20
+        # self.c_load_borne_muscle_a = 0.20
+        # self.c_load_borne_collagen = 1.0 - (
+        #     self.c_load_borne_elastin
+        #     + self.c_load_borne_muscle_p
+        #     + self.c_load_borne_muscle_a
+        # )
 
         # Common factor for tension balance
         self.c_common_factor = (
@@ -77,6 +99,8 @@ class ArterialParameters:
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         ) 
 
+        print(f"k elastin = {self.c_k_elastin}")
+
         collagen_denominator = (
             2
             * self.c_lambda_elastin
@@ -86,6 +110,7 @@ class ArterialParameters:
         )
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
+        print(f"k collagen = {self.c_k_collagen}")
 
         # Media collagen Cauchy stress
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
@@ -128,17 +153,16 @@ class ArterialParameters:
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
         # Smooth muscle cell rates
-        self.beta1_smc = 1.0
-        self.beta2_smc = 1.0
-        self.beta_wss_smc = 10 # or 10
+        self.beta1_smc = 1.0 # Rate of change in SMCs aaccording to stretch
+        self.beta2_smc = 0 # Rate of change in SMCs according to change in elastin
+        self.beta3_smc = 1.0 # Rate of change in SMCs according to immune cells
+        self.beta_wss_smc = 1.0 # or 500
         self.tau_homeo = 1.0 
-
-        # # Muscle cell rates 
-        # self.r_m1 = 0 # 1.0      # Baseline muscle cell migration and proliferation rate (years^-1)
-        # self.r_m2 = 0 # 0.5      # Muscle cell migration and proliferation sensitivity to TGF-Beta (years^-1)
-        # self.r_m3 = 0 # 0.25     # Proliferation caused by stretch (years^-1)
-        # self.r_m4 = 0 # 0.03     # Immune cell degradation of muscle cells (years^-1)
-        # self.r_m5 = 0 # 1.0      # Muscle cell death rate (years^-1)
+        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
+        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
+        self.lambda_smc_max = 1.4    # Stretch where active force is max
+        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
+        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
 
         # Procollagen rates
         self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
@@ -175,13 +199,6 @@ class ArterialParameters:
         self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
         self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
 
-        # Smooth muscle cell rates 
-        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
-        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
-        self.lambda_smc_max = 1.4    # Stretch where active force is max
-        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
-        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
-
         # Mechanical model parameters
         self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
         self.t_sim = 90              # Simulation time in years
@@ -189,9 +206,9 @@ class ArterialParameters:
         self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
 
         # Set initial values for variables 
-        self.alpha_init = 1.15 # Initial rate 
-        self.init_fibroblast = 1.0
-        self.init_muscle_cells = 0
+        self.alpha_init = 1.15 
+        self.init_fibroblast = 1.0 
+        self.init_muscle_cells = 1.0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
         self.init_elastin_ad = 1.0
@@ -202,11 +219,15 @@ class ArterialParameters:
         self.init_timp = 1.0
         self.init_collagenases = 0.0
         self.init_elastases = 0.0
-        self.init_latent_tgf_beta = 0
-        self.init_active_tgf_beta = 0
+        self.init_latent_tgf_beta = 0.0
+        self.init_active_tgf_beta = 0.0
 
         # TGF-Beta levels for different genotypes (experimentally derived - provided by the UMC Utrecht)
-        self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
+        self.tgf_beta_levels = {
+            "TT": 0.713, 
+            "TC": 0.916, 
+            "CC": 1.119
+            }
 
         # TGF-Beta treatment spike
         self.tgf_spike_amount = 1.0

@@ -1,14 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from aneurysm_sim.model import model
-from aneurysm_sim.config.parameters import ArterialParameters as params
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
     Plot the pressure vs stretch of the artery with a zoomed-in view.
     """
-
     sv_stretch_var = results["sv_stretch_var"]
     sv_pressure_var = results["sv_pressure_var"]
     sv_pressure_var_elastin = results["sv_pressure_var_elastin"]
@@ -95,7 +92,6 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
         fig, ax = plt.subplots(figsize=(12, 8))
         xlabel, ylabel = True, True
 
-
     time = results["time"]
 
     ax.plot(time, results["collagen_me"],   color='brown',   linestyle=':', label='Medial Collagen',    linewidth=1)
@@ -163,14 +159,12 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     ax.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
     ax.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
     
-    # ax.set_title("Systolic Stretch Over Time by Genotype (with treatment)", fontsize=16, weight='bold')
     ax.set_xlabel("Time (years)", fontsize=20)
-    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$", fontsize=20)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$ (mm)", fontsize=20)
     ax.grid(True, linestyle='--', alpha=0.4)
     ax.tick_params(axis='x', labelsize=16)
     ax.tick_params(axis='y', labelsize=16)
     ax.set_xlim(40, 75)
-    # ax.set_ylim(1.3, 1.5)
     ax.legend(fontsize=12)
     ax.axvline(45, color='black', linestyle='--', linewidth=1.5)
     fig.tight_layout()
@@ -281,4 +275,19 @@ def plot_rec_dist(lambda_rec_min, lambda_rec_mode, lambda_rec_max):
     plt.ylabel('PDF', fontsize=14)
     plt.grid(True)
     plt.show()
+
+def plot_elastin_smc(results_smc, results_no_smc):
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        xlabel, ylabel = True, True
+
+    time = results_smc["time"]
+
+    ax.plot(time, results_smc["elastin_me"],   color='brown',   linestyle=':', label='Medial Collagen',    linewidth=1)
+    ax.plot(time, results_no_smc["elastin_me"], linestyle='-', label='Medial Collagen',    linewidth=1)
+    ax.legend(loc='upper right', fontsize=10, ncol=2)
+
+    return ax
+
+
 
