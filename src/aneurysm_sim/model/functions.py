@@ -228,7 +228,7 @@ def d_timp_dt(tgf_beta, fibroblast, collagenase, timp, params):
     """
     return (params.r_i1 + params.r_i2 * tgf_beta) * fibroblast - (params.r_i3 + params.r_i4 * collagenase) * timp
 
-def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda_c_max, lambda_att_max, tgf_beta_level, params):
+def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda_c_max, lambda_att_max, params):
     """
     Latent TGF-beta ODE: Equation 16 from Apricio et al. 2016.
     Latent TGF-beta is the inactive form of TGF-beta, which is activated by collagenase.
@@ -236,7 +236,7 @@ def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda
     term1 = params.r_betal1 * tgf_beta + params.r_betal2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max)
     term2 = 1 + params.r_betal3 * collagen
     term3 = params.r_betal4 + params.r_betal5 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast
-    return (term1 / term2) * fibroblast * tgf_beta_level - term3 * latent_tgf_beta       
+    return (term1 / term2) * fibroblast * params.tgf_beta_level - term3 * latent_tgf_beta       
 
 def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, lambda_att_max, params):
     """

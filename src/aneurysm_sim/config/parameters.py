@@ -1,7 +1,7 @@
 import numpy as np
 
 class ArterialParameters:
-    def __init__(self, polygenic_score = None):
+    def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
         # Geometric and pressure
         self.c_diam_tzero_mm = 2.9 
         self.c_radius_tzero = self.c_diam_tzero_mm / 2 
@@ -64,6 +64,8 @@ class ArterialParameters:
         
         if polygenic_score is None or polygenic_score < 0:
             polygenic_score = 0
+        if polygenic_score > 4:
+            polygenic_score = 4
 
         self.c_load_borne_muscle_p = self.smc_mean_fraction.get(int(min(polygenic_score, 4))) / 2
         self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
@@ -228,6 +230,11 @@ class ArterialParameters:
             "TC": 0.916, 
             "CC": 1.119
             }
+
+        if genotype is not None and genotype in self.tgf_beta_levels:
+            self.tgf_beta_level = self.tgf_beta_levels[genotype]
+        else:
+            self.tgf_beta_level = 1.0 # Default value if genotype is not provided or not recognized
 
         # TGF-Beta treatment spike
         self.tgf_spike_amount = 1.0

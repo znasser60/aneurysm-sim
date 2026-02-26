@@ -84,7 +84,7 @@ def simulate_arterial_stress_and_pressure(params):
         'sv_pressure_var_collagen_ad': sv_pressure_var_collagen_ad,
     }
 
-def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
+def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
     """
     steps = int(params.t_sim / dt) + 1
@@ -136,7 +136,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     timp[0] = params.init_timp 
     latent_tgf_beta[0] = params.init_latent_tgf_beta 
     active_tgf_beta[0] = params.init_active_tgf_beta 
-    tgf_beta_level = functions.get_latent_tgf_beta_level(params, genotype)
 
     # Initialize collagen attachment and recruitment stretch parameters
     lambda_att_max[0]  = params.c_att_max_ad
@@ -207,7 +206,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
             latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
                                                                                 fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], 
-                                                                                lambda_att_max[i-1], tgf_beta_level, params)
+                                                                                lambda_att_max[i-1], params)
             active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], 
                                                                                             fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
 

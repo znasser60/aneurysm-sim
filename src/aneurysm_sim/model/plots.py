@@ -123,6 +123,7 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     ax.grid(True, linestyle='--', alpha=0.4)
     if legend:
         ax.legend(loc='upper right', fontsize=10, ncol=2)
+    plt.show()
     return ax
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
