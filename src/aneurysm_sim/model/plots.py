@@ -39,7 +39,6 @@ def plot_pressure_vs_diameter(results, n_zoom=120):
     sv_pressure_var_muscle_p = results["sv_pressure_var_muscle_p"]
     sv_pressure_var_muscle_a = results["sv_pressure_var_muscle_a"]
 
-
     plt.figure(figsize=(12, 8))
     plt.plot(sv_diam_var[:n_zoom], sv_pressure_var[:n_zoom]/1e3, '-', linewidth=6, label='Total')
     plt.plot(sv_diam_var[32:n_zoom], sv_pressure_var_elastin[32:n_zoom]/1e3, '--', linewidth=3, label='E')
@@ -121,9 +120,9 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     ax.axvline(40, color='black', linestyle='--', linewidth=1.5)
     ax.axvline(50, color='black', linestyle=':',  linewidth=1.5)
     ax.grid(True, linestyle='--', alpha=0.4)
+
     if legend:
         ax.legend(loc='upper right', fontsize=10, ncol=2)
-    plt.show()
     return ax
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
@@ -150,7 +149,28 @@ def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
 
     return fig
 
-def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
+def plot_normalised_densities_by_score(results_score_0, results_score_1, results_score_2, results_score_3, results_score_4):
+    """
+    Plot normalised densities for each polygenic score (0-4) in a 3x2 grid.
+    """
+    fig, axes = plt.subplots(3, 2, figsize=(18, 18))
+    axes = axes.flatten()
+
+    plot_normalised_densities(results_score_0, axes[0], title="Polygenic Score: 0", ylabel=True, xlabel=False, legend=False)
+    plot_normalised_densities(results_score_1, axes[1], title="Polygenic Score: 1", ylabel=True, xlabel=False, legend=False)
+    plot_normalised_densities(results_score_2, axes[2], title="Polygenic Score: 2", ylabel=True, xlabel=True, legend=False)
+    plot_normalised_densities(results_score_3, axes[3], title="Polygenic Score: 3", ylabel=True, xlabel=True, legend=False)
+    plot_normalised_densities(results_score_4, axes[4], title="Polygenic Score: 4", ylabel=True, xlabel=True, legend=False)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper right', fontsize=10)
+
+    plt.subplots_adjust(hspace=0.3, wspace=0.3)
+    plt.show()
+
+    return fig
+
+def plot_stretch_by_genotype(results_tt, results_tc, results_cc):
     """
     Plot the systolic stretch over time for each genotype.
     """
@@ -159,6 +179,31 @@ def plot_systolic_stretch_over_time(results_tt, results_tc, results_cc):
     ax.plot(results_tt["time"], results_tt["lambda_sys"], label="TT", color='red')
     ax.plot(results_tc["time"], results_tc["lambda_sys"], label="TC", color='brown')
     ax.plot(results_cc["time"], results_cc["lambda_sys"], label="CC", color='gold')
+    
+    ax.set_xlabel("Time (years)", fontsize=20)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$ (mm)", fontsize=20)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
+    ax.set_xlim(40, 75)
+    ax.legend(fontsize=12)
+    ax.axvline(45, color='black', linestyle='--', linewidth=1.5)
+    fig.tight_layout()
+    plt.show()
+    
+    return fig
+
+def plot_stretch_by_score(results_score_0, results_score_1, results_score_2, results_score_3, results_score_4):
+    """
+    Plot the systolic stretch over time for each polygenic score.
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    ax.plot(results_score_0["time"], results_score_0["lambda_sys"], label="Score 0", color='red')
+    ax.plot(results_score_1["time"], results_score_1["lambda_sys"], label="Score 1", color='brown')
+    ax.plot(results_score_2["time"], results_score_2["lambda_sys"], label="Score 2", color='gold')
+    ax.plot(results_score_3["time"], results_score_3["lambda_sys"], label="Score 3", color='green')
+    ax.plot(results_score_4["time"], results_score_4["lambda_sys"], label="Score 4", color='blue')
     
     ax.set_xlabel("Time (years)", fontsize=20)
     ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$ (mm)", fontsize=20)

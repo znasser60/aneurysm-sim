@@ -101,8 +101,6 @@ class ArterialParameters:
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         ) 
 
-        print(f"k elastin = {self.c_k_elastin}")
-
         collagen_denominator = (
             2
             * self.c_lambda_elastin
@@ -112,7 +110,6 @@ class ArterialParameters:
         )
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
-        print(f"k collagen = {self.c_k_collagen}")
 
         # Media collagen Cauchy stress
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
