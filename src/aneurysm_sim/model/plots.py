@@ -90,6 +90,8 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 8))
         xlabel, ylabel = True, True
+    else: 
+        fig = ax.get_figure()
 
     time = results["time"]
 
@@ -123,7 +125,7 @@ def plot_normalised_densities(results, ax=None, title=None, legend=False, xlabel
 
     if legend:
         ax.legend(loc='upper right', fontsize=10, ncol=2)
-    return ax
+    return fig
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     """
