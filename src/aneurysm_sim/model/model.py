@@ -48,9 +48,9 @@ def simulate_arterial_stress_and_pressure(params):
         sv_pressure_var_collagen[i] = functions.pressure_collagen(stretch, params)
         sv_pressure_var_collagen_me[i] = functions.pressure_collagen_me(stretch, params)
         sv_pressure_var_collagen_ad[i] = functions.pressure_collagen_ad(stretch, params)
-        # sv_pressure_var_muscle_p[i] = max(functions.pressure_muscle_p(stretch, params), 0)
+        sv_pressure_var_muscle_p[i] = max(functions.pressure_muscle_p(stretch, params), 0)
         sv_pressure_var_muscle_a[i] = max(functions.pressure_muscle_a(stretch, params), 0)
-        sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i]
+        sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i]
 
         sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]                                            
         

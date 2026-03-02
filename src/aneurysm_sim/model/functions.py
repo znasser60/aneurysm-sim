@@ -112,7 +112,10 @@ def pressure_muscle(x, params):
     return pres_prefactor(x, params) * sigma_muscle_t(x, params)
 
 def pressure_muscle_a(x, params):
-    return pres_prefactor(x, params) * sigma_muscle_t(x, params)
+    return pres_prefactor(x, params) * sigma_muscle_a(x, params)
+
+def pressure_muscle_p(x, params):
+    return pres_prefactor(x, params) * sigma_muscle_p(x, params)
 
 def pressure_collagen_me(x, params):
     return pres_prefactor(x, params) * sigma_collagen_me(x, params)

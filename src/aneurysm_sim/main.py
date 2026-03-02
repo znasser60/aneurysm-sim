@@ -64,9 +64,12 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
         )
         patient_results = model.simulate_aneurysm(patient_params)
         patient_results_treat = model.simulate_aneurysm(patient_params, treatment=True)
+        patient_stretch_results = model.simulate_arterial_stress_and_pressure(patient_params)
 
         plot_registry = {
-            "stretch_vs_stress": lambda: plots.plot_stretch_vs_stress(patient_results),
+            "pressure_vs_stretch": lambda: plots.plot_pressure_vs_stretch(patient_stretch_results),
+            "pressure_vs_diameter": lambda: plots.plot_pressure_vs_diameter(patient_stretch_results),
+            "stretch_vs_stress": lambda: plots.plot_stretch_vs_stress(patient_stretch_results),
             "att_dist":          lambda: plots.plot_att_dist(patient_params.c_att_min_ad, patient_params.c_att_mod_ad, patient_params.c_att_max_ad),
             "rec_dist":          lambda: plots.plot_rec_dist(patient_params.c_rec_min_ad, patient_params.c_rec_mod_ad, patient_params.c_rec_max_ad),
             "density":           lambda: [plots.plot_normalised_densities(patient_results, legend=True), plt.show()],
