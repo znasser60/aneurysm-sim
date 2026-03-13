@@ -26,7 +26,7 @@ def simulate_arterial_stress_and_pressure(params):
     sv_pressure_var_collagen_ad = np.zeros(n)
 
     # Calculate diameter from stretch variable
-    sv_diam_var = 2 * params.c_radius_tzero * 1e3 * sv_stretch_var
+    sv_diam_var = 2 * params.c_radius_tzero * sv_stretch_var
 
     for i in range(n):
         stretch = sv_stretch_var[i]
@@ -41,6 +41,7 @@ def simulate_arterial_stress_and_pressure(params):
         sv_stress_var_total[i] = max((
             sv_stress_var_elastin[i]
             + sv_stress_var_collagen[i]
+            + sv_stress_var_muscle_t[i]
         ), 0)
 
         # Pressures

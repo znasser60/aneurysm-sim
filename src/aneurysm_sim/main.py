@@ -62,6 +62,7 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
             genotype=patient_row["TGF Genotype"].values[0],
             polygenic_score=patient_row["Polygenic Score"].values[0],
         )
+        
         patient_results = model.simulate_aneurysm(patient_params)
         patient_results_treat = model.simulate_aneurysm(patient_params, treatment=True)
         patient_stretch_results = model.simulate_arterial_stress_and_pressure(patient_params)

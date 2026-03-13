@@ -46,7 +46,7 @@ def plot_pressure_vs_diameter(results, n_zoom=120):
     plt.plot(sv_diam_var[44:n_zoom], sv_pressure_var_muscle_p[44:n_zoom]/1e3, '+', linewidth=2, markersize=8, label='VSMCp')
     plt.plot(sv_diam_var[:n_zoom], sv_pressure_var_muscle_a[:n_zoom]/1e3, '.', linewidth=2, markersize=8, label='VSMCa')
 
-    plt.axvline(x=2.9, color='red', linestyle='--', linewidth=2)
+    plt.axvline(x=2.9 , color='red', linestyle='--', linewidth=2)
     plt.axhline(y=16, color='red', linestyle='--', linewidth=2)
     plt.plot(2.9, 16, 'ro', linewidth=3, markersize=8)
 

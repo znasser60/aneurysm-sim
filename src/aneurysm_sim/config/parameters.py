@@ -101,6 +101,8 @@ class ArterialParameters:
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         ) 
 
+        print(f"K elastin: {self.c_k_elastin:.2f}")
+
         collagen_denominator = (
             2
             * self.c_lambda_elastin
@@ -110,6 +112,7 @@ class ArterialParameters:
         )
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
+        print(f"K collagen: {self.c_k_collagen:.2f}")
 
         # Media collagen Cauchy stress
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
@@ -130,8 +133,9 @@ class ArterialParameters:
             * self.c_common_factor
             / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
         )
-
+        print(f"K muscle passive: {self.c_k_muscle_p:.2f}")
         self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor / muscle_a_denominator
+        print(f"K muscle active: {self.c_k_muscle_a:.2f}")
 
         # Immune cell related rates
         self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
