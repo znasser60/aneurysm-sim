@@ -26,7 +26,7 @@ def simulate_arterial_stress_and_pressure(params):
     sv_pressure_var_collagen_ad = np.zeros(n)
 
     # Calculate diameter from stretch variable
-    sv_diam_var = 2 * params.c_radius_tzero * 1e3 * sv_stretch_var
+    sv_diam_var = 2 * params.c_radius_tzero * sv_stretch_var
 
     for i in range(n):
         stretch = sv_stretch_var[i]
@@ -36,13 +36,12 @@ def simulate_arterial_stress_and_pressure(params):
         sv_stress_var_collagen[i] = functions.sigma_collagen(stretch, params)
         sv_stress_var_collagen_me[i] = functions.sigma_collagen_me(stretch, params)
         sv_stress_var_collagen_ad[i] = functions.sigma_collagen_ad(stretch, params)
-        # sv_stress_var_muscle_a[i] = functions.sigma_muscle_a(stretch, params)
-        # sv_stress_var_muscle_p[i] = functions.sigma_muscle_p(stretch, params)
         sv_stress_var_muscle_t[i] = functions.sigma_muscle_t(stretch, params)
 
         sv_stress_var_total[i] = max((
             sv_stress_var_elastin[i]
             + sv_stress_var_collagen[i]
+            + sv_stress_var_muscle_t[i]
         ), 0)
 
         # Pressures
@@ -50,9 +49,9 @@ def simulate_arterial_stress_and_pressure(params):
         sv_pressure_var_collagen[i] = functions.pressure_collagen(stretch, params)
         sv_pressure_var_collagen_me[i] = functions.pressure_collagen_me(stretch, params)
         sv_pressure_var_collagen_ad[i] = functions.pressure_collagen_ad(stretch, params)
-        # sv_pressure_var_muscle_p[i] = max(functions.pressure_muscle_p(stretch, params), 0)
+        sv_pressure_var_muscle_p[i] = max(functions.pressure_muscle_p(stretch, params), 0)
         sv_pressure_var_muscle_a[i] = max(functions.pressure_muscle_a(stretch, params), 0)
-        sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i]
+        sv_pressure_var_muscle[i] = sv_pressure_var_muscle_a[i] + sv_pressure_var_muscle_p[i]
 
         sv_pressure_var[i] = sv_pressure_var_elastin[i] + sv_pressure_var_collagen_me[i] + sv_pressure_var_collagen_ad[i] + sv_pressure_var_muscle[i]                                            
         
@@ -84,7 +83,7 @@ def simulate_arterial_stress_and_pressure(params):
         'sv_pressure_var_collagen_ad': sv_pressure_var_collagen_ad,
     }
 
-def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
+def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
     """
     """
     steps = int(params.t_sim / dt) + 1
@@ -136,7 +135,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
     timp[0] = params.init_timp 
     latent_tgf_beta[0] = params.init_latent_tgf_beta 
     active_tgf_beta[0] = params.init_active_tgf_beta 
-    tgf_beta_level = functions.get_latent_tgf_beta_level(params, genotype)
 
     # Initialize collagen attachment and recruitment stretch parameters
     lambda_att_max[0]  = params.c_att_max_ad
@@ -207,7 +205,7 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
             timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
             latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
                                                                                 fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], 
-                                                                                lambda_att_max[i-1], tgf_beta_level, params)
+                                                                                lambda_att_max[i-1], params)
             active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], 
                                                                                             fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
 
@@ -245,3 +243,6 @@ def simulate_aneurysm(params, genotype = None, treatment = False, dt = 0.0069): 
         'final_lambda_sys': lambda_sys_array[-1],
     }
 
+def validate_model(results, params):
+    print("Final diameter:", results['diameter'][-1])
+    print("Final lambda_sys:", results['final_lambda_sys'])

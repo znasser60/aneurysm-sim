@@ -1,10 +1,10 @@
 import numpy as np
 
 class ArterialParameters:
-    def __init__(self, polygenic_score = None):
+    def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
         # Geometric and pressure
         self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = self.c_diam_tzero_mm / 2 
+        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3)
         self.c_thickness_tzero = self.c_radius_tzero / 5
         self.c_thickness_ad = 0.104 # 0.267 mm 
         self.c_thickness_me = 0.216 # 0.533 mm 
@@ -19,7 +19,7 @@ class ArterialParameters:
         self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
         self.c_musc_mean = 1.1
         self.c_musc_min = 0.4
-        self.c_vasodil_conc = 0.68
+        self.c_vasodil_conc = 1.0 # 0.68
         self.c_vasodil_conc_basal = 0.68
         self.c_vasodil_conc_shear = 1.36
         self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0
@@ -64,6 +64,8 @@ class ArterialParameters:
         
         if polygenic_score is None or polygenic_score < 0:
             polygenic_score = 0
+        if polygenic_score > 4:
+            polygenic_score = 4
 
         self.c_load_borne_muscle_p = self.smc_mean_fraction.get(int(min(polygenic_score, 4))) / 2
         self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
@@ -99,7 +101,7 @@ class ArterialParameters:
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         ) 
 
-        print(f"k elastin = {self.c_k_elastin}")
+        print(f"K elastin: {self.c_k_elastin:.2f}")
 
         collagen_denominator = (
             2
@@ -110,7 +112,7 @@ class ArterialParameters:
         )
 
         self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
-        print(f"k collagen = {self.c_k_collagen}")
+        print(f"K collagen: {self.c_k_collagen:.2f}")
 
         # Media collagen Cauchy stress
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
@@ -131,8 +133,9 @@ class ArterialParameters:
             * self.c_common_factor
             / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
         )
-
+        print(f"K muscle passive: {self.c_k_muscle_p:.2f}")
         self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor / muscle_a_denominator
+        print(f"K muscle active: {self.c_k_muscle_a:.2f}")
 
         # Immune cell related rates
         self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
@@ -228,6 +231,11 @@ class ArterialParameters:
             "TC": 0.916, 
             "CC": 1.119
             }
+
+        if genotype is not None and genotype in self.tgf_beta_levels:
+            self.tgf_beta_level = self.tgf_beta_levels[genotype]
+        else:
+            self.tgf_beta_level = 1.0 # Default value if genotype is not provided or not recognized
 
         # TGF-Beta treatment spike
         self.tgf_spike_amount = 1.0

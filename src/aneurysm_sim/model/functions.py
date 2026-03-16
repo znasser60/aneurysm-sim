@@ -112,7 +112,10 @@ def pressure_muscle(x, params):
     return pres_prefactor(x, params) * sigma_muscle_t(x, params)
 
 def pressure_muscle_a(x, params):
-    return pres_prefactor(x, params) * sigma_muscle_t(x, params)
+    return pres_prefactor(x, params) * sigma_muscle_a(x, params)
+
+def pressure_muscle_p(x, params):
+    return pres_prefactor(x, params) * sigma_muscle_p(x, params)
 
 def pressure_collagen_me(x, params):
     return pres_prefactor(x, params) * sigma_collagen_me(x, params)
@@ -136,7 +139,7 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
     stress_muscle = sigma_muscle_t(lambda_sys, params)
     mass_density_mult = params.c_thickness_me*(mE_M * stress_elastin) + params.c_thickness_me*(mC_M * stress_collagen_me) + params.c_thickness_ad*(mC_A * stress_collagen_ad) + params.c_thickness_me*(mM * stress_muscle)
-    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys**2 * params.c_lambda_z)) * mass_density_mult
 
     # Return residual from target pressure
     return calculated_pressure - params.c_pressure_sys 
@@ -228,7 +231,7 @@ def d_timp_dt(tgf_beta, fibroblast, collagenase, timp, params):
     """
     return (params.r_i1 + params.r_i2 * tgf_beta) * fibroblast - (params.r_i3 + params.r_i4 * collagenase) * timp
 
-def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda_c_max, lambda_att_max, tgf_beta_level, params):
+def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda_c_max, lambda_att_max, params):
     """
     Latent TGF-beta ODE: Equation 16 from Apricio et al. 2016.
     Latent TGF-beta is the inactive form of TGF-beta, which is activated by collagenase.
@@ -236,7 +239,7 @@ def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda
     term1 = params.r_betal1 * tgf_beta + params.r_betal2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max)
     term2 = 1 + params.r_betal3 * collagen
     term3 = params.r_betal4 + params.r_betal5 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast
-    return (term1 / term2) * fibroblast * tgf_beta_level - term3 * latent_tgf_beta       
+    return (term1 / term2) * fibroblast * params.tgf_beta_level - term3 * latent_tgf_beta       
 
 def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, lambda_att_max, params):
     """
