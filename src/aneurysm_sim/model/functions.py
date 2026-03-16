@@ -139,7 +139,7 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
     stress_muscle = sigma_muscle_t(lambda_sys, params)
     mass_density_mult = params.c_thickness_me*(mE_M * stress_elastin) + params.c_thickness_me*(mC_M * stress_collagen_me) + params.c_thickness_ad*(mC_A * stress_collagen_ad) + params.c_thickness_me*(mM * stress_muscle)
-    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys * params.c_lambda_z)) * mass_density_mult
+    calculated_pressure = (1 / (params.c_radius_tzero * lambda_sys**2 * params.c_lambda_z)) * mass_density_mult
 
     # Return residual from target pressure
     return calculated_pressure - params.c_pressure_sys 

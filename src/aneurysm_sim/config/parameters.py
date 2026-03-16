@@ -4,7 +4,7 @@ class ArterialParameters:
     def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
         # Geometric and pressure
         self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = self.c_diam_tzero_mm / 2 
+        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3)
         self.c_thickness_tzero = self.c_radius_tzero / 5
         self.c_thickness_ad = 0.104 # 0.267 mm 
         self.c_thickness_me = 0.216 # 0.533 mm 
@@ -19,7 +19,7 @@ class ArterialParameters:
         self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
         self.c_musc_mean = 1.1
         self.c_musc_min = 0.4
-        self.c_vasodil_conc = 0.68
+        self.c_vasodil_conc = 1.0 # 0.68
         self.c_vasodil_conc_basal = 0.68
         self.c_vasodil_conc_shear = 1.36
         self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0

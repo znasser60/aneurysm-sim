@@ -243,3 +243,6 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
         'final_lambda_sys': lambda_sys_array[-1],
     }
 
+def validate_model(results, params):
+    print("Final diameter:", results['diameter'][-1])
+    print("Final lambda_sys:", results['final_lambda_sys'])
