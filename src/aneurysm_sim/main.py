@@ -46,6 +46,15 @@ def run_general_mode(plot_names):
             results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s), treatment=True) for s in SCORES}
             plots.plot_stretch_by_score(*[results[s] for s in SCORES])
 
+        elif plot_name == "diameter_vs_time": 
+            results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
+            plots.plot_diameter_vs_time(results["TT"], results["TC"], results["CC"])
+
+        elif plot_name == "stiffness_by_score":
+            params_dict = {s: ArterialParameters(polygenic_score=s) for s in SCORES}
+            results_dict = {s: model.simulate_aneurysm(params_dict[s]) for s in SCORES}
+            plots.plot_stiffness_over_time(results_dict, params_dict)
+
         else:
             print(f"Unknown plot '{plot_name}' for general mode. Available: density_by_genotype, density_by_geno_treat, density_by_score")
 

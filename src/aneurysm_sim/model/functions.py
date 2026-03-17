@@ -5,10 +5,10 @@ def lambda_collagen(x, params):
     return x / params.c_lambda_elastin 
 
 def lambda_muscle(x, params):
-    return x / params.c_lambda_muscle 
+    return x / params.c_rec_muscle 
 
 def lambda_elastin(x, params):
-    return x / params.c_lambda_elastin
+    return x 
 
 def v_m(x, params): 
     return x / params.c_rec_muscle
