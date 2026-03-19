@@ -121,6 +121,7 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
     lambda_sys_array = np.zeros(steps)
 
     # Initialize variables
+    diameter[0] = 2*params.c_radius_tzero*params.c_lambda_sys
     collagen_me[0] = params.init_collagen_me
     elastin_me[0] = params.init_elastin_me
     collagenases[0] = params.init_collagenases
@@ -155,6 +156,7 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
 
         # Calculate the lambda_sys using fsolve to find the root of the force balance equation
         lambda_sys = fsolve(functions.force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], muscle_cells[i-1], params,))[0]
+        diameter[i] = 2 * params.c_radius_tzero * lambda_sys
         lambda_sys_array[i] = lambda_sys
         
         lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1]
@@ -213,6 +215,7 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
                 active_tgf_beta[i] += params.tgf_spike_amount
 
     return {
+        'diameter': diameter,
         'time': time,
         'elastin_me': elastin_me,
         'collagen_me': collagen_me,

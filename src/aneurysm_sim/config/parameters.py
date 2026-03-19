@@ -2,24 +2,24 @@ import numpy as np
 
 class ArterialParameters:
     def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
-        # Geometric and pressure
+        # Geometric and pressure 
         self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3)
-        self.c_thickness_tzero = self.c_radius_tzero / 5
-        self.c_thickness_ad = 0.104 # 0.267 mm 
-        self.c_thickness_me = 0.216 # 0.533 mm 
-        self.c_pressure_sys = 16000 # Pa 
+        self.c_radius_tzero = 1.27 # self.c_diam_tzero_mm / (2 * 1.3) 
+        self.c_thickness_tzero = self.c_radius_tzero / 5 
+        self.c_thickness_ad = 0.104
+        self.c_thickness_me = 0.216
+        self.c_pressure_sys = 16000 # Pa
 
         # Stretches
         self.c_lambda_z = 1.3
         self.c_lambda_sys = 1.3
         self.c_lambda_elastin = 1.3 
-        self.c_lambda_muscle = 1.15
+        self.c_lambda_muscle = 1.13
         self.c_lambda_muscle_att = 1.1
-        self.c_rec_muscle = self.c_lambda_elastin / self.c_lambda_muscle
+        self.c_rec_muscle = self.c_lambda_sys / self.c_lambda_muscle
         self.c_musc_mean = 1.1
         self.c_musc_min = 0.4
-        self.c_vasodil_conc = 1.0 # 0.68
+        self.c_vasodil_conc = 0.68
         self.c_vasodil_conc_basal = 0.68
         self.c_vasodil_conc_shear = 1.36
         self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0
@@ -86,18 +86,26 @@ class ArterialParameters:
         # )
 
         # Common factor for tension balance
-        self.c_common_factor = (
+        self.c_common_factor_me = (
             self.c_pressure_sys
             * self.c_radius_tzero
             * self.c_lambda_elastin**2
             * self.c_lambda_z
-            / self.c_thickness_tzero
+            / self.c_thickness_me
+        )
+
+        self.c_common_factor_ad = (
+            self.c_pressure_sys
+            * self.c_radius_tzero
+            * self.c_lambda_elastin**2
+            * self.c_lambda_z
+            / self.c_thickness_ad
         )
 
         # Material parameters
         self.c_k_elastin = (
             self.c_load_borne_elastin
-            * self.c_common_factor
+            * (self.c_common_factor_me)
             / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         ) 
 
@@ -111,7 +119,7 @@ class ArterialParameters:
                + 2 * (self.v_a_me - self.c_lambda_elastin))
         )
 
-        self.c_k_collagen = self.c_load_borne_collagen * self.c_common_factor / collagen_denominator
+        self.c_k_collagen = self.c_load_borne_collagen * (self.c_common_factor_me) / collagen_denominator
         print(f"K collagen: {self.c_k_collagen:.2f}")
 
         # Media collagen Cauchy stress
@@ -130,11 +138,11 @@ class ArterialParameters:
 
         self.c_k_muscle_p = (
             self.c_load_borne_muscle_p
-            * self.c_common_factor
+            * (self.c_common_factor_me)
             / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
         )
         print(f"K muscle passive: {self.c_k_muscle_p:.2f}")
-        self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor / muscle_a_denominator
+        self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
         print(f"K muscle active: {self.c_k_muscle_a:.2f}")
 
         # Immune cell related rates

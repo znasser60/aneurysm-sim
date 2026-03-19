@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
+from aneurysm_sim.model import functions
+
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
     Plot the pressure vs stretch of the artery with a zoomed-in view.
@@ -337,5 +339,62 @@ def plot_elastin_smc(results_smc, results_no_smc):
 
     return ax
 
+def plot_diameter_vs_time(results_tt, results_tc, results_cc):
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.plot(results_tt["time"], results_tt["diameter"], label="TT", color='red')
+    ax.plot(results_tc["time"], results_tc["diameter"], label="TC", color='brown')
+    ax.plot(results_cc["time"], results_cc["diameter"], label="CC", color='gold')
+    ax.set_xlabel("Time (years)", fontsize=20)
+    ax.set_ylabel("Diameter (mm)", fontsize=20)   
 
+    plt.show()
+    return fig
+            
+def plot_stiffness_over_time(results_dict, params_dict):
+    """
+    results_dict: dict mapping score to results, e.g., {0: res0, 4: res4}
+    params_dict: dict mapping score to corresponding ArterialParameters object
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+    colors = {0: 'red', 1: 'brown', 2: 'gold', 3: 'green', 4: 'blue'}
+    
+    for score, results in results_dict.items():
+        params = params_dict[score]
+        time = results['time']
+        stiffness = np.zeros_like(time)
+        
+        for i in range(len(time)):
+            lam = results['lambda_sys'][i]
+            
+            # Perturb the stretch by 1% to measure the stiffness
+            lam_pert = lam * 1.01 
+            
+            mE_M = results['elastin_me'][i]
+            mC_M = results['collagen_me'][i]
+            mC_A = results['collagen_ad'][i]
+            mM = results['muscle_cells'][i]
+            
+            # Calculate the pressure difference using your force balance equation
+            # force_balance_equation returns (calculated_pressure - target_pressure)
+            res_base = functions.force_balance_equation([lam], mE_M, mC_M, mC_A, mM, params)
+            res_pert = functions.force_balance_equation([lam_pert], mE_M, mC_M, mC_A, mM, params)
+            
+            # Change in pressure (dP) / Change in stretch (dlam)
+            dP = res_pert - res_base
+            dlam = lam_pert - lam
+            
+            # Store stiffness in kPa
+            stiffness[i] = (dP / dlam) / 1000.0 
+            
+        ax.plot(time, stiffness, label=f"Score {score}", color=colors.get(score, 'black'), linewidth=2)
 
+    ax.set_title('Arterial Stiffness (Tangent Modulus) Over Time', fontsize=16, weight='bold')
+    ax.set_xlabel('Time (years)', fontsize=14)
+    ax.set_ylabel('Stiffness / Tangent Modulus (kPa)', fontsize=14)
+    ax.axvline(40, color='black', linestyle='--', linewidth=1.5, label='Immune Infiltration (t=40)')
+    ax.grid(True, linestyle='--', alpha=0.6)
+    ax.legend(fontsize=12, loc='upper left')
+    ax.set_xlim([35, 90])
+    
+    plt.show()
+    return fig
