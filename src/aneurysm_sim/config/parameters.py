@@ -4,7 +4,7 @@ class ArterialParameters:
     def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
         # Geometric and pressure 
         self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3) 
+        self.c_radius_tzero = 1.27 # self.c_diam_tzero_mm / (2 * 1.3) 
         self.c_thickness_tzero = self.c_radius_tzero / 5 
         self.c_thickness_ad = 0.104
         self.c_thickness_me = 0.216
