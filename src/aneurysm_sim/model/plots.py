@@ -70,6 +70,7 @@ def plot_stretch_vs_stress(results, n_zoom=120):
     sv_stress_var_collagen_me = results["sv_stress_var_collagen_me"]
     sv_stress_var_collagen_ad = results["sv_stress_var_collagen_ad"]
     sv_stress_var_collagen = results["sv_stress_var_collagen"]
+    sv_stress_var_muscle = results["sv_stress_var_muscle_t"]
     sv_stress_var_total = results["sv_stress_var_total"]
 
     plt.figure(figsize=(12, 8))
@@ -77,6 +78,7 @@ def plot_stretch_vs_stress(results, n_zoom=120):
     plt.plot(sv_stretch_var[64:n_zoom], sv_stress_var_collagen[64:n_zoom], '-.', linewidth=2, label='Collagen Total')
     plt.plot(sv_stretch_var[44:n_zoom], sv_stress_var_collagen_me[44:n_zoom], '+', linewidth=2, markersize=8, label='Collagen ME')
     plt.plot(sv_stretch_var[:n_zoom], sv_stress_var_collagen_ad[:n_zoom], '.', linewidth=2, markersize=8, label='Collagen AD')
+    plt.plot(sv_stretch_var[44:n_zoom], sv_stress_var_muscle[44:n_zoom], 'x', linewidth=2, markersize=8, label='Muscle')
     plt.plot(sv_stretch_var[:n_zoom], sv_stress_var_total[:n_zoom], '-', linewidth=3, label='Total Stress')
     plt.xlabel(r'Stretch $\lambda$', fontsize=14)
     plt.ylabel(r'Stress $\sigma$', fontsize=14)

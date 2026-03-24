@@ -336,3 +336,11 @@ def get_latent_tgf_beta_level(params, genotype = None):
     if genotype is None:
         return 1.0
     return levels.get(genotype.upper(), 1.0)
+
+def fiber_exp_pow_stress(alpha, params):
+    """
+    Calculate the stress for the fiber exponential power model.
+    """
+    fiber_exp_pow_stress = 2*params.k_collagen_me*lambda_fiber*(lambda_fiber**2 - 1)**(beta-1)*np.exp(alpha*(lambda_fiber**2-1)**beta)
+    return fiber_exp_pow_stress
+
