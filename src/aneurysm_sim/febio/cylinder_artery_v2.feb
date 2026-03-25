@@ -6,7 +6,7 @@
 	<Control>
 		<analysis>STATIC</analysis>
 		<time_steps>10</time_steps>
-		<step_size>0.1</step_size>
+		<step_size>0.01</step_size>
 		<plot_zero_state>0</plot_zero_state>
 		<plot_range>0,-1</plot_range>
 		<plot_level>PLOT_MAJOR_ITRS</plot_level>
@@ -18,7 +18,7 @@
 			<max_retries>5</max_retries>
 			<opt_iter>11</opt_iter>
 			<dtmin>0</dtmin>
-			<dtmax>0.1</dtmax>
+			<dtmax>0.05</dtmax>
 			<aggressiveness>0</aggressiveness>
 			<cutback>0.5</cutback>
 			<dtforce>0</dtforce>
@@ -68,37 +68,36 @@
 		</Constants>
 	</Globals>
 	<Material>
-		<material id="1" name="Media" type="solid mixture">
+        <material id="1" name="Media" type="uncoupled solid mixture">
+            <density>1</density>
+            <k>10000.0</k> 
+            <solid type="Holzapfel-Gasser-Ogden">
+                <c>1.0</c> 
+                <k1>0.1286</k1> 
+                <k2>0.0042</k2> 
+                <gamma>45</gamma>
+                <kappa>0</kappa>
+				<mat_axis type="cylindrical">
+					<center>0,0,0</center>
+					<axis>0,0,1</axis>
+					<vector>0,0,1</vector>
+				</mat_axis>
+            </solid>
+            <solid type="prescribed uniaxial active contraction">
+                <T0 lc="1">1.0</T0> 
+                <fiber type="vector">0,1,0</fiber> 
+			</solid>
+        </material>
+        <material id="2" name="Adventitia" type="fiber-exp-pow">
 			<density>1</density>
-			<solid type="neo-Hookean">
-				<E>42083.7417</E>
-				<v>0.495</v>
-			</solid>
-			<solid type="fiber-exp-pow">
-				<alpha>0.001</alpha>
-				<beta>2.1135</beta>
-				<ksi>73433.9675</ksi>
-				<mu>0</mu>
-				<lam0>1.15044</lam0>
-				<fiber type="vector">0.707,0.707,0</fiber>
-			</solid>
-			<solid type="fiber-exp-pow">
-				<alpha>0.001</alpha>
-				<beta>2.6232</beta>
-				<ksi>93881.1510</ksi>
-				<mu>0</mu>
-				<lam0>1.2871</lam0>
-				<fiber type="vector">0.707,-0.707,0</fiber>
-			</solid>
-		</material>
-		<material id="2" name="Adventitia" type="solid mixture">
-			<density>1</density>
-			<solid type="neo-Hookean">
-				<E>42083.7417</E>
-				<v>0.495</v>
-			</solid>
-		</material>
-	</Material>
+			<alpha>0.001</alpha>
+			<beta>2.6232</beta>
+			<ksi>0.0939</ksi>
+			<mu>0</mu>
+			<lam0>1.2871</lam0>
+			<fiber type="vector">0.707,-0.707,0</fiber>
+        </material>
+    </Material>
 	<Mesh>
 		<Nodes name="Object1">
 			<node id="1">0.95,0,0</node>

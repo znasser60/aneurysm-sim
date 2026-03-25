@@ -74,31 +74,35 @@
 				<E>42083.74</E>
 				<v>0.495</v>
 			</solid>
-			<solid type="fiber-exp-pow">
-				<alpha>0.001</alpha>
-				<beta>2.1135</beta>
-				<ksi>73433.97</ksi>
-				<mu>0</mu>
-				<lam0>1.15044</lam0>
-				<fiber type="vector">
-					<vector>0.707,0.707,0</vector>
-				</fiber>
+			<solid type="neo-Hookean">
+				<E>275854.4</E>
+				<v>0.495</v>
 			</solid>
 			<solid type="fiber-exp-pow">
-				<alpha>0.001</alpha>
+				<alpha>2</alpha>
 				<beta>2.6232</beta>
 				<ksi>93881.15</ksi>
 				<mu>0</mu>
-				<lam0>1.2871</lam0>
+				<lam0>1</lam0>
 				<fiber type="vector">
-					<vector>0.707,-0.707,0</vector>
+					<vector>1,-1,0</vector>
 				</fiber>
 			</solid>
 		</material>
 		<material id="2" name="Adventitia" type="solid mixture">
 			<density>1</density>
+			<solid type="fiber-exp-pow">
+				<alpha>2</alpha>
+				<beta>2.7554</beta>
+				<ksi>446212.1</ksi>
+				<mu>0</mu>
+				<lam0>1.2871</lam0>
+				<fiber type="vector">
+					<vector>1,-1,0</vector>
+				</fiber>
+			</solid>
 			<solid type="neo-Hookean">
-				<E>42083.74</E>
+				<E>10000</E>
 				<v>0.495</v>
 			</solid>
 		</material>
