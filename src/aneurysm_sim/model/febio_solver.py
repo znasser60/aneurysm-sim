@@ -10,7 +10,6 @@ def fit_collagen_me_fiber_parameters():
     
     params = ArterialParameters()
     lam0 = params.c_rec_mod_me
-
     stretches = np.linspace(lam0, 2.0, 100)
     target_stress = np.array([functions.sigma_collagen_me(lam, params) for lam in stretches])
 
@@ -76,6 +75,7 @@ def fit_collagen_me_fiber_params_hgo():
         target_stress, 
         p0=initial_guesses
     )
+    
     fitted_k1 = popt[0]
     fitted_k2 = popt[1]
     print(f"Fitted k1: {fitted_k1:.4f}")

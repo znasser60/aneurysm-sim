@@ -70,14 +70,14 @@
 	<Material>
 		<material id="1" name="Media" type="uncoupled solid mixture">
 			<density>1</density>
-			<k>10000</k>
+			<k>1000</k>
 			<pressure_model>default</pressure_model>
 			<solid type="Holzapfel-Gasser-Ogden">
 				<c>1.0</c>
-				<k1>0.1286</k1>
+				<k1>0.1285768195</k1>
 				<k2>0.0042</k2>
 				<kappa>0</kappa>
-				<gamma>29</gamma>
+				<gamma>30</gamma>
 				<mat_axis type="cylindrical">
 					<center>0,0,0</center>
 					<axis>0,0,1</axis>
@@ -102,14 +102,14 @@
 		</material>
 		<material id="2" name="Adventitia" type="uncoupled solid mixture">
 			<density>1</density>
-			<k>1000</k>
+			<k>100000</k>
 			<pressure_model>default</pressure_model>
 			<solid type="Holzapfel-Gasser-Ogden">
 				<c>1633.3698</c>
-				<k1>0.47921</k1>
+				<k1>0.4792100791</k1>
 				<k2>0.0082</k2>
 				<kappa>0</kappa>
-				<gamma>62</gamma>
+				<gamma>70</gamma>
 				<mat_axis type="cylindrical">
 					<center>0,0,0</center>
 					<axis>0,0,1</axis>
