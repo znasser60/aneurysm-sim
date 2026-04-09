@@ -5,7 +5,7 @@
 	</Module>
 	<Control>
 		<analysis>STATIC</analysis>
-		<time_steps>1000</time_steps>
+		<time_steps>200</time_steps>
 		<step_size>0.01</step_size>
 		<plot_zero_state>0</plot_zero_state>
 		<plot_range>0,-1</plot_range>
@@ -15,10 +15,10 @@
 		<output_stride>1</output_stride>
 		<adaptor_re_solve>1</adaptor_re_solve>
 		<time_stepper type="default">
-			<max_retries>5</max_retries>
+			<max_retries>10</max_retries>
 			<opt_iter>11</opt_iter>
 			<dtmin>0</dtmin>
-			<dtmax>0.1</dtmax>
+			<dtmax>0.01</dtmax>
 			<aggressiveness>0</aggressiveness>
 			<cutback>0.5</cutback>
 			<dtforce>0</dtforce>
@@ -73,11 +73,11 @@
 			<k>1000</k>
 			<pressure_model>default</pressure_model>
 			<solid type="Holzapfel-Gasser-Ogden">
-				<c>1.0</c>
+				<c>0.1</c>
 				<k1>0.1285768195</k1>
 				<k2>0.0042</k2>
 				<kappa>0</kappa>
-				<gamma>30</gamma>
+				<gamma>29</gamma>
 				<mat_axis type="cylindrical">
 					<center>0,0,0</center>
 					<axis>0,0,1</axis>
@@ -85,10 +85,10 @@
 				</mat_axis>
 			</solid>
 			<solid type="uncoupled active fiber stress">
-				<smax>500</smax>
+				<smax>0.066540</smax>
 				<activation lc="1">1</activation>
 				<stl type="math">
-					<math>(0.066540*(l * (1 - ((1.1 - l)/(1.1 - 0.4))^2)))</math>
+					<math>((l * (1 - ((1.1 - l)/(1.1 - 0.4))^2)))</math>
 				</stl>
 				<stv type="const">
 					<value>1</value>
@@ -102,14 +102,14 @@
 		</material>
 		<material id="2" name="Adventitia" type="uncoupled solid mixture">
 			<density>1</density>
-			<k>100000</k>
+			<k>1000</k>
 			<pressure_model>default</pressure_model>
 			<solid type="Holzapfel-Gasser-Ogden">
-				<c>1633.3698</c>
+				<c>0.001</c>
 				<k1>0.4792100791</k1>
 				<k2>0.0082</k2>
 				<kappa>0</kappa>
-				<gamma>70</gamma>
+				<gamma>62</gamma>
 				<mat_axis type="cylindrical">
 					<center>0,0,0</center>
 					<axis>0,0,1</axis>
