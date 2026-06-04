@@ -1,10 +1,11 @@
 import numpy as np
 
 class ArterialParameters:
-    def __init__(self, gender = None, age = None, genotype = None, polygenic_score = None):
+    def __init__(self, gender = None, age = None, genotype = None, 
+                 polygenic_score = None, smc_fraction=None, tgf_beta_level=None):
         # Geometric and pressure 
         self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = 1.27 # self.c_diam_tzero_mm / (2 * 1.3) 
+        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3) 
         self.c_thickness_tzero = self.c_radius_tzero / 5 
         self.c_thickness_ad = 0.104
         self.c_thickness_me = 0.216
@@ -53,97 +54,32 @@ class ArterialParameters:
         self.v_b_ad = self.c_rec_max_ad
         self.v_c_ad = self.c_rec_mod_ad
 
-        # Load-borne proportions (calculated based on 2:1 C:E ratio and genetic data)
-        self.smc_mean_fraction = {
-            0: 0.7262666, 
-            1: 0.7132891, 
-            2: 0.6736118, 
-            3: 0.7635375, 
-            4: 0.4898171,
-            }
-        
-        if polygenic_score is None or polygenic_score < 0:
-            polygenic_score = 0
-        if polygenic_score > 4:
-            polygenic_score = 4
+        self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
+        self.smc_mean_fractions = {0: 0.7262666, 
+                                   1: 0.7132891, 
+                                   2: 0.6736118, 
+                                   3: 0.7635375, 
+                                   4: 0.4898171}
+        self.smc_sd_fractions = {0: 0.1118832, 
+                                 1: 0.1333362, 
+                                 2: 0.1479770, 
+                                 3: 0.0969533, 
+                                 4: 0.1184857}
+        self.polygenic_score = polygenic_score
+        if tgf_beta_level is not None:
+            self.tgf_beta_level = tgf_beta_level
+        elif genotype in self.tgf_beta_levels:
+            self.tgf_beta_level = self.tgf_beta_levels[genotype]
+        else:
+            self.tgf_beta_level = 1.0
 
-        self.c_load_borne_muscle_p = self.smc_mean_fraction.get(int(min(polygenic_score, 4))) / 2
-        self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
-        self.c_load_borne_elastin = (1/3) * (1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a))
-        self.c_load_borne_collagen = 1.0 - (
-            self.c_load_borne_elastin
-            + self.c_load_borne_muscle_p
-            + self.c_load_borne_muscle_a
-        )
+        if smc_fraction is not None:
+            self.smc_fraction = smc_fraction
+        else:
+            score = 0 if polygenic_score is None else int(np.clip(polygenic_score, 0, 4))
+            self.smc_fraction = self.smc_mean_fractions[score]
 
-        # self.c_load_borne_elastin = 0.50
-        # self.c_load_borne_muscle_p = 0.20
-        # self.c_load_borne_muscle_a = 0.20
-        # self.c_load_borne_collagen = 1.0 - (
-        #     self.c_load_borne_elastin
-        #     + self.c_load_borne_muscle_p
-        #     + self.c_load_borne_muscle_a
-        # )
-
-        # Common factor for tension balance
-        self.c_common_factor_me = (
-            self.c_pressure_sys
-            * self.c_radius_tzero
-            * self.c_lambda_elastin**2
-            * self.c_lambda_z
-            / self.c_thickness_me
-        )
-
-        self.c_common_factor_ad = (
-            self.c_pressure_sys
-            * self.c_radius_tzero
-            * self.c_lambda_elastin**2
-            * self.c_lambda_z
-            / self.c_thickness_ad
-        )
-
-        # Material parameters
-        self.c_k_elastin = (
-            self.c_load_borne_elastin
-            * (self.c_common_factor_me)
-            / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
-        ) 
-
-        print(f"K elastin: {self.c_k_elastin:.2f}")
-
-        collagen_denominator = (
-            2
-            * self.c_lambda_elastin
-            / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
-            * ((self.v_a_me + self.c_lambda_elastin) * np.log(self.c_lambda_elastin / self.v_a_me)
-               + 2 * (self.v_a_me - self.c_lambda_elastin))
-        )
-
-        self.c_k_collagen = self.c_load_borne_collagen * (self.c_common_factor_me) / collagen_denominator
-        print(f"K collagen: {self.c_k_collagen:.2f}")
-
-        # Media collagen Cauchy stress
-        self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
-        self.v_delta_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me))
-
-        # Adventitia collagen Cauchy stress
-        self.v_gamma_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
-        self.v_delta_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
-
-        muscle_a_denominator = (
-            self.c_vasodil_conc
-            * self.c_lambda_muscle
-            * (1 - ((self.c_musc_mean - self.c_lambda_muscle) / (self.c_musc_mean - self.c_musc_min)) ** 2)
-        )
-
-        self.c_k_muscle_p = (
-            self.c_load_borne_muscle_p
-            * (self.c_common_factor_me)
-            / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
-        )
-        print(f"K muscle passive: {self.c_k_muscle_p:.2f}")
-        self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
-        print(f"K muscle active: {self.c_k_muscle_a:.2f}")
+        self.tgf_spike_amount = 1.0
 
         # Immune cell related rates
         self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
@@ -164,8 +100,8 @@ class ArterialParameters:
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
         # Smooth muscle cell rates
-        self.beta1_smc = 1.0 # Rate of change in SMCs aaccording to stretch
-        self.beta2_smc = 0 # Rate of change in SMCs according to change in elastin
+        self.beta1_smc = 2.0 # Rate of change in SMCs according to stretch
+        self.beta2_smc = 0.0 # Rate of change in SMCs according to change in elastin
         self.beta3_smc = 1.0 # Rate of change in SMCs according to immune cells
         self.beta_wss_smc = 1.0 # or 500
         self.tau_homeo = 1.0 
@@ -205,7 +141,7 @@ class ArterialParameters:
         self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
         self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
         self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
-        self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1
+        self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1)
         self.r_beta1 = 0.5           # Baseline latent TGF-Beta activation rate
         self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
         self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
@@ -219,6 +155,8 @@ class ArterialParameters:
         # Set initial values for variables 
         self.alpha_init = 1.15 
         self.init_fibroblast = 1.0 
+        # baseline_healthy_smc_fraction = self.smc_mean_fractions[0]
+        # self.init_muscle_cells = self.smc_fraction / baseline_healthy_smc_fraction
         self.init_muscle_cells = 1.0
         self.init_collagen_ad = 1.0
         self.init_collagen_me = 1.0
@@ -233,21 +171,50 @@ class ArterialParameters:
         self.init_latent_tgf_beta = 0.0
         self.init_active_tgf_beta = 0.0
 
-        # TGF-Beta levels for different genotypes (experimentally derived - provided by the UMC Utrecht)
-        self.tgf_beta_levels = {
-            "TT": 0.713, 
-            "TC": 0.916, 
-            "CC": 1.119
-            }
+        self.refresh_physics()
 
-        if genotype is not None and genotype in self.tgf_beta_levels:
-            self.tgf_beta_level = self.tgf_beta_levels[genotype]
-        else:
-            self.tgf_beta_level = 1.0 # Default value if genotype is not provided or not recognized
+    def refresh_physics(self): 
+        '''
+        Recalculates stiffness parameters based on current TGF-Beta levels and SMC fractions. 
+        '''
+        self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
+        self.c_rec_min_me = self.c_lambda_elastin / self.c_att_max_me
+        self.c_rec_mod_me = self.c_lambda_elastin / self.c_att_mod_me
+        self.v_a_me, self.v_b_me, self.v_c_me = self.c_rec_min_me, self.c_rec_max_me, self.c_rec_mod_me
 
-        # TGF-Beta treatment spike
-        self.tgf_spike_amount = 1.0
+        self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
+        self.c_rec_min_ad = self.c_lambda_elastin / self.c_att_max_ad
+        self.c_rec_mod_ad = self.c_lambda_elastin / self.c_att_mod_ad
+        self.v_a_ad, self.v_b_ad, self.v_c_ad = self.c_rec_min_ad, self.c_rec_max_ad, self.c_rec_mod_ad
 
+        # B. Volume Fraction Distribution
+        self.c_load_borne_muscle_p = self.smc_fraction / 2
+        self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
+        self.c_load_borne_elastin = (1/3) * (1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a))
+        self.c_load_borne_collagen = 1.0 - (self.c_load_borne_elastin + self.c_load_borne_muscle_p + self.c_load_borne_muscle_a)
+
+        # C. Common Factors for Tension Balance
+        self.c_common_factor_me = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_me)
+        self.c_common_factor_ad = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_ad)
+
+        # D. Material Stiffness Constants (k)
+        self.c_k_elastin = self.c_load_borne_elastin * (self.c_common_factor_me) / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
+
+        collagen_denominator = (2 * self.c_lambda_elastin / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me)) * ((self.v_a_me + self.c_lambda_elastin) * np.log(self.c_lambda_elastin / self.v_a_me) + 2 * (self.v_a_me - self.c_lambda_elastin)))
+        
+        self.c_k_collagen = self.c_load_borne_collagen * (self.c_common_factor_me) / collagen_denominator
+
+        # E. Cauchy Stress Slopes
+        self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
+        self.v_delta_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me))
+        self.v_gamma_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
+        self.v_delta_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
+
+        # F. Muscle Stiffness
+        muscle_a_denominator = (self.c_vasodil_conc * self.c_lambda_muscle * (1 - ((self.c_musc_mean - self.c_lambda_muscle) / (self.c_musc_mean - self.c_musc_min)) ** 2))
+        self.c_k_muscle_p = self.c_load_borne_muscle_p * (self.c_common_factor_me) / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
+        self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
+        print(f"Updated physics: K elastin: {self.c_k_elastin:.2f}, K collagen: {self.c_k_collagen:.2f}, K muscle passive: {self.c_k_muscle_p:.2f}, K muscle active: {self.c_k_muscle_a:.2f}")
 
     def to_dict(self):
         return self.__dict__

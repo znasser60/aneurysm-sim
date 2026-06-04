@@ -1,7 +1,10 @@
 import numpy as np
 from scipy.optimize import fsolve
+from SALib.sample import saltelli
+from SALib.analyze import sobol
 
 from aneurysm_sim.model import functions
+from aneurysm_sim.config.parameters import ArterialParameters
 
 def simulate_arterial_stress_and_pressure(params):
 
@@ -84,8 +87,7 @@ def simulate_arterial_stress_and_pressure(params):
     }
 
 def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
-    """
-    """
+
     steps = int(params.t_sim / dt) + 1
     time = np.linspace(0, params.t_sim, steps)
 
@@ -246,6 +248,61 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
         'final_lambda_sys': lambda_sys_array[-1],
     }
 
-def validate_model(results, params):
-    print("Final diameter:", results['diameter'][-1])
-    print("Final lambda_sys:", results['final_lambda_sys'])
+def simulate_aneurysm_batch_smc(params, n_sims=10):
+    """
+    Runs multiple simulations for a single parameter set by sampling 
+    vSMC fractions from a Gaussian distribution based on the score's SD.
+    """
+    # Identify the score to get the correct SD
+    score = int(np.clip(params.polygenic_score, 0, 4)) if params.polygenic_score is not None else 0
+    mean_val = params.smc_mean_fractions[score]
+    sd_val = params.smc_sd_fractions[score]
+
+    batch_results = []
+    sampled_fractions = np.clip(np.random.normal(mean_val, sd_val, n_sims), 0.0, 1.0)
+
+    for fraction in sampled_fractions:
+        p_temp = ArterialParameters(smc_fraction=fraction, 
+                                   tgf_beta_level=params.tgf_beta_level)
+        try:
+            res = simulate_aneurysm(p_temp)
+            batch_results.append(res)
+        except Exception as e:
+            print(f"Simulation failed for fraction {fraction}: {e}")
+        
+        #status update bar
+        print(f"Completed {len(batch_results)}/{n_sims}")
+    return batch_results
+
+def sobol_sensitivity_analysis(num_samples=128):
+    """
+    Performs Sobol sensitivity analysis tracking final circumferential stretch.
+    Varies the SMC Volume Fraction directly, alongside TGF-beta parameters.
+    """
+    problem = {
+        'num_vars': 2,
+        'names': ['smc_fraction', 'tgf_beta_level', ],
+        'bounds': [
+            [0.40, 0.90],  
+            [0.70, 1.30],   
+        ]
+    }
+
+    param_values = saltelli.sample(problem, num_samples)
+    Y = np.zeros([param_values.shape[0]])
+
+    for i, X in enumerate(param_values):
+        print(f"Running simulation {i + 1}/{len(Y)} with parameters: SMC Fraction={X[0]:.2f}, TGF-Beta Level={X[1]:.2f}")
+        smc_pct, tgf_lvl= X
+        
+        p = ArterialParameters(smc_fraction=smc_pct, tgf_beta_level=tgf_lvl) 
+
+        try:
+            results = simulate_aneurysm(p)
+            Y[i] = results['final_lambda_sys']
+        except Exception as e:
+            Y[i] = 1.0 
+
+    Si = sobol.analyze(problem, Y, print_to_console=True)
+
+    return Si

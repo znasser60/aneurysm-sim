@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 
@@ -9,14 +10,20 @@ DATA_PATH = "src/aneurysm_sim/data/syn_patient_data.csv"
 
 
 def run_general_mode(plot_names):
-    """Run only the requested general comparison simulations and plots."""
     GENOTYPES = ["TT", "TC", "CC"]
     SCORES = range(5)
+    SMC_RANGE = np.linspace(0.45, 0.85, 30)
+    TGF_RANGE = np.linspace(0.65, 1.25, 30)
+    Z = np.zeros((len(TGF_RANGE), len(SMC_RANGE)))
 
     for plot_name in plot_names:
         if plot_name == "density_by_genotype":
             results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
             plots.plot_normalised_densities_by_genotype(results["TT"], results["TC"], results["CC"])
+
+        elif plot_name == "density_by_genotype2":
+            results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
+            plots.plot_normalised_densities_by_genotype2(results["TT"], results["TC"], results["CC"])
 
         elif plot_name == "density_by_geno_treat":
             results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
@@ -25,6 +32,10 @@ def run_general_mode(plot_names):
         elif plot_name == "density_by_score":
             results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s)) for s in SCORES}
             plots.plot_normalised_densities_by_score(*[results[s] for s in SCORES])
+        
+        elif plot_name == "density_by_score2":
+            results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s)) for s in SCORES}
+            plots.plot_normalised_densities_by_score2(*[results[s] for s in SCORES])
         
         elif plot_name == "density_by_score_treat":
             results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s), treatment=True) for s in SCORES}
@@ -38,9 +49,20 @@ def run_general_mode(plot_names):
             results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
             plots.plot_stretch_by_genotype(results["TT"], results["TC"], results["CC"])
 
+        elif plot_name == "stretch_treat_notreat":
+                results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
+                results_treat = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
+                plots.plot_stretch_treat_notreat(results["TT"], results["TC"], results["CC"],
+                                                 results_treat["TT"], results_treat["TC"], results_treat["CC"])
+
         elif plot_name == "stretch_by_score":
-            results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s)) for s in SCORES}
-            plots.plot_stretch_by_score(*[results[s] for s in SCORES])
+            SCORES = range(5)
+            results_batch = {}
+            for s in SCORES:
+                p = ArterialParameters(polygenic_score=s)
+                results_batch[s] = model.simulate_aneurysm_batch_smc(p, n_sims=50)
+            
+            plots.plot_stretch_by_score(results_batch)
 
         elif plot_name == "stretch_by_score_treat":
             results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s), treatment=True) for s in SCORES}
@@ -54,6 +76,39 @@ def run_general_mode(plot_names):
             params_dict = {s: ArterialParameters(polygenic_score=s) for s in SCORES}
             results_dict = {s: model.simulate_aneurysm(params_dict[s]) for s in SCORES}
             plots.plot_stiffness_over_time(results_dict, params_dict)
+
+        elif plot_name == "sobol_sensitivity":
+            si_results = model.sobol_sensitivity_analysis()
+            plots.plot_sobol_indices(si_results)
+        
+        elif plot_name == "tgf_smc_heatmap":
+            for i, tgf in enumerate(TGF_RANGE):
+                for j, smc in enumerate(SMC_RANGE):
+                    p = ArterialParameters(smc_fraction=smc, tgf_beta_level=tgf)
+                    try:
+                        sim_results = model.simulate_aneurysm(p)
+                        Z[i, j] = sim_results['final_lambda_sys'] * (2 * p.c_radius_tzero)
+                    except Exception as e:
+                        Z[i, j] = 2 * p.c_radius_tzero
+                    
+                    #status update bar 
+                    print(f"Completed step {i * len(SMC_RANGE) + j + 1}/{len(TGF_RANGE) * len(SMC_RANGE)}: SMC={smc:.2f}, TGF={tgf:.2f}, Final Diameter={Z[i, j]:.4f}")
+
+
+
+            landscape_data = {
+                "smc_range": SMC_RANGE,
+                "tgf_range": TGF_RANGE,
+                "Z": Z
+            }
+            plots.plot_genetic_risk_landscape(landscape_data)
+
+        elif plot_name == "load_bearing_epochs":
+            params_dict = {s: ArterialParameters(polygenic_score=s) for s in [0,4]}
+            results_dict = {s: model.simulate_aneurysm(params_dict[s]) for s in [0,4]}
+            plots.plot_load_bearing_epochs(results_dict, params_dict)
+
+
 
         else:
             print(f"Unknown plot '{plot_name}' for general mode. Available: density_by_genotype, density_by_geno_treat, density_by_score")

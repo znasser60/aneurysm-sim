@@ -254,9 +254,9 @@ def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
     SMCs proliferate with increased stretch, and degrade when medial elastin degrades
     """ 
     lam_m = lambda_muscle(x, params)
-    epsilon_stretch = (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att
-    epsilon_elastin = (elastin_me - params.init_elastin_me)/params.init_elastin_me
-    epsilon_immune = - (immune_cells - params.i_0)
+    epsilon_stretch = max(0, (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att)
+    epsilon_elastin = (elastin_me - params.init_elastin_me) / params.init_elastin_me
+    epsilon_immune = (params.i_0 - immune_cells) / 1.0
     return muscle_cells * (params.beta1_smc * epsilon_stretch + params.beta2_smc * epsilon_elastin + params.beta3_smc * epsilon_immune)
 
 # Collagen remodeling I: 
@@ -337,10 +337,4 @@ def get_latent_tgf_beta_level(params, genotype = None):
         return 1.0
     return levels.get(genotype.upper(), 1.0)
 
-def fiber_exp_pow_stress(alpha, params):
-    """
-    Calculate the stress for the fiber exponential power model.
-    """
-    fiber_exp_pow_stress = 2*params.k_collagen_me*lambda_fiber*(lambda_fiber**2 - 1)**(beta-1)*np.exp(alpha*(lambda_fiber**2-1)**beta)
-    return fiber_exp_pow_stress
 
