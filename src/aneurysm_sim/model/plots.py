@@ -3,9 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
 
-from matplotlib.colors import TwoSlopeNorm
 from aneurysm_sim.model import functions
-from aneurysm_sim.config.parameters import ArterialParameters
+from aneurysm_sim.model import model 
 
 def plot_pressure_vs_stretch(results, n_zoom=120): 
     """
@@ -359,20 +358,6 @@ def plot_stretch_by_score(results_dict):
     
     # Vertical Line for Infiltration at t=40
     ax.axvline(40, color='black', linestyle='-', linewidth=2, alpha=0.8)
-
-    # # --- ANNOTATION START ---
-    # y_min, y_max = ax.get_ylim()
-    # # Position the text box slightly above the bottom axis
-    # y_label_pos = y_min + (y_max - y_min) * 0.05
-
-    # ax.annotate("Infiltration Event", 
-    #            xy=(40, y_min), 
-    #            xytext=(38.5, y_label_pos), 
-    #            fontsize=18, 
-    #            weight='bold',
-    #            bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="black", lw=2),
-    #            arrowprops=dict(arrowstyle="->", color='black', lw=2.5))
-    # # --- ANNOTATION END ---
     
     # Typography
     ax.set_xlabel("Time (years)", fontsize=26, weight='bold', labelpad=15)
@@ -386,122 +371,130 @@ def plot_stretch_by_score(results_dict):
     fig.tight_layout()
     plt.show()
 
-def compute_auc(time, y):
-    """Compute area under the curve using trapezoidal rule."""
-    return np.trapz(y, time)
+# def plot_att_dist(lambda_att_min, lambda_att_mode, lambda_att_max): 
+#     """
+#     Plot triangular distribution of attachment stretch.
+#     """
+#     x = np.linspace(lambda_att_min, lambda_att_max, 1000)
+#     y = np.where(
+#         (x >= lambda_att_min) & (x <= lambda_att_mode),
+#         2 * (x - lambda_att_min) / ((lambda_att_mode - lambda_att_min) * (lambda_att_max - lambda_att_min)),
+#         np.where(
+#             (x > lambda_att_mode) & (x <= lambda_att_max),
+#             2 * (lambda_att_max - x) / ((lambda_att_max - lambda_att_mode) * (lambda_att_max - lambda_att_min)),
+#             0
+#         )
+#     )
 
-def extract_aucs(results_dict, components, treatment_labels):
-    """Return AUC values for each component and treatment condition."""
-    aucs = []
-    for var_key, _ in components:
-        auc_vals = []
-        for cond in treatment_labels:
-            time = results_dict[cond]["time"]
-            y = results_dict[cond][var_key]
-            auc_vals.append(compute_auc(time, y))
-        aucs.append(auc_vals)
-    return np.array(aucs)
+#     plt.figure(figsize=(10, 6))
+#     plt.plot(x, y, label='Attachment Stretch Distribution', color='blue')
+#     plt.xlabel(r'Attachment Stretch $\lambda_A^{AT}$', fontsize=14)
+#     plt.ylabel('PDF', fontsize=14)
+#     plt.grid(True)
+#     plt.show()
 
-def plot_auc_bars_by_genotype(results_tt, results_tc, results_cc, treatment_labels=("No Treatment", "Treatment")):
+# def plot_rec_dist(lambda_rec_min, lambda_rec_mode, lambda_rec_max): 
+#     """
+#     Plot triangular distribution of recruitment stretch.
+#     """
+#     x = np.linspace(lambda_rec_min, lambda_rec_max, 1000)
+#     y = np.where(
+#         (x >= lambda_rec_min) & (x <= lambda_rec_mode),
+#         2 * (x - lambda_rec_min) / ((lambda_rec_mode - lambda_rec_min) * (lambda_rec_max - lambda_rec_min)),
+#         np.where(
+#             (x > lambda_rec_mode) & (x <= lambda_rec_max),
+#             2 * (lambda_rec_max - x) / ((lambda_rec_max - lambda_rec_mode) * (lambda_rec_max - lambda_rec_min)),
+#             0
+#         )
+#     )
+
+#     plt.figure(figsize=(10, 6))
+#     plt.plot(x, y, label='Recruitment Stretch Distribution', color='blue')
+#     plt.xlabel(r'Recruitment Stretch $\lambda_A^R$', fontsize=14)
+#     plt.ylabel('PDF', fontsize=14)
+#     plt.grid(True)
+#     plt.show()
+
+def plot_stretch_evolution_dist(results, stretch_type="attachment", target_years=[40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 55, 60]):
     """
-    Plot bar charts of AUC values for selected normalised densities, comparing
-    treatment vs. no-treatment, for each genotype (TT, TC, CC).
+    Plots multiple triangular distributions layered on the same axes.
+    Specifically targets requested years to capture active remodeling.
+    Includes sorting logic to protect against inverted ODE parameters.
     """
+    time = results["time"]
+    
+    # 1. Extract the relevant raw arrays
+    if stretch_type == "attachment":
+        l_min_raw = results["lambda_att_min"]
+        l_mode_raw = results["lambda_att_mode"]
+        l_max_raw = results["lambda_att_max"]
+        xlabel = r'Attachment Stretch $\lambda_A^{AT}$'
+        title = 'Evolution of Attachment Stretch Distribution'
+    elif stretch_type == "recruitment":
+        l_min_raw = results["lambda_rec_min"]
+        l_mode_raw = results["lambda_rec_mode"]
+        l_max_raw = results["lambda_rec_max"]
+        xlabel = r'Recruitment Stretch $\lambda_A^R$'
+        title = 'Evolution of Recruitment Stretch Distribution'
+    else:
+        raise ValueError("stretch_type must be 'attachment' or 'recruitment'")
 
-    components = [
-        ("fibroblast", "Fibroblasts"),
-        ("collagen_ad", "Adventitial Collagen"),
-        ("latent_tgf_beta", "Latent TGF-β"),
-        ("active_tgf_beta", "Active TGF-β"),
-    ]
-
-    aucs_tt = extract_aucs(results_tt, components, treatment_labels)
-    aucs_tc = extract_aucs(results_tc, components, treatment_labels)
-    aucs_cc = extract_aucs(results_cc, components, treatment_labels)
-
-    fig, axes = plt.subplots(1, 3, figsize=(22, 7), sharey=True)
-
-    for ax, aucs, title in zip(
-        axes, [aucs_tt, aucs_tc, aucs_cc], ["Genotype: TT", "Genotype: TC", "Genotype: CC"]
-    ):
-        x = np.arange(len(components))
-        width = 0.35
-        bars1 = ax.bar(x - width/2, aucs[:, 0], width, label=treatment_labels[0], color="skyblue")
-        bars2 = ax.bar(x + width/2, aucs[:, 1], width, label=treatment_labels[1], color="salmon")
-
-        ax.set_title(title, fontsize=14, weight="bold")
-        ax.set_xticks(x)
-        ax.set_xticklabels([label for _, label in components], rotation=45, ha="right", fontsize=11)
-        ax.grid(axis="y", linestyle="--", alpha=0.6)
-
-    for ax in axes[1:]:
-        ax.tick_params(labelleft=False)
-        ax.spines['left'].set_visible(False)
-
-    fig.text(0.02, 0.5, "AUC", va="center", rotation="vertical", fontsize=14)
-
-    axes[0].legend(loc="upper right", fontsize=11)
-    plt.tight_layout(rect=[0.05, 0, 1, 1])  
-    plt.show()
-
-    return fig
-
-def plot_att_dist(lambda_att_min, lambda_att_mode, lambda_att_max): 
-    """
-    Plot triangular distribution of attachment stretch.
-    """
-    x = np.linspace(lambda_att_min, lambda_att_max, 1000)
-    y = np.where(
-        (x >= lambda_att_min) & (x <= lambda_att_mode),
-        2 * (x - lambda_att_min) / ((lambda_att_mode - lambda_att_min) * (lambda_att_max - lambda_att_min)),
-        np.where(
-            (x > lambda_att_mode) & (x <= lambda_att_max),
-            2 * (lambda_att_max - x) / ((lambda_att_max - lambda_att_mode) * (lambda_att_max - lambda_att_min)),
-            0
-        )
-    )
-
+    # 2. Find the exact array indices for the requested target years
+    indices = []
+    for y in target_years:
+        idx = np.argmin(np.abs(time - y))
+        indices.append(idx)
+        
+    num_layers = len(indices)
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(x, y, label='Attachment Stretch Distribution', color='blue')
-    plt.xlabel(r'Attachment Stretch $\lambda_A^{AT}$', fontsize=14)
-    plt.ylabel('PDF', fontsize=14)
-    plt.grid(True)
+    
+    # Update colormap to fit the number of target years perfectly
+    colors = plt.cm.viridis(np.linspace(0.1, 0.9, num_layers))
+    
+    # 3. Create a global x-axis using the absolute bounds
+    all_selected_vals = np.concatenate([l_min_raw[indices], l_mode_raw[indices], l_max_raw[indices]])
+    x_min_global = np.min(all_selected_vals) * 0.98
+    x_max_global = np.max(all_selected_vals) * 1.02
+    x = np.linspace(x_min_global, x_max_global, 1500)
+    
+    # 4. Loop through each snapshot
+    for i, idx in enumerate(indices):
+        t = time[idx]
+        
+        # Sort the vertices to guarantee a valid geometric triangle
+        vertices = np.sort([l_min_raw[idx], l_mode_raw[idx], l_max_raw[idx]])
+        a = vertices[0]  # Left Base
+        b = vertices[1]  # Peak
+        c = vertices[2]  # Right Base
+        
+        # Protect against the triangle collapsing into a vertical line
+        if c - a < 1e-6:
+            y = np.zeros_like(x)
+        else:
+            y = np.where(
+                (x >= a) & (x <= b),
+                2 * (x - a) / ((b - a + 1e-9) * (c - a)),
+                np.where(
+                    (x > b) & (x <= c),
+                    2 * (c - x) / ((c - b + 1e-9) * (c - a)),
+                    0
+                )
+            )
+        
+        # Plot the semi-transparent fill and the solid outline
+        plt.fill_between(x, y, alpha=0.25, color=colors[i])
+        plt.plot(x, y, label=f'Year {int(t)}', color=colors[i], linewidth=2.5)
+
+    # 5. Formatting
+    plt.xlabel(xlabel, fontsize=14, weight='bold')
+    plt.ylabel('Probability Density', fontsize=14, weight='bold')
+    plt.title(title, fontsize=16, weight='bold')
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.legend(title="Simulation Time", fontsize=11, title_fontsize=12, loc='upper right')
+    
+    plt.tight_layout()
     plt.show()
-
-def plot_rec_dist(lambda_rec_min, lambda_rec_mode, lambda_rec_max): 
-    """
-    Plot triangular distribution of recruitment stretch.
-    """
-    x = np.linspace(lambda_rec_min, lambda_rec_max, 1000)
-    y = np.where(
-        (x >= lambda_rec_min) & (x <= lambda_rec_mode),
-        2 * (x - lambda_rec_min) / ((lambda_rec_mode - lambda_rec_min) * (lambda_rec_max - lambda_rec_min)),
-        np.where(
-            (x > lambda_rec_mode) & (x <= lambda_rec_max),
-            2 * (lambda_rec_max - x) / ((lambda_rec_max - lambda_rec_mode) * (lambda_rec_max - lambda_rec_min)),
-            0
-        )
-    )
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(x, y, label='Recruitment Stretch Distribution', color='blue')
-    plt.xlabel(r'Recruitment Stretch $\lambda_A^R$', fontsize=14)
-    plt.ylabel('PDF', fontsize=14)
-    plt.grid(True)
-    plt.show()
-
-def plot_elastin_smc(results_smc, results_no_smc):
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(12, 8))
-        xlabel, ylabel = True, True
-
-    time = results_smc["time"]
-
-    ax.plot(time, results_smc["elastin_me"],   color='brown',   linestyle=':', label='Medial Collagen',    linewidth=1)
-    ax.plot(time, results_no_smc["elastin_me"], linestyle='-', label='Medial Collagen',    linewidth=1)
-    ax.legend(loc='upper right', fontsize=10, ncol=2)
-
-    return ax
 
 def plot_diameter_vs_time(results_tt, results_tc, results_cc):
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -633,71 +626,6 @@ def plot_sobol_indices(si_results, width=0.35):
 
     return fig
 
-def plot_stretch_heatmap(): 
-    pass
-
-def plot_genetic_risk_landscape(landscape_results):
-    """
-    Plots the pre-computed heatmap of the genetic risk landscape.
-    Expects 'landscape_results' to contain: smc_range, tgf_range, and Z (2D array).
-    """
-    smc_range = landscape_results["smc_range"]
-    tgf_range = landscape_results["tgf_range"]
-    Z = landscape_results["Z"]
-
-    norm = TwoSlopeNorm(vcenter=2.9, vmin=2.5, vmax=3.5) 
-    
-    plt.figure(figsize=(12, 9))
-    im = plt.pcolormesh(smc_range, tgf_range, Z, cmap='RdBu_r', norm=norm, shading='gouraud')
-    
-    contours = plt.contour(smc_range, tgf_range, Z, levels=[2.88, 2.92], colors='white', alpha=0.5)
-    plt.clabel(contours, inline=True, fontsize=10, fmt="Healthy Zone")
-
-    plt.title("Arterial Health Landscape: TGF-B Level vs SMC Volume Fraction", fontsize=16, weight='bold')
-    plt.xlabel("SMC Volume Fraction", fontsize=12)
-    plt.ylabel("TGF-beta Expression Level", fontsize=12)
-    plt.colorbar(im, label="Final Artery Diameter (mm)")
-    
-    plt.tight_layout()
-    plt.show()
-
-def plot_intervention_window_heatmap(landscape_data):
-    """
-    Plots a heatmap of final arterial diameter based on polygenic score and treatment timing.
-    """
-    genotype = landscape_data["genotype"]
-    treat_times = landscape_data["treat_times"]
-    final_diameters = landscape_data["final_diameters"]
-
-    fig, ax = plt.subplots(figsize=(14, 8))
-    vmax = max(np.max(final_diameters), 4.5)
-    norm = TwoSlopeNorm(vcenter=2.9, vmin=2.5, vmax=vmax) # center around 2.9mm (healthy)
-
-    im = ax.pcolormesh(treat_times, genotype, final_diameters, cmap='RdYlBu_r', norm=norm, shading='nearest')
-
-    contours = ax.contour(treat_times, genotype, final_diameters, levels=[3.2, 4.0], colors=['white', 'black'], linewidths=2)
-    fmt = {3.2: 'Stable (<3.2mm)', 5.0: 'Unstable (>5.0mm)'}
-    ax.clabel(contours, inline=True, fontsize=12, fmt=fmt, weight='bold')
-
-    ax.set_title("Intervention Timing vs. Final Artery Diameter", fontsize=22, weight='bold', pad=20)
-    ax.set_xlabel("Time of Treatment (Years)", fontsize=16, weight='bold', labelpad=15)
-    ax.set_ylabel("TGF-B Expression Level", fontsize=16, weight='bold', labelpad=15)
-    
-    ax.set_yticks(genotype)
-    ax.tick_params(axis='both', labelsize=14)
-    ax.axvline(x=40, color='red', linestyle='--', linewidth=3, alpha=0.8) # immune infiltration event
-    ax.text(40.5, 3.8, 'Immune Infiltration\n(t=40)', color='red', fontsize=12, weight='bold', 
-            bbox=dict(facecolor='white', alpha=0.8, edgecolor='red', boxstyle='round,pad=0.3'))
-
-    cbar = fig.colorbar(im, ax=ax, pad=0.02)
-    cbar.set_label("Final Artery Diameter at t=90 (mm)", fontsize=14, weight='bold', rotation=270, labelpad=25)
-    cbar.ax.tick_params(labelsize=12)
-
-    plt.tight_layout()
-    plt.show()
-
-    return fig
-
 def plot_load_bearing_epochs(results_dict, params_dict, epochs=[35, 42, 55]):
     """
     Plots a stacked bar chart of load-bearing structures at specific time epochs.
@@ -757,8 +685,7 @@ def plot_load_bearing_epochs(results_dict, params_dict, epochs=[35, 42, 55]):
         ax.bar(x, p_col_me, width, bottom=p_el + p_smc, label='Collagen (Media)', color=colors['Collagen'], edgecolor='black', linewidth=1.2)
         ax.bar(x, p_col_ad, width, bottom=p_el + p_smc + p_col_me, label='Collagen (Adventitia)', color='#009E73', edgecolor='black', linewidth=1.2)
 
-        
-        # Poster-ready typography
+    
         epoch_labels = {35: "Pre-Infiltration\n(Homeostasis, t=35)", 
                         42: "Active Remodeling\n(Post-Infiltration, t=42)", 
                         55: "Late Stage\n(Degeneration, t=55)"}
@@ -779,3 +706,51 @@ def plot_load_bearing_epochs(results_dict, params_dict, epochs=[35, 42, 55]):
     plt.tight_layout(rect=[0.05, 0.05, 1, 0.95])
     plt.show()
     return fig
+
+def plot_time_step_convergence(dt_list, params): 
+    # final_lambda_sys_array = []
+    final_fibroblast_array = []
+    differences = []
+    for dt in dt_list: 
+        results = model.simulate_aneurysm(params, dt=dt)
+        # final_lambda_sys_array.append(results["final_lambda_sys"])
+        final_fibroblast_array.append(results["fibroblast"][-1])
+        #record differences 
+        # if len(final_lambda_sys_array) > 1: 
+        #     diff = abs(final_lambda_sys_array[-1] - final_lambda_sys_array[-2])
+        #     differences.append(diff)
+        # else: 
+        #     differences.append(0)  # No difference for the first point
+        if len(final_fibroblast_array) > 1:
+            diff = abs(final_fibroblast_array[-1] - final_fibroblast_array[-2])
+            differences.append(diff)
+        else:
+            differences.append(0)  
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    # ax.plot(dt_list, final_lambda_sys_array, marker='o', linestyle='-', color='blue', linewidth=2, markersize=8)
+    ax.plot(dt_list, final_fibroblast_array, marker='o', linestyle='-', color='green', linewidth=2, markersize=8)
+    ax.set_xlabel("Time Step (years)", fontsize=14)
+    # ax.set_ylabel(r"Final Systolic Stretch $\lambda_{sys}$", fontsize=14)
+    ax.set_ylabel("Final Fibroblast Density", fontsize=14)
+    ax.set_title("Time Step Convergence Study", fontsize=16, weight='bold')
+    ax.grid(True, linestyle='--', alpha=0.5)
+    tolerance = 1e-4
+    
+    large_diff_indices = [i for i, diff in enumerate(differences) if diff > tolerance and i > 0]
+    
+    if large_diff_indices:
+        break_index = large_diff_indices[0]
+        optimal_dt = dt_list[break_index - 1]
+        print(f"Convergence breaks at dt = {dt_list[break_index]}")
+        print(f"Optimal converged dt = {optimal_dt}")
+        ax.axvline(optimal_dt, color='red', linestyle='--', linewidth=2, 
+                   label=f'Convergence Threshold (dt={optimal_dt:.3f} years)')
+        ax.legend(fontsize=12)
+    else:
+        print("All dt values are within the convergence tolerance! The model is converged across the whole range.")
+    
+    plt.show()
+    return fig
+    
+

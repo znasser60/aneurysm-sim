@@ -260,20 +260,41 @@ def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
     return muscle_cells * (params.beta1_smc * epsilon_stretch + params.beta2_smc * epsilon_elastin + params.beta3_smc * epsilon_immune)
 
 # Collagen remodeling I: 
+# def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
+#     """
+#     Numerical implementation of Equation 18 from Aparício et al. (2016)
+#     Uses a moving average over T_at years (N steps)
+#     """
+#     N = int(params.remodel_time / dt)
+#     if t_idx < N:
+#         # avg_stretch =  np.mean(lambda_c_max_history[:t_idx+1])
+#         # scale = dt / params.remodel_time
+#         # lambda_att_max = scale * len(lambda_c_max_history[:t_idx+1]) * avg_stretch
+#         lambda_att_max = np.mean(lambda_c_max_history[:t_idx+1])
+    
+#     else: 
+#         window = lambda_c_max_history[t_idx - N + 1 : t_idx + 1]
+#         scale = dt / params.remodel_time
+#         lambda_att_max = scale * N * np.mean(window)
+#     return lambda_att_max
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
     """
-    Numerical implementation of Equation 18 from Aparício et al. (2016)
-    Uses a moving average over T_at years (N steps)
+    Numerical implementation of Equation 18 from Aparício et al. (2016).
+    Trailing moving average over T_AT years (N steps), with the
+    pre-simulation history (t<0) assumed to sit at baseline.
     """
     N = int(params.remodel_time / dt)
+
     if t_idx < N:
-        avg_stretch =  np.mean(lambda_c_max_history[:t_idx+1])
-        scale = dt / params.remodel_time
-        lambda_att_max = scale * len(lambda_c_max_history[:t_idx+1]) * avg_stretch
-    else: 
+        baseline_stretch = lambda_c_max_history[0]
+        missing_steps = N - (t_idx + 1)
+        sum_ghost = missing_steps * baseline_stretch
+        sum_recorded = np.sum(lambda_c_max_history[:t_idx + 1])
+        lambda_att_max = (sum_ghost + sum_recorded) / N
+    else:
         window = lambda_c_max_history[t_idx - N + 1 : t_idx + 1]
-        scale = dt / params.remodel_time
-        lambda_att_max = scale * N * np.mean(window)
+        lambda_att_max = np.mean(window)
+
     return lambda_att_max
 
 def calculate_min_attachment_stretch(lambda_att_max, params): 
@@ -292,7 +313,7 @@ def calculate_mode_attachment_stretch(lambda_att_min, lambda_att_max, params):
     where s(t) is the skew of the distribution at time t. 
     For simplicity, we take s(t) = 0.5
     """
-    lambda_att_mode = lambda_att_min + params.skew_att_dist * (lambda_att_min - lambda_att_max)
+    lambda_att_mode = lambda_att_min + params.skew_att_dist * (lambda_att_max - lambda_att_min)
     return lambda_att_mode
 
 # Collagen remodeling II: 

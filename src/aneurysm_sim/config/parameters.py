@@ -29,9 +29,12 @@ class ArterialParameters:
         self.c_collagen_ratio_ad_me = 8.0
 
         # Media attachment stretches
-        self.c_att_min_me = 1.00001
-        self.c_att_mod_me = 1.01
-        self.c_att_max_me = 1.07
+        # self.c_att_min_me = 1.00001
+        # self.c_att_mod_me = 1.01
+        # self.c_att_max_me = 1.07
+        self.c_att_min_me = 1.0
+        self.c_att_mod_me = 1.05
+        self.c_att_max_me = 1.1
 
         # Media recruitment stretches
         self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
@@ -42,9 +45,12 @@ class ArterialParameters:
         self.v_c_me = self.c_rec_mod_me
 
         # Adventitia attachment
-        self.c_att_min_ad = 0.8
-        self.c_att_mod_ad = 0.9
-        self.c_att_max_ad = 0.99999
+        # self.c_att_min_ad = 0.8
+        # self.c_att_mod_ad = 0.9
+        # self.c_att_max_ad = 0.99999
+        self.c_att_min_ad = 0.9
+        self.c_att_mod_ad = 0.95
+        self.c_att_max_ad = 1.0
 
         # Adventitia recruitment
         self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
@@ -96,11 +102,11 @@ class ArterialParameters:
 
         # Fibroblast rates
         self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
-        self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
+        self.r_f2 = 1.0      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
         # Smooth muscle cell rates
-        self.beta1_smc = 2.0 # Rate of change in SMCs according to stretch
+        self.beta1_smc = 0.5 # Rate of change in SMCs according to stretch
         self.beta2_smc = 0.0 # Rate of change in SMCs according to change in elastin
         self.beta3_smc = 1.0 # Rate of change in SMCs according to immune cells
         self.beta_wss_smc = 1.0 # or 500
@@ -117,8 +123,8 @@ class ArterialParameters:
         self.r_p3 = 1.0      # Combined baseline procollagen degradation and modification rate (years^-1)
 
         # Adventitial collagen rates
-        self.r_c1 = 0.5      # Baseline adventitial collagen maturation rat (years^-1)
-        self.r_c2 = 0.5      # Adventitial collagen degredation rate (years^-1)
+        self.r_c1 = 0.5      # Baseline adventitial collagen maturation rate (years^-1)
+        self.r_c2 = 0.5      # Adventitial collagen degradation rate (years^-1)
 
         # Zymogen rates
         self.r_z1 = 1.0      # Baseline zymogen secretion rate by fibroblasts (years^-1)
@@ -138,7 +144,7 @@ class ArterialParameters:
 
         # TGF-Beta rates
         self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
-        self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
+        self.r_betal2 = 10.0         # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
         self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
         self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
         self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1)
@@ -187,30 +193,40 @@ class ArterialParameters:
         self.c_rec_mod_ad = self.c_lambda_elastin / self.c_att_mod_ad
         self.v_a_ad, self.v_b_ad, self.v_c_ad = self.c_rec_min_ad, self.c_rec_max_ad, self.c_rec_mod_ad
 
-        # B. Volume Fraction Distribution
         self.c_load_borne_muscle_p = self.smc_fraction / 2
         self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
         self.c_load_borne_elastin = (1/3) * (1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a))
         self.c_load_borne_collagen = 1.0 - (self.c_load_borne_elastin + self.c_load_borne_muscle_p + self.c_load_borne_muscle_a)
 
-        # C. Common Factors for Tension Balance
         self.c_common_factor_me = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_me)
         self.c_common_factor_ad = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_ad)
+        x = self.c_lambda_elastin
+        v_a = self.v_a_me
+        v_b = self.v_b_me
+        v_c = self.v_c_me
 
-        # D. Material Stiffness Constants (k)
-        self.c_k_elastin = self.c_load_borne_elastin * (self.c_common_factor_me) / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
+        gamma_unit = 1.0 / ((v_b - v_a) * (v_c - v_a))
+        delta_unit = 1.0 / ((v_b - v_a) * (v_b - v_c))
 
-        collagen_denominator = (2 * self.c_lambda_elastin / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me)) * ((self.v_a_me + self.c_lambda_elastin) * np.log(self.c_lambda_elastin / self.v_a_me) + 2 * (self.v_a_me - self.c_lambda_elastin)))
-        
+        if x < v_a:
+            collagen_denominator = 1e-9 
+        elif x < v_c:
+            collagen_denominator = x * gamma_unit * 2 * ((x + v_a) * np.log(x / v_a) + 2 * (v_a - x))
+        elif x <= v_b:
+            term1 = (x + v_a) * np.log(v_c / v_a) + v_a - v_c + ((v_a - v_c) / v_c) * x
+            term2 = (x + v_b) * np.log(x / v_c) + v_b + v_c - ((v_b + v_c) / v_c) * x
+            collagen_denominator = x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+        else:
+            term1 = (x + v_a) * np.log(v_c / v_a) + v_a - v_c + ((v_a - v_c) / v_c) * x
+            term2 = (x + v_b) * np.log(v_b / v_c) - v_b + v_c - ((v_b - v_c) / v_c) * x
+            collagen_denominator = x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+
         self.c_k_collagen = self.c_load_borne_collagen * (self.c_common_factor_me) / collagen_denominator
-
-        # E. Cauchy Stress Slopes
         self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
         self.v_delta_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me))
         self.v_gamma_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
         self.v_delta_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
-
-        # F. Muscle Stiffness
+        self.c_k_elastin = self.c_load_borne_elastin * (self.c_common_factor_me) / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
         muscle_a_denominator = (self.c_vasodil_conc * self.c_lambda_muscle * (1 - ((self.c_musc_mean - self.c_lambda_muscle) / (self.c_musc_mean - self.c_musc_min)) ** 2))
         self.c_k_muscle_p = self.c_load_borne_muscle_p * (self.c_common_factor_me) / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
         self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator

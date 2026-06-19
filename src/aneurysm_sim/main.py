@@ -54,7 +54,6 @@ def run_general_mode(plot_names):
                 results_treat = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
                 plots.plot_stretch_treat_notreat(results["TT"], results["TC"], results["CC"],
                                                  results_treat["TT"], results_treat["TC"], results_treat["CC"])
-
         elif plot_name == "stretch_by_score":
             SCORES = range(5)
             results_batch = {}
@@ -80,34 +79,16 @@ def run_general_mode(plot_names):
         elif plot_name == "sobol_sensitivity":
             si_results = model.sobol_sensitivity_analysis()
             plots.plot_sobol_indices(si_results)
-        
-        elif plot_name == "tgf_smc_heatmap":
-            for i, tgf in enumerate(TGF_RANGE):
-                for j, smc in enumerate(SMC_RANGE):
-                    p = ArterialParameters(smc_fraction=smc, tgf_beta_level=tgf)
-                    try:
-                        sim_results = model.simulate_aneurysm(p)
-                        Z[i, j] = sim_results['final_lambda_sys'] * (2 * p.c_radius_tzero)
-                    except Exception as e:
-                        Z[i, j] = 2 * p.c_radius_tzero
-                    
-                    #status update bar 
-                    print(f"Completed step {i * len(SMC_RANGE) + j + 1}/{len(TGF_RANGE) * len(SMC_RANGE)}: SMC={smc:.2f}, TGF={tgf:.2f}, Final Diameter={Z[i, j]:.4f}")
 
-
-
-            landscape_data = {
-                "smc_range": SMC_RANGE,
-                "tgf_range": TGF_RANGE,
-                "Z": Z
-            }
-            plots.plot_genetic_risk_landscape(landscape_data)
 
         elif plot_name == "load_bearing_epochs":
             params_dict = {s: ArterialParameters(polygenic_score=s) for s in [0,4]}
             results_dict = {s: model.simulate_aneurysm(params_dict[s]) for s in [0,4]}
             plots.plot_load_bearing_epochs(results_dict, params_dict)
-
+        
+        elif plot_name == "time_convergence":
+            dt_list = np.linspace(0.0001, 0.05, 50)
+            plots.plot_time_step_convergence(dt_list, ArterialParameters())
 
 
         else:
@@ -135,8 +116,10 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
             "pressure_vs_stretch": lambda: plots.plot_pressure_vs_stretch(patient_stretch_results),
             "pressure_vs_diameter": lambda: plots.plot_pressure_vs_diameter(patient_stretch_results),
             "stretch_vs_stress": lambda: plots.plot_stretch_vs_stress(patient_stretch_results),
-            "att_dist":          lambda: plots.plot_att_dist(patient_params.c_att_min_ad, patient_params.c_att_mod_ad, patient_params.c_att_max_ad),
-            "rec_dist":          lambda: plots.plot_rec_dist(patient_params.c_rec_min_ad, patient_params.c_rec_mod_ad, patient_params.c_rec_max_ad),
+            # "att_dist":          lambda: plots.plot_att_dist(patient_params.c_att_min_ad, patient_params.c_att_mod_ad, patient_params.c_att_max_ad),
+            # "rec_dist":          lambda: plots.plot_rec_dist(patient_params.c_rec_min_ad, patient_params.c_rec_mod_ad, patient_params.c_rec_max_ad),
+            "att_dist":     lambda: plots.plot_stretch_evolution_dist(patient_results, stretch_type="attachment"),
+            "rec_dist":     lambda: plots.plot_stretch_evolution_dist(patient_results, stretch_type="recruitment"),
             "density":           lambda: [plots.plot_normalised_densities(patient_results, legend=True), plt.show()],
             "density_treat":     lambda: [plots.plot_normalised_densities(patient_results_treat, legend=True), plt.show()],
         }

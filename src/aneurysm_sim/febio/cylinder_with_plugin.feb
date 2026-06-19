@@ -5,7 +5,7 @@
 	</Module>
 	<Control>
 		<analysis>STATIC</analysis>
-		<time_steps>215</time_steps>
+		<time_steps>210</time_steps>
 		<step_size>0.01</step_size>
 		<plot_zero_state>0</plot_zero_state>
 		<plot_range>0,-1</plot_range>
@@ -71,7 +71,7 @@
         <material id="1" name="Media" type="aneurysm_0D_coupled">
             <layer>0</layer>
 			<k>500.0</k>
-            <genotype>0</genotype> 
+            <genotype>1</genotype> 
 			<polygenic_score>0</polygenic_score>
             <febio_disease_start>1.1</febio_disease_start>
             <years_per_febio_sec>90.0</years_per_febio_sec>
@@ -82,12 +82,10 @@
                 
 			<passive_solid type="Holzapfel-Gasser-Ogden">
 				<c>0.046694141259266245</c>
-				<!-- <k1>0.0983385498</k1>
-				<k2>0.005</k2> -->
-				<!-- <k1>0.082781</k1>
-				<k2>0.0001</k2> -->
-				<k1>0.079433</k1>
-				<k2>1.517629</k2>
+				<!-- <k1>0.079433</k1>
+				<k2>1.517629</k2> -->
+				<k1>0.063746</k1>
+				<k2>1.041763</k2>
 				<kappa>0.27</kappa>
 				<gamma>7</gamma>
 				<mat_axis type="cylindrical">
@@ -116,7 +114,7 @@
         <material id="2" name="Adventitia" type="aneurysm_0D_coupled">
             <k>500.0</k>
             <layer>1</layer>
-            <genotype>0</genotype> 
+            <genotype>1</genotype> 
 			<polygenic_score>0</polygenic_score>
             <febio_disease_start>1.1</febio_disease_start>
             <years_per_febio_sec>90.0</years_per_febio_sec>
@@ -131,12 +129,10 @@
                 
 			<passive_solid type="Holzapfel-Gasser-Ogden">
 				<c>0.001</c>
-				<!-- <k1>0.4183258586</k1>
-				<k2>0.0084</k2> -->
-				<!-- <k1>0.827938</k1>
-				<k2>0.0001</k2> -->
-				<k1>0.047472</k1>
-				<k2>11.303713</k2>
+				<!-- <k1>0.047472</k1>
+				<k2>11.303713</k2> -->
+				<k1>0.105416</k1>
+				<k2>7.918840</k2>
 				<kappa>0.32</kappa>
 				<gamma>77</gamma>
 				<mat_axis type="cylindrical">

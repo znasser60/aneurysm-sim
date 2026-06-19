@@ -103,53 +103,58 @@ public:
 };
 
 const int FEAneurysmPoint::MAX_HIST;
-class FEAneurysmMaterial : public FEUncoupledMaterial
+
+class FEAneurysmMaterial: 
+public FEUncoupledMaterial
 {
 public:
     // FEUncoupledMaterial* m_base_mat;
     FEUncoupledMaterial* m_pPassive;
     FEUncoupledMaterial* m_pActive;
+    // FEUncoupledMaterial* m_pElastin;    // Isotropic Matrix
+    // FEUncoupledMaterial* m_pCollagen;   // Anisotropic Fibers
+    // FEUncoupledMaterial* m_pActive;     // Smooth Muscle Cells
 
-    int    layer; // 0 = Media, 1 = Adventitia
-    int    genotype; // 0 = TT, 1 = TC, 2 = CC
-    int    polygenic_score; // 0–4
-
+    int layer; // 0 = Media, 1 = Adventitia
+    int genotype; // 0 = TT, 1 = TC, 2 = CC
+    int polygenic_score; // 0–4
     double tgf_beta_level;
     double smc_fraction;
-
     double febio_disease_start;
     double years_per_febio_sec;
-
     double patch_x, patch_y, patch_z;
     double spread_sigma;
 
-    double r_e    = 1.0,  r_cm   = 1.0;
-    double t_i0   = 40.0, i_0    = 0.0, i_max = 1.0, k_i = 1.25;
-    double r_pc1  = 1.0,  r_pc2  = 1.0;
-    double r_f1   = 1.0,  r_f2   = 0.5,  r_f3   = 1.0;
-    double r_p1   = 1.0,  r_p2   = 0.5,  r_p3   = 1.0;
-    double r_c1   = 0.5,  r_c2   = 0.5;
-    double r_z1   = 1.0,  r_z2   = 0.5,  r_z3   = 1.0;
-    double r_ca1  = 0.5,  r_ca2  = 0.25, r_ca3  = 0.25;
-    double r_i1   = 1.0,  r_i2   = 0.5,  r_i3   = 0.75, r_i4 = 0.25;
-    double r_betal1 = 0.1, r_betal2 = 5.0, r_betal3 = 1.0;
+    double r_e = 1.0, r_cm = 1.0;
+    double t_i0 = 40.0, i_0 = 0.0, i_max = 1.0, k_i = 1.25;
+    double r_pc1 = 1.0, r_pc2 = 1.0;
+    double r_f1 = 1.0, r_f2 = 0.5, r_f3 = 1.0;
+    double r_p1 = 1.0, r_p2 = 0.5, r_p3 = 1.0;
+    double r_c1 = 0.5, r_c2 = 0.5;
+    double r_z1 = 1.0, r_z2 = 0.5, r_z3 = 1.0;
+    double r_ca1 = 0.5, r_ca2  = 0.25, r_ca3  = 0.25;
+    double r_i1 = 1.0, r_i2 = 0.5, r_i3 = 0.75, r_i4 = 0.25;
+    double r_betal1 = 0.1, r_betal2 = 10.0, r_betal3 = 1.0;
     double r_betal4 = 1.0, r_betal5 = 1.0;
-    double r_beta1  = 0.5, r_beta2  = 1.0, r_beta3 = 1.0;
-    double beta1_smc = 0.75, beta2_smc = 0.0, beta3_smc = 1.0;
-    double lambda_att_smc   = 1.1;
+    double r_beta1 = 0.5, r_beta2 = 1.0, r_beta3 = 1.0;
+    double beta1_smc = 0.5, beta2_smc = 0.0, beta3_smc = 1.0;
+    double lambda_att_smc = 1.1;
 
-    double remodel_time   = 10.0;
+    double remodel_time = 10.0;
     double width_att_dist = 0.1;
-    double skew_att_dist  = 0.5;
-    double alpha_init     = 1.15;
+    double skew_att_dist = 0.5;
+    double alpha_init = 1.15;
 
     FEAneurysmMaterial(FEModel* fem) : FEUncoupledMaterial(fem)
     {
-        m_pPassive          = nullptr;
-        m_pActive           = nullptr;
-        layer               = 0;
-        genotype            = 0;
-        polygenic_score     = 0;
+        m_pPassive = nullptr;
+        m_pActive = nullptr;
+        // m_pElastin = nullptr;
+        // m_pCollagen = nullptr;
+        // m_pActive = nullptr;
+        layer = 0;
+        genotype = 0;
+        polygenic_score = 0;
         febio_disease_start = 2.0;
         years_per_febio_sec = 45.0;
         patch_x = 1.27; patch_y = 0.0; patch_z = 5.0;
@@ -163,11 +168,11 @@ public:
         const double tgf_map[3]  = {0.713, 0.916, 1.119};
         const double smc_map[5]  = {0.7262666, 0.7132891, 0.6736118, 0.7635375, 0.4898171};
 
-        genotype        = std::max(0, std::min(genotype, 2));
+        genotype  = std::max(0, std::min(genotype, 2));
         polygenic_score = std::max(0, std::min(polygenic_score, 4));
 
         tgf_beta_level = tgf_map[genotype];
-        smc_fraction   = smc_map[polygenic_score];
+        smc_fraction = smc_map[polygenic_score];
 
         return FEUncoupledMaterial::Init();
     }
@@ -186,7 +191,7 @@ public:
         if (layer == 0) { 
             double w_e  = (1.0 / 3.0) * (1.0 - smc_fraction);
             double w_cm = (2.0 / 3.0) * (1.0 - smc_fraction);
-            double w_mp  = 0.5*smc_fraction;
+            double w_mp = 0.5*smc_fraction;
             return (w_e * pt.elastin_me + w_cm * pt.collagen_me + w_mp * pt.muscle_cells) 
                / (w_e + w_cm + w_mp);
         }
@@ -202,17 +207,56 @@ public:
         return MaxPrincipalStretch(ep->m_F);
     }
 
+    // double CalcLamAttMax(FEAneurysmPoint& pt, double dt_bio) const
+    // {
+    //     int N = std::max(1, (int)(remodel_time / dt_bio));
+    //     int count = pt.hist_count;
+    //     int use = std::min(count, FEAneurysmPoint::MAX_HIST);
+    //     int start = std::max(0, use - N);
+    //     double sum = 0.0;
+    //     int n_used = 0;
+    //     for (int k = start; k < use; ++k) { sum += pt.lc_max_history[k]; ++n_used; }
+    //     if (n_used == 0) return pt.lambda_rec_min > 0 ? 1.3 / pt.lambda_rec_min : 1.0;
+    //     return (sum * dt_bio) / remodel_time;
+    // }
     double CalcLamAttMax(FEAneurysmPoint& pt, double dt_bio) const
     {
         int N = std::max(1, (int)(remodel_time / dt_bio));
+        
+        if (N > FEAneurysmPoint::MAX_HIST) {
+            N = FEAneurysmPoint::MAX_HIST;
+        }
+
         int count = pt.hist_count;
-        int use = std::min(count, FEAneurysmPoint::MAX_HIST);
-        int start = std::max(0, use - N);
-        double sum = 0.0;
-        int n_used = 0;
-        for (int k = start; k < use; ++k) { sum += pt.lc_max_history[k]; ++n_used; }
-        if (n_used == 0) return pt.lambda_rec_min > 0 ? 1.3 / pt.lambda_rec_min : 1.0;
-        return (sum * dt_bio) / remodel_time;
+        
+        if (count == 0) {
+            return pt.lambda_rec_min > 0 ? 1.3 / pt.lambda_rec_min : 1.0; 
+        }
+
+        double baseline_stretch = pt.lc_max_history[0]; 
+        
+        if (count < N) {
+            int missing_steps = N - count;
+            double sum_ghost = missing_steps * baseline_stretch;
+            
+            double sum_recorded = 0.0;
+            for (int k = 0; k < count; ++k) {
+                sum_recorded += pt.lc_max_history[k];
+            }
+            
+            return (sum_ghost + sum_recorded) / (double)N;
+        } 
+        else {
+            int use = std::min(count, FEAneurysmPoint::MAX_HIST);
+            int start = use - N;
+            
+            double sum_window = 0.0;
+            for (int k = start; k < use; ++k) {
+                sum_window += pt.lc_max_history[k];
+            }
+            
+            return sum_window / (double)N;
+        }
     }
 
     double GetScale(FEMaterialPoint& mp) const
@@ -391,15 +435,15 @@ public:
 BEGIN_FECORE_CLASS(FEAneurysmMaterial, FEUncoupledMaterial)
     ADD_PROPERTY(m_pPassive, "passive_solid");
     ADD_PROPERTY(m_pActive, "active_solid", FEProperty::Optional);
-    ADD_PARAMETER(layer,               "layer");
-    ADD_PARAMETER(genotype,            "genotype");
-    ADD_PARAMETER(polygenic_score,     "polygenic_score");
+    ADD_PARAMETER(layer, "layer");
+    ADD_PARAMETER(genotype, "genotype");
+    ADD_PARAMETER(polygenic_score, "polygenic_score");
     ADD_PARAMETER(febio_disease_start, "febio_disease_start");
     ADD_PARAMETER(years_per_febio_sec, "years_per_febio_sec");
-    ADD_PARAMETER(patch_x,             "patch_x");
-    ADD_PARAMETER(patch_y,             "patch_y");
-    ADD_PARAMETER(patch_z,             "patch_z");
-    ADD_PARAMETER(spread_sigma,        "spread_sigma");
+    ADD_PARAMETER(patch_x, "patch_x");
+    ADD_PARAMETER(patch_y, "patch_y");
+    ADD_PARAMETER(patch_z, "patch_z");
+    ADD_PARAMETER(spread_sigma, "spread_sigma");
 END_FECORE_CLASS();
 
 extern "C" {
