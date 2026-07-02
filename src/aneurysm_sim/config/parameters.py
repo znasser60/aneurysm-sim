@@ -1,6 +1,12 @@
 import numpy as np
 
 class ArterialParameters:
+    """
+    Class to hold general and patient-specific initial parameters for the 1D artery model. 
+
+    args
+
+    """
     def __init__(self, gender = None, age = None, genotype = None, 
                  polygenic_score = None, smc_fraction=None, tgf_beta_level=None):
         # Geometric and pressure 
@@ -29,12 +35,12 @@ class ArterialParameters:
         self.c_collagen_ratio_ad_me = 8.0
 
         # Media attachment stretches
-        # self.c_att_min_me = 1.00001
-        # self.c_att_mod_me = 1.01
-        # self.c_att_max_me = 1.07
-        self.c_att_min_me = 1.0
-        self.c_att_mod_me = 1.05
-        self.c_att_max_me = 1.1
+        self.c_att_min_me = 1.00001
+        self.c_att_mod_me = 1.01
+        self.c_att_max_me = 1.07
+        # self.c_att_min_me = 1.0
+        # self.c_att_mod_me = 1.05
+        # self.c_att_max_me = 1.1
 
         # Media recruitment stretches
         self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
@@ -45,12 +51,12 @@ class ArterialParameters:
         self.v_c_me = self.c_rec_mod_me
 
         # Adventitia attachment
-        # self.c_att_min_ad = 0.8
-        # self.c_att_mod_ad = 0.9
-        # self.c_att_max_ad = 0.99999
-        self.c_att_min_ad = 0.9
-        self.c_att_mod_ad = 0.95
-        self.c_att_max_ad = 1.0
+        self.c_att_min_ad = 0.8
+        self.c_att_mod_ad = 0.9
+        self.c_att_max_ad = 0.99999
+        # self.c_att_min_ad = 0.9
+        # self.c_att_mod_ad = 0.95
+        # self.c_att_max_ad = 1.0
 
         # Adventitia recruitment
         self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
@@ -72,8 +78,15 @@ class ArterialParameters:
                                  3: 0.0969533, 
                                  4: 0.1184857}
         self.polygenic_score = polygenic_score
+        self.genotype = genotype
+        
+        def _is_missing(v):
+            return v is None or (isinstance(v, float) and np.isnan(v))
+
         if tgf_beta_level is not None:
             self.tgf_beta_level = tgf_beta_level
+        elif _is_missing(genotype):
+            self.tgf_beta_level = 1.0
         elif genotype in self.tgf_beta_levels:
             self.tgf_beta_level = self.tgf_beta_levels[genotype]
         else:
@@ -82,10 +95,13 @@ class ArterialParameters:
         if smc_fraction is not None:
             self.smc_fraction = smc_fraction
         else:
-            score = 0 if polygenic_score is None else int(np.clip(polygenic_score, 0, 4))
+            if _is_missing(polygenic_score):
+                score = 0
+            else:
+                score = int(np.clip(polygenic_score, 0, 4))
             self.smc_fraction = self.smc_mean_fractions[score]
 
-        self.tgf_spike_amount = 1.0
+        self.tgf_spike_amount = 0.65
 
         # Immune cell related rates
         self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
@@ -102,7 +118,7 @@ class ArterialParameters:
 
         # Fibroblast rates
         self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
-        self.r_f2 = 1.0      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
+        self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
         self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
 
         # Smooth muscle cell rates
@@ -144,7 +160,7 @@ class ArterialParameters:
 
         # TGF-Beta rates
         self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
-        self.r_betal2 = 10.0         # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
+        self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
         self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
         self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
         self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1)
@@ -155,11 +171,13 @@ class ArterialParameters:
         # Mechanical model parameters
         self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
         self.t_sim = 90              # Simulation time in years
-        self.width_att_dist = 0.1    # Width of the attachment stretch distribution (assumed constant)
-        self.skew_att_dist = 0.5     # Skew of the attachment stretch distribution (assumed constant)
+        self.width_att_dist = self.c_att_max_ad - self.c_att_min_ad    # Width of the attachment stretch distribution (assumed constant)
+        self.skew_att_dist = (self.c_att_mod_ad - self.c_att_min_ad) / self.width_att_dist    # Skew of the attachment stretch distribution (assumed constant)
+        self.width_att_dist_me = self.c_att_max_me - self.c_att_min_me   
+        self.skew_att_dist_me  = (self.c_att_mod_me - self.c_att_min_me) / self.width_att_dist_me    
 
         # Set initial values for variables 
-        self.alpha_init = 1.15 
+        self.alpha_init = 0.1
         self.init_fibroblast = 1.0 
         # baseline_healthy_smc_fraction = self.smc_mean_fractions[0]
         # self.init_muscle_cells = self.smc_fraction / baseline_healthy_smc_fraction
@@ -183,6 +201,9 @@ class ArterialParameters:
         '''
         Recalculates stiffness parameters based on current TGF-Beta levels and SMC fractions. 
         '''
+        #CHANGED
+        self.c_att_max_me_current = self.c_att_max_me
+
         self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
         self.c_rec_min_me = self.c_lambda_elastin / self.c_att_max_me
         self.c_rec_mod_me = self.c_lambda_elastin / self.c_att_mod_me

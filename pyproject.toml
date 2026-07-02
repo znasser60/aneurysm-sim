@@ -9,9 +9,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 dependencies = [
-    "numpy",
+    "numpy>=2.0",
     "scipy",
-    "matplotlib"
+    "matplotlib",
+    "pandas>=2.2.3",
 ]
 
 [build-system]

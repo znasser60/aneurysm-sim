@@ -239,6 +239,7 @@ def d_latent_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, collagen, lambda
     term1 = params.r_betal1 * tgf_beta + params.r_betal2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max)
     term2 = 1 + params.r_betal3 * collagen
     term3 = params.r_betal4 + params.r_betal5 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast
+    # print(f"Bl1 term: {params.r_betal1 * tgf_beta}, Bl2 term: {params.r_betal2 * f_lambda_fibroblast(lambda_c_max, lambda_att_max)}, Bl3 term: {1 + params.r_betal3 * collagen},  Bl4 term: {params.r_betal4}, Bl5 term: {params.r_betal5 * f_lambda_fibroblast(lambda_c_max, lambda_att_max) * fibroblast}")
     return (term1 / term2) * fibroblast * params.tgf_beta_level - term3 * latent_tgf_beta       
 
 def d_active_tgf_beta_dt(tgf_beta, latent_tgf_beta, fibroblast, lambda_c_max, lambda_att_max, params):
@@ -253,44 +254,33 @@ def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
     Smooth Muscle Cells ODE: Simplified from Mandaltsi paper 
     SMCs proliferate with increased stretch, and degrade when medial elastin degrades
     """ 
-    lam_m = lambda_muscle(x, params)
-    epsilon_stretch = max(0, (lam_m - params.c_lambda_muscle_att) / params.c_lambda_muscle_att)
+    # lam_m = lambda_muscle(x, params)
+    epsilon_stretch = max(0, (x - params.c_lambda_sys) / params.c_lambda_sys)
     epsilon_elastin = (elastin_me - params.init_elastin_me) / params.init_elastin_me
     epsilon_immune = (params.i_0 - immune_cells) / 1.0
     return muscle_cells * (params.beta1_smc * epsilon_stretch + params.beta2_smc * epsilon_elastin + params.beta3_smc * epsilon_immune)
 
-# Collagen remodeling I: 
 # def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
 #     """
-#     Numerical implementation of Equation 18 from Aparício et al. (2016)
-#     Uses a moving average over T_at years (N steps)
+#     Calculates an arithmetic moving average over the remodeling 
+#     window (T_AT) to maximize sensitivity to genotype-driven changes.
 #     """
 #     N = int(params.remodel_time / dt)
-#     if t_idx < N:
-#         # avg_stretch =  np.mean(lambda_c_max_history[:t_idx+1])
-#         # scale = dt / params.remodel_time
-#         # lambda_att_max = scale * len(lambda_c_max_history[:t_idx+1]) * avg_stretch
-#         lambda_att_max = np.mean(lambda_c_max_history[:t_idx+1])
-    
-#     else: 
-#         window = lambda_c_max_history[t_idx - N + 1 : t_idx + 1]
-#         scale = dt / params.remodel_time
-#         lambda_att_max = scale * N * np.mean(window)
+#     num_points_available = t_idx + 1
+#     steps_to_average = min(num_points_available, N)
+#     start_idx = num_points_available - steps_to_average
+#     window = lambda_c_max_history[start_idx : num_points_available]
+#     lambda_att_max = np.mean(window)
 #     return lambda_att_max
+
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
-    """
-    Numerical implementation of Equation 18 from Aparício et al. (2016).
-    Trailing moving average over T_AT years (N steps), with the
-    pre-simulation history (t<0) assumed to sit at baseline.
-    """
     N = int(params.remodel_time / dt)
+    baseline = lambda_c_max_history[0] 
 
     if t_idx < N:
-        baseline_stretch = lambda_c_max_history[0]
-        missing_steps = N - (t_idx + 1)
-        sum_ghost = missing_steps * baseline_stretch
-        sum_recorded = np.sum(lambda_c_max_history[:t_idx + 1])
-        lambda_att_max = (sum_ghost + sum_recorded) / N
+        missing = N - (t_idx + 1)
+        lambda_att_max = (missing * baseline + 
+                         np.sum(lambda_c_max_history[:t_idx + 1])) / N
     else:
         window = lambda_c_max_history[t_idx - N + 1 : t_idx + 1]
         lambda_att_max = np.mean(window)
@@ -315,6 +305,18 @@ def calculate_mode_attachment_stretch(lambda_att_min, lambda_att_max, params):
     """
     lambda_att_mode = lambda_att_min + params.skew_att_dist * (lambda_att_max - lambda_att_min)
     return lambda_att_mode
+
+def calculate_min_attachment_stretch_me(lambda_att_max_me, params):
+    """
+    Media min attachment stretch
+    """
+    return lambda_att_max_me - params.width_att_dist_me
+
+def calculate_mode_attachment_stretch_me(lambda_att_min_me, lambda_att_max_me, params):
+    """
+    Media mode attachment stretch
+    """
+    return lambda_att_min_me + params.skew_att_dist_me * (lambda_att_max_me - lambda_att_min_me)
 
 # Collagen remodeling II: 
 def alpha_rate(fibroblast, collagen, collagenase, params): 

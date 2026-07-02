@@ -70,14 +70,18 @@
 	<Material>
         <material id="1" name="Media" type="aneurysm_0D_coupled">
             <layer>0</layer>
-			<k>500.0</k>
+			<k>100.0</k>
             <genotype>1</genotype> 
 			<polygenic_score>0</polygenic_score>
             <febio_disease_start>1.1</febio_disease_start>
             <years_per_febio_sec>90.0</years_per_febio_sec>
-            <patch_x>1.26585</patch_x>
+            <!-- <patch_x>1.26585</patch_x>
             <patch_y>0.651371</patch_y>
             <patch_z>5.225</patch_z>
+            <spread_sigma>0.4</spread_sigma> -->
+			<patch_x>0.934521</patch_x>
+            <patch_y>0.36659</patch_y>
+            <patch_z>4.75</patch_z>
             <spread_sigma>0.4</spread_sigma>
                 
 			<passive_solid type="Holzapfel-Gasser-Ogden">
@@ -94,7 +98,6 @@
 					<vector>0,1,0</vector>
 				</mat_axis>
 			</passive_solid>
-                
 			<active_solid type="uncoupled active fiber stress">
 				<smax>0.0584395672</smax>
 				<activation lc="6">1</activation>
@@ -112,15 +115,19 @@
 			</active_solid>
         </material>
         <material id="2" name="Adventitia" type="aneurysm_0D_coupled">
-            <k>500.0</k>
+            <k>100.0</k>
             <layer>1</layer>
             <genotype>1</genotype> 
 			<polygenic_score>0</polygenic_score>
             <febio_disease_start>1.1</febio_disease_start>
             <years_per_febio_sec>90.0</years_per_febio_sec>
-            <patch_x>1.26585</patch_x>
+            <!-- <patch_x>1.26585</patch_x>
             <patch_y>0.651371</patch_y>
             <patch_z>5.225</patch_z>
+            <spread_sigma>0.4</spread_sigma> -->
+			<patch_x>0.934521</patch_x>
+            <patch_y>0.36659</patch_y>
+            <patch_z>4.75</patch_z>
             <spread_sigma>0.4</spread_sigma>
 
             <!-- <solid type="uncoupled solid mixture">
@@ -27456,5 +27463,9 @@
 			<var type="stress"/>
 			<var type="relative volume"/>
 		</plotfile>
+		<!-- <logfile file="results/$(filename).log">
+			<node_data data="ux;uy;uz" delim=",">1200</node_data>
+    		<element_data data="sx;sy;sz;sxy;syz;sxz;s1;s2;s3" delim=",">1102</element_data>
+		</logfile> -->
 	</Output>
 </febio_spec>

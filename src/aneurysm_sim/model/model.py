@@ -1,13 +1,12 @@
 import numpy as np
 from scipy.optimize import fsolve
-from SALib.sample import saltelli
-from SALib.analyze import sobol
+# from SALib.sample import saltelli
+# from SALib.analyze import sobol
 
 from aneurysm_sim.model import functions
 from aneurysm_sim.config.parameters import ArterialParameters
 
 def simulate_arterial_stress_and_pressure(params):
-
     n = 235
     sv_stretch_var = 0.55 + 0.01 * np.arange(n) # Stretch variable for simulation
 
@@ -39,6 +38,8 @@ def simulate_arterial_stress_and_pressure(params):
         sv_stress_var_collagen[i] = functions.sigma_collagen(stretch, params)
         sv_stress_var_collagen_me[i] = functions.sigma_collagen_me(stretch, params)
         sv_stress_var_collagen_ad[i] = functions.sigma_collagen_ad(stretch, params)
+        sv_stress_var_muscle_a[i] = functions.sigma_muscle_a(stretch, params)
+        sv_stress_var_muscle_p[i] = functions.sigma_muscle_p(stretch, params)
         sv_stress_var_muscle_t[i] = functions.sigma_muscle_t(stretch, params)
 
         sv_stress_var_total[i] = max((
@@ -86,7 +87,7 @@ def simulate_arterial_stress_and_pressure(params):
         'sv_pressure_var_collagen_ad': sv_pressure_var_collagen_ad,
     }
 
-def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, step independence achieved at 0.0069 from paper
+def simulate_aneurysm(params, treatment = False, dt = 0.01): # dt in years, step independence achieved at 0.01 
 
     steps = int(params.t_sim / dt) + 1
     time = np.linspace(0, params.t_sim, steps)
@@ -122,6 +123,16 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
     lambda_rec_mode = np.zeros(steps)
     lambda_sys_array = np.zeros(steps)
 
+    lambda_c_max_me    = np.zeros(steps)
+    lambda_c_min_me    = np.zeros(steps)
+    lambda_c_mode_me   = np.zeros(steps)
+    lambda_att_max_me  = np.zeros(steps)
+    lambda_att_min_me  = np.zeros(steps)
+    lambda_att_mode_me = np.zeros(steps)
+    lambda_rec_min_me  = np.zeros(steps)
+    lambda_rec_max_me  = np.zeros(steps)
+    lambda_rec_mode_me = np.zeros(steps)
+
     # Initialize variables
     diameter[0] = 2*params.c_radius_tzero*params.c_lambda_sys
     collagen_me[0] = params.init_collagen_me
@@ -153,29 +164,19 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
     lambda_sys_array[0] = params.c_lambda_sys
     lambd_c_max_history = [lambda_c_max[0]] 
 
+    lambda_att_max_me[0]  = params.c_att_max_me
+    lambda_att_min_me[0]  = params.c_att_min_me
+    lambda_att_mode_me[0] = params.c_att_mod_me
+    lambda_rec_min_me[0]  = params.c_rec_min_me
+    lambda_rec_max_me[0]  = params.c_rec_max_me
+    lambda_rec_mode_me[0] = params.c_rec_mod_me
+    lambda_c_max_me[0]    = params.c_lambda_sys / lambda_rec_min_me[0]
+    lambda_c_min_me[0]    = params.c_lambda_sys / lambda_rec_max_me[0]
+    lambda_c_mode_me[0]   = params.c_lambda_sys / lambda_rec_mode_me[0]
+    lambd_c_max_me_history = [lambda_c_max_me[0]]
+
     for i in range(1, steps): 
         t = time[i]
-
-        # Calculate the lambda_sys using fsolve to find the root of the force balance equation
-        lambda_sys = fsolve(functions.force_balance_equation, [lambda_sys_array[i-1]], args=(elastin_me[i-1], collagen_me[i-1], collagen_ad[i-1], muscle_cells[i-1], params,))[0]
-        diameter[i] = 2 * params.c_radius_tzero * lambda_sys
-        lambda_sys_array[i] = lambda_sys
-        
-        lambda_c_max[i] = lambda_sys / lambda_rec_min[i-1]
-        lambda_c_min[i] = lambda_sys / lambda_rec_max[i-1]
-        lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i-1]
-        lambd_c_max_history.append(lambda_c_max[i])
-
-        lambda_att_max[i] = functions.calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
-        lambda_att_min[i] = functions.calculate_min_attachment_stretch(lambda_att_max[i], params)
-        lambda_att_mode[i] = functions.calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
-        alpha = functions.alpha_rate(fibroblast[i-1], collagen_ad[i-1], collagenase[i-1], params)
-
-        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * functions.d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i], lambda_att_max[i])
-        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * functions.d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i], lambda_att_min[i])
-        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * functions.d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i], lambda_att_mode[i])
-
-        diameter[i] = 2 * params.c_radius_tzero * lambda_sys
 
         if t < params.t_i0:
             collagen_me[i] = collagen_me[0]
@@ -192,29 +193,119 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
             timp[i] = timp[0]
             latent_tgf_beta[i] = latent_tgf_beta[0]
             active_tgf_beta[i] = active_tgf_beta[0]
+            
             lambda_sys_array[i] = lambda_sys_array[0]
+            diameter[i] = diameter[0]
+            
+            lambda_rec_max[i] = lambda_rec_max[0]
+            lambda_rec_min[i] = lambda_rec_min[0]
+            lambda_rec_mode[i] = lambda_rec_mode[0]
+            lambda_att_max[i] = lambda_att_max[0]
+            lambda_att_min[i] = lambda_att_min[0]
+            lambda_att_mode[i] = lambda_att_mode[0]
 
-        else: 
-            immune_cells[i] = functions.calculate_immune_cell_level(t, params)
-            collagen_me[i] = collagen_me[i-1] + dt * functions.d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)
-            collagen_ad[i] = collagen_ad[i-1] + dt * functions.d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
-            elastin_me[i] = elastin_me[i-1] + dt * functions.d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
-            collagenases[i] = collagenases[i-1] + dt * functions.d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
-            elastases[i] = elastases[i-1] + dt * functions.d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
-            muscle_cells[i] = muscle_cells[i-1] + dt * functions.d_muscle_cells_dt(lambda_sys, muscle_cells[i-1], elastin_me[i-1], immune_cells[i-1], params)
-            fibroblast[i] = fibroblast[i-1] + dt * functions.d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
-            procollagen[i] = procollagen[i-1] + dt * functions.d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
-            collagenase[i] = collagenase[i-1] + dt * functions.d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
-            zymogen[i] = zymogen[i-1] + dt * functions.d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
-            timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
-            latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
-                                                                                fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i], 
-                                                                                lambda_att_max[i-1], params)
-            active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], 
-                                                                                            fibroblast[i-1], lambda_c_max[i], lambda_att_max[i-1], params)
+            lambda_rec_min_me[i]  = lambda_rec_min_me[0]
+            lambda_rec_max_me[i]  = lambda_rec_max_me[0]
+            lambda_rec_mode_me[i] = lambda_rec_mode_me[0]
+            lambda_att_max_me[i]  = lambda_att_max_me[0]
+            lambda_att_min_me[i]  = lambda_att_min_me[0]
+            lambda_att_mode_me[i] = lambda_att_mode_me[0]
+                        
+            lambda_c_max[i] = lambda_c_max[0]
+            lambda_c_min[i] = lambda_c_min[0]
+            lambda_c_mode[i] = lambda_c_mode[0]
 
-            if treatment and abs(t - params.t_treat) < dt:
-                active_tgf_beta[i] += params.tgf_spike_amount
+            lambda_c_max_me[i]    = lambda_c_max_me[0]
+            lambda_c_min_me[i]    = lambda_c_min_me[0]
+            lambda_c_mode_me[i]   = lambda_c_mode_me[0]
+
+            lambd_c_max_me_history.append(lambda_c_max_me[i])
+            lambd_c_max_history.append(lambda_c_max[i])
+            continue
+        
+        # Update biological ODEs beginning with immune cell infiltration
+        immune_cells[i] = functions.calculate_immune_cell_level(t, params)
+        collagen_me[i] = collagen_me[i-1] + dt * functions.d_medial_collagen_dt(collagenases[i-1], collagen_me[i-1], params)
+        collagen_ad[i] = collagen_ad[i-1] + dt * functions.d_collagen_dt(procollagen[i-1], collagenase[i-1], collagen_ad[i-1], params)
+        elastin_me[i] = elastin_me[i-1] + dt * functions.d_medial_elastin_dt(elastases[i-1], elastin_me[i-1], params)
+        collagenases[i] = collagenases[i-1] + dt * functions.d_collagenases_dt(immune_cells[i-1], collagenases[i-1], params)
+        elastases[i] = elastases[i-1] + dt * functions.d_elastases_dt(immune_cells[i-1], elastases[i-1], params)
+        muscle_cells[i] = muscle_cells[i-1] + dt * functions.d_muscle_cells_dt(lambda_sys_array[i-1], muscle_cells[i-1], elastin_me[i-1], immune_cells[i-1], params)
+        fibroblast[i] = fibroblast[i-1] + dt * functions.d_fibroblast_dt(active_tgf_beta[i-1], fibroblast[i-1], params)
+        procollagen[i] = procollagen[i-1] + dt * functions.d_procollagen_dt(active_tgf_beta[i-1], fibroblast[i-1], procollagen[i-1], params)
+        collagenase[i] = collagenase[i-1] + dt * functions.d_collagenase_dt(collagenase[i-1], zymogen[i-1], timp[i-1], params)
+        zymogen[i] = zymogen[i-1] + dt * functions.d_zymogen_dt(active_tgf_beta[i-1], fibroblast[i-1], zymogen[i-1], params)
+        timp[i] = timp[i-1] + dt * functions.d_timp_dt(active_tgf_beta[i-1], fibroblast[i-1], collagenase[i-1], timp[i-1], params)
+        latent_tgf_beta[i] = latent_tgf_beta[i-1] + dt * functions.d_latent_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1],
+                                                                            fibroblast[i-1], collagen_ad[i-1], lambda_c_max[i-1], 
+                                                                            lambda_att_max[i-1], params)
+        active_tgf_beta[i] = active_tgf_beta[i-1] + dt * functions.d_active_tgf_beta_dt(active_tgf_beta[i-1], latent_tgf_beta[i-1], 
+                                                                                        fibroblast[i-1], lambda_c_max[i-1], lambda_att_max[i-1], params)
+        
+        # Update adventitia recruitment stretch 
+        alpha = functions.alpha_rate(fibroblast[i], collagen_ad[i], collagenase[i], params)
+        lambda_rec_min[i] = lambda_rec_min[i-1] + dt * functions.d_collagen_min_recruitment_stretch_ad_dt(alpha, lambda_c_max[i-1], lambda_att_max[i-1])
+        lambda_rec_max[i] = lambda_rec_max[i-1] + dt * functions.d_collagen_max_recruitment_stretch_ad_dt(alpha, lambda_c_min[i-1], lambda_att_min[i-1])
+        lambda_rec_mode[i] = lambda_rec_mode[i-1] + dt * functions.d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode[i-1], lambda_att_mode[i-1])
+        
+        # Update adventitia gamma and delta due to updates in recruitment stretch
+        params.v_a_ad = lambda_rec_min[i]
+        params.v_b_ad = lambda_rec_max[i]
+        params.v_c_ad = lambda_rec_mode[i]
+        params.v_gamma_ad = params.c_k_collagen * params.c_collagen_ratio_ad_me \
+            / ((params.v_b_ad - params.v_a_ad) * (params.v_c_ad - params.v_a_ad))
+        params.v_delta_ad = params.c_k_collagen * params.c_collagen_ratio_ad_me \
+            / ((params.v_b_ad - params.v_a_ad) * (params.v_b_ad - params.v_c_ad))
+
+        # Update media recruitment stretches
+        lambda_rec_min_me[i]  = lambda_rec_min_me[i-1]  + dt * functions.d_collagen_min_recruitment_stretch_ad_dt(
+                            params.alpha_init, lambda_c_max_me[i-1], lambda_att_max_me[i-1])
+        lambda_rec_max_me[i]  = lambda_rec_max_me[i-1]  + dt * functions.d_collagen_max_recruitment_stretch_ad_dt(
+                                    params.alpha_init, lambda_c_min_me[i-1], lambda_att_min_me[i-1])
+        lambda_rec_mode_me[i] = lambda_rec_mode_me[i-1] + dt * functions.d_collagen_mode_recruitment_stretch_ad_dt(
+                                    params.alpha_init, lambda_c_mode_me[i-1], lambda_att_mode_me[i-1])
+
+        #Update media gamma and delta due to updates in recruitment stretch
+        params.v_a_me = lambda_rec_min_me[i]
+        params.v_b_me = lambda_rec_max_me[i]
+        params.v_c_me = lambda_rec_mode_me[i]
+        params.v_gamma_me = params.c_k_collagen \
+            / ((params.v_b_me - params.v_a_me) * (params.v_c_me - params.v_a_me))
+        params.v_delta_me = params.c_k_collagen \
+            / ((params.v_b_me - params.v_a_me) * (params.v_b_me - params.v_c_me))
+
+        # Solve for lambda_sys
+        lambda_sys = fsolve(functions.force_balance_equation, [lambda_sys_array[i-1]],
+                    args=(elastin_me[i], collagen_me[i], collagen_ad[i], muscle_cells[i], params))[0]
+
+        lambda_sys_array[i] = lambda_sys
+        diameter[i] = 2 * params.c_radius_tzero * lambda_sys
+
+        # Update circumferential and attachment stretches for media and adventitia
+        lambda_c_max[i] = lambda_sys / lambda_rec_min[i]
+        lambda_c_min[i] = lambda_sys / lambda_rec_max[i]
+        lambda_c_mode[i] = lambda_sys / lambda_rec_mode[i]
+        lambd_c_max_history.append(lambda_c_max[i])
+
+        lambda_att_max[i] = functions.calculate_max_attachment_stretch(lambd_c_max_history, dt, i, params)
+        lambda_att_min[i] = functions.calculate_min_attachment_stretch(lambda_att_max[i], params)
+        lambda_att_mode[i] = functions.calculate_mode_attachment_stretch(lambda_att_min[i], lambda_att_max[i], params)
+
+        lambda_c_max_me[i]  = lambda_sys / lambda_rec_min_me[i]
+        lambda_c_min_me[i]  = lambda_sys / lambda_rec_max_me[i]
+        lambda_c_mode_me[i] = lambda_sys / lambda_rec_mode_me[i]
+        lambd_c_max_me_history.append(lambda_c_max_me[i])
+
+        lambda_att_max_me[i]  = functions.calculate_max_attachment_stretch(
+                                    lambd_c_max_me_history, dt, i, params)
+        lambda_att_min_me[i]  = functions.calculate_min_attachment_stretch_me(
+                                    lambda_att_max_me[i], params)
+        lambda_att_mode_me[i] = functions.calculate_mode_attachment_stretch_me(
+                                    lambda_att_min_me[i], lambda_att_max_me[i], params)
+
+        # Apply TGF-B treatment if requested
+        if treatment and abs(t - params.t_treat) < dt:
+            active_tgf_beta[i] += params.tgf_spike_amount
 
     return {
         'diameter': diameter,
@@ -248,61 +339,73 @@ def simulate_aneurysm(params, treatment = False, dt = 0.0069): # dt in years, st
         'final_lambda_sys': lambda_sys_array[-1],
     }
 
-def simulate_aneurysm_batch_smc(params, n_sims=10):
+def simulate_aneurysm_batch_smc(params, treatment=False,n_vals=15):
     """
     Runs multiple simulations for a single parameter set by sampling 
     vSMC fractions from a Gaussian distribution based on the score's SD.
     """
-    # Identify the score to get the correct SD
     score = int(np.clip(params.polygenic_score, 0, 4)) if params.polygenic_score is not None else 0
     mean_val = params.smc_mean_fractions[score]
     sd_val = params.smc_sd_fractions[score]
 
-    batch_results = []
-    sampled_fractions = np.clip(np.random.normal(mean_val, sd_val, n_sims), 0.0, 1.0)
+    sweep_fractions = np.linspace(
+        np.clip(mean_val - sd_val, 0.0, 1.0),
+        np.clip(mean_val + sd_val, 0.0, 1.0),
+        n_vals
+    )
 
-    for fraction in sampled_fractions:
-        p_temp = ArterialParameters(smc_fraction=fraction, 
-                                   tgf_beta_level=params.tgf_beta_level)
+    batch_results = []
+
+
+    for fraction in sweep_fractions:
+        p_temp = ArterialParameters(smc_fraction=fraction,
+                                    polygenic_score=params.polygenic_score,
+                                    tgf_beta_level=params.tgf_beta_level)
         try:
-            res = simulate_aneurysm(p_temp)
+            res = simulate_aneurysm(p_temp, treatment=treatment)
             batch_results.append(res)
         except Exception as e:
-            print(f"Simulation failed for fraction {fraction}: {e}")
+            print(f"Simulation failed for fraction {fraction:.4f}: {e}")
+    
+
+    p_mean = ArterialParameters(smc_fraction=mean_val,
+                                polygenic_score=params.polygenic_score,
+                                tgf_beta_level=params.tgf_beta_level)
+    mean_result = simulate_aneurysm(p_mean, treatment=treatment)
+
+    return batch_results, mean_result
+    
+
+
+# def sobol_sensitivity_analysis(num_samples=128):
+#     """
+#     Performs Sobol sensitivity analysis tracking final circumferential stretch.
+#     Varies the SMC Volume Fraction directly, alongside TGF-beta parameters.
+#     """
+#     problem = {
+#         'num_vars': 2,
+#         'names': ['smc_fraction', 'tgf_beta_level', ],
+#         'bounds': [
+#             [0.40, 0.90],  
+#             [0.70, 1.30],   
+#         ]
+#     }
+
+#     param_values = saltelli.sample(problem, num_samples)
+#     Y = np.zeros([param_values.shape[0]])
+
+#     for i, X in enumerate(param_values):
+#         print(f"Running simulation {i + 1}/{len(Y)} with parameters: SMC Fraction={X[0]:.2f}, TGF-Beta Level={X[1]:.2f}")
+#         smc_pct, tgf_lvl= X
         
-        #status update bar
-        print(f"Completed {len(batch_results)}/{n_sims}")
-    return batch_results
+#         p = ArterialParameters(smc_fraction=smc_pct, tgf_beta_level=tgf_lvl) 
 
-def sobol_sensitivity_analysis(num_samples=128):
-    """
-    Performs Sobol sensitivity analysis tracking final circumferential stretch.
-    Varies the SMC Volume Fraction directly, alongside TGF-beta parameters.
-    """
-    problem = {
-        'num_vars': 2,
-        'names': ['smc_fraction', 'tgf_beta_level', ],
-        'bounds': [
-            [0.40, 0.90],  
-            [0.70, 1.30],   
-        ]
-    }
+#         try:
+#             results = simulate_aneurysm(p)
+#             Y[i] = results['final_lambda_sys']
+#         except Exception as e:
+#             Y[i] = 1.0 
 
-    param_values = saltelli.sample(problem, num_samples)
-    Y = np.zeros([param_values.shape[0]])
+#     Si = sobol.analyze(problem, Y, print_to_console=True)
 
-    for i, X in enumerate(param_values):
-        print(f"Running simulation {i + 1}/{len(Y)} with parameters: SMC Fraction={X[0]:.2f}, TGF-Beta Level={X[1]:.2f}")
-        smc_pct, tgf_lvl= X
-        
-        p = ArterialParameters(smc_fraction=smc_pct, tgf_beta_level=tgf_lvl) 
-
-        try:
-            results = simulate_aneurysm(p)
-            Y[i] = results['final_lambda_sys']
-        except Exception as e:
-            Y[i] = 1.0 
-
-    Si = sobol.analyze(problem, Y, print_to_console=True)
-
-    return Si
+#     return Si
