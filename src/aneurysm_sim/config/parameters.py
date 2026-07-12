@@ -3,7 +3,8 @@ import numpy as np
 
 class ArterialParameters:
     """
-    Class to hold general and patient-specific initial parameters for the 1D artery model.
+    Class to hold general and patient-specific initial parameters 
+    for the 1D cerebral artery model. 
     """
     def __init__(
         self,
@@ -13,62 +14,54 @@ class ArterialParameters:
         tgf_beta_level=None,
     ):
         # Geometric and pressure
-        self.c_diam_tzero_mm = 2.9
-        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3)
-        # self.c_thickness_tzero = self.c_radius_tzero / 5
-        self.c_thickness_ad = 0.104
-        self.c_thickness_me = 0.216
-        self.c_thickness_tzero = self.c_thickness_ad + self.c_thickness_me
-        self.c_pressure_sys = 16000  # Pa
+        self.diam_tzero_mm = 2.9 # Loaded initial diameter in mm
+        self.radius_tzero = self.diam_tzero_mm / (2 * 1.3) # Loaded initial radius in mm
+        self.thickness_ad = 0.104 # Adventitia thickness in mm
+        self.thickness_me = 0.216 # Media thickness in mm
+        self.thickness_tzero = self.thickness_ad + self.thickness_me
+        self.pressure_sys = 16000  # Systolic pressure in Pa (120 mmHg)
 
         # Stretches
-        self.c_lambda_z = 1.3
-        self.c_lambda_sys = 1.3
-        self.c_lambda_elastin = 1.3
-        self.c_lambda_muscle = 1.13
-        self.c_lambda_muscle_att = 1.1
-        self.c_rec_muscle = self.c_lambda_sys / self.c_lambda_muscle
-        self.c_musc_mean = 1.1
-        self.c_musc_min = 0.4
-        self.c_vasodil_conc = 0.68
-        self.c_vasodil_conc_basal = 0.68
-        self.c_vasodil_conc_shear = 1.36
-        self.c_ge_muscle = (self.c_lambda_muscle**2 - 1.0) / 2.0
+        self.lambda_z = 1.3 # Axial stretch ratio
+        self.lambda_sys = 1.3 # Circumferential stretch ratio at systolic pressure
+        self.lambda_elastin = 1.3 # Elastin stretch ratio
+        self.lambda_muscle = 1.13 # Muscle stretch ratio
+        self.lambda_muscle_att = 1.1 # Muscle attachment stretch ratio
+        self.rec_muscle = self.lambda_sys / self.lambda_muscle # Muscle recruitment stretch ratio
+        self.musc_mean = 1.1 # Mean muscle stretch ratio
+        self.musc_min = 0.4 # Minimum muscle stretch ratio
+        self.vasodil_conc = 0.68 # Vasodilator concentration
+        self.vasodil_conc_basal = 0.68 # Basal vasodilator concentration
+        self.vasodil_conc_shear = 1.36 # Shear-induced vasodilator concentration
 
-        # Collagen ratio
-        self.c_collagen_ratio_ad_me = 8.0
+        # Collagen adventitia:media ratio
+        self.collagen_ratio_ad_me = 8.0
 
-        # Media attachment stretches
-        self.c_att_min_me = 1.00001
-        self.c_att_mod_me = 1.01
-        self.c_att_max_me = 1.07
-        # self.c_att_min_me = 1.0
-        # self.c_att_mod_me = 1.05
-        # self.c_att_max_me = 1.1
+        # Media attachment stretch distribution
+        self.att_min_me = 1.00001
+        self.att_mod_me = 1.01
+        self.att_max_me = 1.07
 
-        # Media recruitment stretches
-        self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
-        self.c_rec_min_me = self.c_lambda_elastin / self.c_att_max_me
-        self.c_rec_mod_me = self.c_lambda_elastin / self.c_att_mod_me
-        self.v_a_me = self.c_rec_min_me
-        self.v_b_me = self.c_rec_max_me
-        self.v_c_me = self.c_rec_mod_me
+        # Media recruitment stretch distribution
+        self.rec_max_me = self.lambda_elastin / self.att_min_me
+        self.rec_min_me = self.lambda_elastin / self.att_max_me
+        self.rec_mod_me = self.lambda_elastin / self.att_mod_me
+        self.a_me = self.rec_min_me
+        self.b_me = self.rec_max_me
+        self.c_me = self.rec_mod_me
 
-        # Adventitia attachment
-        self.c_att_min_ad = 0.8
-        self.c_att_mod_ad = 0.9
-        self.c_att_max_ad = 0.99999
-        # self.c_att_min_ad = 0.9
-        # self.c_att_mod_ad = 0.95
-        # self.c_att_max_ad = 1.0
+        # Adventitia attachment stretch distribution
+        self.att_min_ad = 0.8
+        self.att_mod_ad = 0.9
+        self.att_max_ad = 0.99999
 
-        # Adventitia recruitment
-        self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
-        self.c_rec_min_ad = self.c_lambda_elastin / self.c_att_max_ad
-        self.c_rec_mod_ad = self.c_lambda_elastin / self.c_att_mod_ad
-        self.v_a_ad = self.c_rec_min_ad
-        self.v_b_ad = self.c_rec_max_ad
-        self.v_c_ad = self.c_rec_mod_ad
+        # Adventitia recruitment stretch distribution
+        self.rec_max_ad = self.lambda_elastin / self.att_min_ad
+        self.rec_min_ad = self.lambda_elastin / self.att_max_ad
+        self.rec_mod_ad = self.lambda_elastin / self.att_mod_ad
+        self.a_ad = self.rec_min_ad
+        self.b_ad = self.rec_max_ad
+        self.c_ad = self.rec_mod_ad
 
         self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
         self.smc_mean_fractions = {
@@ -200,14 +193,14 @@ class ArterialParameters:
         )
         self.t_sim = 90  # Simulation time in years
         self.width_att_dist = (
-            self.c_att_max_ad - self.c_att_min_ad
+            self.att_max_ad - self.att_min_ad
         )  # Width of the attachment stretch distribution (assumed constant)
         self.skew_att_dist = (
-            (self.c_att_mod_ad - self.c_att_min_ad) / self.width_att_dist
+            (self.att_mod_ad - self.att_min_ad) / self.width_att_dist
         )  # Skew of the attachment stretch distribution (assumed constant)
-        self.width_att_dist_me = self.c_att_max_me - self.c_att_min_me
+        self.width_att_dist_me = self.att_max_me - self.att_min_me
         self.skew_att_dist_me = (
-            self.c_att_mod_me - self.c_att_min_me
+            self.att_mod_me - self.att_min_me
         ) / self.width_att_dist_me
 
         # Set initial values for variables
@@ -235,58 +228,56 @@ class ArterialParameters:
         """
         Recalculates stiffness parameters based on current TGF-Beta levels and SMC fractions.
         """
-        # CHANGED
-        self.c_att_max_me_current = self.c_att_max_me
+        self.att_max_me_current = self.att_max_me
 
-        self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
-        self.c_rec_min_me = self.c_lambda_elastin / self.c_att_max_me
-        self.c_rec_mod_me = self.c_lambda_elastin / self.c_att_mod_me
-        self.v_a_me, self.v_b_me, self.v_c_me = (
-            self.c_rec_min_me,
-            self.c_rec_max_me,
-            self.c_rec_mod_me,
-        )
-
-        self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
-        self.c_rec_min_ad = self.c_lambda_elastin / self.c_att_max_ad
-        self.c_rec_mod_ad = self.c_lambda_elastin / self.c_att_mod_ad
-        self.v_a_ad, self.v_b_ad, self.v_c_ad = (
-            self.c_rec_min_ad,
-            self.c_rec_max_ad,
-            self.c_rec_mod_ad,
+        self.rec_max_me = self.lambda_elastin / self.att_min_me
+        self.rec_min_me = self.lambda_elastin / self.att_max_me
+        self.rec_mod_me = self.lambda_elastin / self.att_mod_me
+        self.a_me, self.b_me, self.c_me = (
+            self.rec_min_me,
+            self.rec_max_me,
+            self.rec_mod_me,
         )
 
-        self.c_load_borne_muscle_p = self.smc_fraction / 2
-        self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
-        self.c_load_borne_elastin = (1 / 3) * (
-            1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a)
-        )
-        self.c_load_borne_collagen = 1.0 - (
-            self.c_load_borne_elastin
-            + self.c_load_borne_muscle_p
-            + self.c_load_borne_muscle_a
+        self.rec_max_ad = self.lambda_elastin / self.att_min_ad
+        self.rec_min_ad = self.lambda_elastin / self.att_max_ad
+        self.rec_mod_ad = self.lambda_elastin / self.att_mod_ad
+        self.a_ad, self.b_ad, self.c_ad = (
+            self.rec_min_ad,
+            self.rec_max_ad,
+            self.rec_mod_ad,
         )
 
-        # self.c_common_factor = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_tzero)
-        self.c_common_factor_me = (
-            self.c_pressure_sys
-            * self.c_radius_tzero
-            * self.c_lambda_elastin**2
-            * self.c_lambda_z
-            / self.c_thickness_me
+        self.load_borne_muscle_p = self.smc_fraction / 2
+        self.load_borne_muscle_a = self.load_borne_muscle_p
+        self.load_borne_elastin = (1 / 3) * (
+            1 - (self.load_borne_muscle_p + self.load_borne_muscle_a)
         )
-        self.c_common_factor_ad = (
-            self.c_pressure_sys
-            * self.c_radius_tzero
-            * self.c_lambda_elastin**2
-            * self.c_lambda_z
-            / self.c_thickness_ad
+        self.load_borne_collagen = 1.0 - (
+            self.load_borne_elastin
+            + self.load_borne_muscle_p
+            + self.load_borne_muscle_a
         )
 
-        x = self.c_lambda_elastin
-        v_a = self.v_a_me
-        v_b = self.v_b_me
-        v_c = self.v_c_me
+        self.common_factor_me = (
+            self.pressure_sys
+            * self.radius_tzero
+            * self.lambda_elastin**2
+            * self.lambda_z
+            / self.thickness_me
+        )
+        self.common_factor_ad = (
+            self.pressure_sys
+            * self.radius_tzero
+            * self.lambda_elastin**2
+            * self.lambda_z
+            / self.thickness_ad
+        )
+
+        x = self.lambda_elastin
+        v_a = self.a_me
+        v_b = self.b_me
+        v_c = self.c_me
 
         gamma_unit = 1.0 / ((v_b - v_a) * (v_c - v_a))
         delta_unit = 1.0 / ((v_b - v_a) * (v_b - v_c))
@@ -310,61 +301,61 @@ class ArterialParameters:
                 x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
             )
 
-        self.c_k_collagen = (
-            self.c_load_borne_collagen
-            * (self.c_common_factor_me)
+        self.k_collagen = (
+            self.load_borne_collagen
+            * (self.common_factor_me)
             / collagen_denominator
         )
 
-        self.v_gamma_me = self.c_k_collagen / (
-            (self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me)
+        self.gamma_me = self.k_collagen / (
+            (self.b_me - self.a_me) * (self.c_me - self.a_me)
         )
-        self.v_delta_me = self.c_k_collagen / (
-            (self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me)
+        self.delta_me = self.k_collagen / (
+            (self.b_me - self.a_me) * (self.b_me - self.c_me)
         )
-        self.v_gamma_ad = (
-            self.c_k_collagen
-            * self.c_collagen_ratio_ad_me
-            / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
+        self.gamma_ad = (
+            self.k_collagen
+            * self.collagen_ratio_ad_me
+            / ((self.b_ad - self.a_ad) * (self.c_ad - self.a_ad))
         )
-        self.v_delta_ad = (
-            self.c_k_collagen
-            * self.c_collagen_ratio_ad_me
-            / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
+        self.delta_ad = (
+            self.k_collagen
+            * self.collagen_ratio_ad_me
+            / ((self.b_ad - self.a_ad) * (self.b_ad - self.c_ad))
         )
-        self.c_k_elastin = (
-            self.c_load_borne_elastin
-            * (self.c_common_factor_me)
+        self.k_elastin = (
+            self.load_borne_elastin
+            * (self.common_factor_me)
             / (
-                self.c_lambda_elastin**2
-                * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4)))
+                self.lambda_elastin**2
+                * (1 - (1 / (self.lambda_z**2 * self.lambda_elastin**4)))
             )
         )
         muscle_a_denominator = (
-            self.c_vasodil_conc
-            * self.c_lambda_muscle
+            self.vasodil_conc
+            * self.lambda_muscle
             * (
                 1
                 - (
-                    (self.c_musc_mean - self.c_lambda_muscle)
-                    / (self.c_musc_mean - self.c_musc_min)
+                    (self.musc_mean - self.lambda_muscle)
+                    / (self.musc_mean - self.musc_min)
                 )
                 ** 2
             )
         )
-        self.c_k_muscle_p = (
-            self.c_load_borne_muscle_p
-            * (self.c_common_factor_me)
+        self.k_muscle_p = (
+            self.load_borne_muscle_p
+            * (self.common_factor_me)
             / (
-                self.c_lambda_muscle**2
-                * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4))
+                self.lambda_muscle**2
+                * (1 - 1 / (self.lambda_z**2 * self.lambda_muscle**4))
             )
         )
-        self.c_k_muscle_a = (
-            self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
+        self.k_muscle_a = (
+            self.load_borne_muscle_a * self.common_factor_me / muscle_a_denominator
         )
         print(
-            f"Updated physics: K elastin: {self.c_k_elastin:.2f}, K collagen: {self.c_k_collagen:.2f}, K muscle passive: {self.c_k_muscle_p:.2f}, K muscle active: {self.c_k_muscle_a:.2f}"
+            f"Updated physics: K elastin: {self.k_elastin:.2f}, K collagen: {self.k_collagen:.2f}, K muscle passive: {self.k_muscle_p:.2f}, K muscle active: {self.k_muscle_a:.2f}"
         )
 
     def to_dict(self):

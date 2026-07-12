@@ -79,7 +79,7 @@ class FebioRunner:
 
             active_muscle = media_mat.find(".//active_solid")
             if active_muscle is not None:
-                smax_pa = params.c_k_muscle_a * params.c_vasodil_conc
+                smax_pa = params.k_muscle_a * params.vasodil_conc
                 smax_mpa = smax_pa / 1e6
                 active_muscle.find("smax").text = f"{smax_mpa:.10f}"
 

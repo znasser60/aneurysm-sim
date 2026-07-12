@@ -16,7 +16,7 @@ def fit_media_stress_hgo_params(
     if params is None:
         params = ArterialParameters()
 
-    lambda_z = params.c_lambda_z
+    lambda_z = params.lambda_z
 
     kappa_media = 0.27
     gamma_media = 7
@@ -33,7 +33,7 @@ def fit_media_stress_hgo_params(
     )
     target_stress_MPa = target_stress_Pa / 1e6
 
-    c_init = (params.c_k_elastin + params.c_k_muscle_p) / 2 / 1e6
+    c_init = (params.k_elastin + params.k_muscle_p) / 2 / 1e6
 
     def hgo_stress(lam, k1, k2):
         gamma = np.radians(gamma_media)
@@ -107,7 +107,7 @@ def fit_adventitia_stress_hgo_params(
     if params is None:
         params = ArterialParameters()
 
-    lambda_z = params.c_lambda_z
+    lambda_z = params.lambda_z
     kappa_ad = 0.32
     gamma_ad = 77
     lam0 = 1.0
