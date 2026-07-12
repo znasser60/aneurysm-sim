@@ -6,39 +6,56 @@ import argparse
 import sys
 
 from aneurysm_sim.config.parameters import ArterialParameters
-from aneurysm_sim.model.febio_solver import fit_media_stress_hgo_params, fit_adventitia_stress_hgo_params
+from aneurysm_sim.model.febio_solver import (
+    fit_media_stress_hgo_params,
+    fit_adventitia_stress_hgo_params,
+)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.abspath(os.path.join(current_dir, "../../"))
 sys.path.insert(0, src_dir)
 
+
 class FebioRunner:
-    def __init__(self, template_path = "cylinder_with_plugin.feb", results_dir="src/aneurysm_sim/febio/results"):
+    def __init__(
+        self,
+        template_path="cylinder_with_plugin.feb",
+        results_dir="src/aneurysm_sim/febio/results",
+    ):
         self.template_path = template_path
         if results_dir is None:
-            results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+            results_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "results"
+            )
         self.results_dir = results_dir
         os.makedirs(self.results_dir, exist_ok=True)
 
-        self.febio_executable = "/Applications/FEBioStudio/FEBioStudio.app/Contents/MacOS/febio4"
+        self.febio_executable = (
+            "/Applications/FEBioStudio/FEBioStudio.app/Contents/MacOS/febio4"
+        )
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.plugin_path = os.path.join(current_dir, "build", "AneurysmPlugin.dylib")
 
-    def _generate_patient_feb(self, params: ArterialParameters, output_path: str): 
+    def _generate_patient_feb(self, params: ArterialParameters, output_path: str):
         """
-        Loads the template XML, modifies the genotype, score, and HGO parameters, 
+        Loads the template XML, modifies the genotype, score, and HGO parameters,
         and saves it to a new file.
         """
         tree = ET.parse(self.template_path)
         root = tree.getroot()
 
         geno_map = {"TT": 0, "TC": 1, "CC": 2}
-        geno_int = geno_map.get(params.genotype.upper(), 0) 
-        score_int = int(params.polygenic_score) if params.polygenic_score is not None else 0
+        geno_int = geno_map.get(params.genotype.upper(), 0)
+        score_int = (
+            int(params.polygenic_score) if params.polygenic_score is not None else 0
+        )
         for mat_name in ["Media", "Adventitia"]:
             mat = root.find(f".//material[@name='{mat_name}']")
             if mat is not None:
-                for tag, val in [("genotype", geno_int), ("polygenic_score", score_int)]:
+                for tag, val in [
+                    ("genotype", geno_int),
+                    ("polygenic_score", score_int),
+                ]:
                     elem = mat.find(tag)
                     if elem is None:
                         elem = ET.SubElement(mat, tag)
@@ -48,29 +65,29 @@ class FebioRunner:
         media_c, media_k1, media_k2 = fit_media_stress_hgo_params(params)
         adv_c, adv_k1, adv_k2 = fit_adventitia_stress_hgo_params(params)
 
-        # update media 
+        # update media
         media_mat = root.find(".//material[@name='Media']")
-        if media_mat is not None: 
+        if media_mat is not None:
             media_mat.find("genotype").text = str(geno_int)
             media_mat.find("polygenic_score").text = str(score_int)
 
             hgo_media = media_mat.find(".//passive_solid")
-            if hgo_media is not None: 
+            if hgo_media is not None:
                 hgo_media.find("c").text = str(media_c)
                 hgo_media.find("k1").text = str(media_k1)
                 hgo_media.find("k2").text = str(media_k2)
-            
+
             active_muscle = media_mat.find(".//active_solid")
             if active_muscle is not None:
                 smax_pa = params.c_k_muscle_a * params.c_vasodil_conc
                 smax_mpa = smax_pa / 1e6
                 active_muscle.find("smax").text = f"{smax_mpa:.10f}"
-            
+
         # update adventitia
         adv_mat = root.find(".//material[@name='Adventitia']")
         if adv_mat is not None:
             hgo_adv = adv_mat.find(".//passive_solid")
-            if hgo_adv is not None: 
+            if hgo_adv is not None:
                 hgo_adv.find("c").text = str(adv_c)
                 hgo_adv.find("k1").text = str(adv_k1)
                 hgo_adv.find("k2").text = str(adv_k2)
@@ -86,9 +103,8 @@ class FebioRunner:
             logfile = output_elem.find("logfile")
             if logfile is not None:
                 logfile.set("file", os.path.join(results_abs, f"{stem}.log"))
-        
-        tree.write(output_path, encoding="ISO-8859-1", xml_declaration=True)
 
+        tree.write(output_path, encoding="ISO-8859-1", xml_declaration=True)
 
     def run_simulations(self, batch_setups: list, max_concurrent=3, cores_per_sim=2):
         print(f"Preparing {len(batch_setups)} simulations...")
@@ -97,7 +113,12 @@ class FebioRunner:
             filename = f"sim_{params.genotype}_score{params.polygenic_score}.feb"
             out = os.path.join(self.results_dir, filename)
             self._generate_patient_feb(params, out)
-            commands.append((filename, [self.febio_executable, "-i", out, "-import", self.plugin_path]))
+            commands.append(
+                (
+                    filename,
+                    [self.febio_executable, "-i", out, "-import", self.plugin_path],
+                )
+            )
 
         active = []
         start_time = time.time()
@@ -108,44 +129,54 @@ class FebioRunner:
                 # Clean up finished processes
                 active = [p for p in active if p.poll() is None]
                 time.sleep(0.5)
-            
+
             print(f"-> Launching: {filename}")
             active.append(
                 subprocess.Popen(
-                    cmd, 
+                    cmd,
                     stdout=subprocess.DEVNULL,
                     # stderr=subprocess.DEVNULL
-                    )
-                    )
+                )
+            )
 
         for p in active:
             p.wait()
-        
+
         print(f"\nFinished in {(time.time() - start_time) / 60:.2f} minutes.")
 
-def main(): 
+
+def main():
     parser = argparse.ArgumentParser(description="Run FEBio Aneurysm Simulations.")
-    parser.add_argument('--genotypes', nargs='+', type=str, default=["TT", "TC", "CC"],
-                        help="Which genotypes to run. Example: --genotypes TT CC")
-    parser.add_argument('--scores', nargs='+', type=int, default=[0],
-                        help="Which polygenic scores to run (0-4). Example: --scores 0 4")
-    args = parser.parse_args()   
-    template_file = os.path.join(current_dir, "cylinder_with_plugin.feb")                 
+    parser.add_argument(
+        "--genotypes",
+        nargs="+",
+        type=str,
+        default=["TT", "TC", "CC"],
+        help="Which genotypes to run. Example: --genotypes TT CC",
+    )
+    parser.add_argument(
+        "--scores",
+        nargs="+",
+        type=int,
+        default=[0],
+        help="Which polygenic scores to run (0-4). Example: --scores 0 4",
+    )
+    args = parser.parse_args()
+    template_file = os.path.join(current_dir, "cylinder_with_plugin.feb")
     runner = FebioRunner(template_path=template_file)
     setups_to_run = []
     for genotype in args.genotypes:
         for score in args.scores:
             params = ArterialParameters(genotype=genotype, polygenic_score=score)
             setups_to_run.append(params)
-    
+
     if setups_to_run:
         runner.run_simulations(
-            batch_setups=setups_to_run, 
-            max_concurrent=1, 
-            cores_per_sim=2
+            batch_setups=setups_to_run, max_concurrent=1, cores_per_sim=2
         )
     else:
         print("No setups defined. Exiting.")
+
 
 if __name__ == "__main__":
     main()

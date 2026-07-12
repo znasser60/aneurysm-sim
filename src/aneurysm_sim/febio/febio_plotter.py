@@ -7,6 +7,7 @@ import re
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), "results")
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data")
 
+
 class FEBioPlotter:
     # def __init__(self, results_path=RESULTS_PATH):
     #     self.genotypes = ["TT", "TC", "CC"]
@@ -73,7 +74,7 @@ class FEBioPlotter:
     #     elem_df = elem_df[["x", "eff_stress"]]
 
     #     return node_df.merge(elem_df, on="x")
-    
+
     def __init__(self, data_path=DATA_PATH):
         self.genotypes = ["TT", "TC", "CC"]
         self.scores = [0, 4]
@@ -88,13 +89,17 @@ class FEBioPlotter:
                     file_path = os.path.join(data_path, f"{meas}_{geno}_{score}.csv")
                     if not os.path.exists(file_path):
                         continue
-                    df = pd.read_csv(file_path, sep=r'\s+').rename(columns={"E1095": meas})
+                    df = pd.read_csv(file_path, sep=r"\s+").rename(
+                        columns={"E1095": meas}
+                    )
                     dfs.append(df)
                 if dfs:
                     merged = dfs[0]
                     for df in dfs[1:]:
                         merged = merged.merge(df, on="x", how="outer")
-                    self.data[(geno, score)] = merged.sort_values("x").reset_index(drop=True)
+                    self.data[(geno, score)] = merged.sort_values("x").reset_index(
+                        drop=True
+                    )
 
     def plot_displacement_by_geno(self):
         plt.figure()
@@ -105,7 +110,7 @@ class FEBioPlotter:
                 # baseline_disp = df.loc[df["x"] == 1.1, "x_disp"].values[0]
                 idx = (df["x"] - 1.1).abs().argmin()
                 homeostasis_val = df["x_disp"].iloc[idx]
-                disp = (df["x_disp"]-homeostasis_val) / homeostasis_val
+                disp = (df["x_disp"] - homeostasis_val) / homeostasis_val
                 plt.plot(time_years, disp, label=f"{geno} score 0")
         plt.xlabel("Time (years)", fontsize=20)
         plt.ylabel("Relative x Displacement (mm)", fontsize=20)
@@ -114,7 +119,7 @@ class FEBioPlotter:
         plt.xlim(35, 90)
         plt.ylim(-0.1, 1.3)
         # plt.title("Displacement by genotype (score 0)")
-        plt.legend(fontsize=16, loc='lower right')
+        plt.legend(fontsize=16, loc="lower right")
 
     def plot_stress_by_geno(self):
         plt.figure()
@@ -134,7 +139,7 @@ class FEBioPlotter:
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
         # plt.title("Effective stress by genotype (score 0)")
-        plt.legend(fontsize=16, loc='lower right')
+        plt.legend(fontsize=16, loc="lower right")
 
     def plot_displacement_by_score(self):
         plt.figure()
@@ -144,7 +149,7 @@ class FEBioPlotter:
                 time_years = (df["x"] - 1.1) * 90
                 idx = (df["x"] - 1.1).abs().argmin()
                 homeostasis_val = df["x_disp"].iloc[idx]
-                disp = (df["x_disp"]-homeostasis_val) / homeostasis_val
+                disp = (df["x_disp"] - homeostasis_val) / homeostasis_val
                 plt.plot(time_years, disp, label=f"TC score {score}")
         plt.xlabel("Time (years)", fontsize=20)
         plt.ylabel("Relative x Displacement (mm)", fontsize=20)
@@ -153,7 +158,7 @@ class FEBioPlotter:
         plt.xlim(35, 90)
         plt.ylim(-0.1, 1.6)
         # plt.title("Relative displacement by score (TC genotype)")
-        plt.legend(fontsize=16, loc='lower right')
+        plt.legend(fontsize=16, loc="lower right")
 
     def plot_stress_by_score(self):
         plt.figure()
@@ -173,7 +178,7 @@ class FEBioPlotter:
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
         # plt.title("TC effective stress by score")
-        plt.legend(fontsize=16, loc='lower right')
+        plt.legend(fontsize=16, loc="lower right")
 
     def main(self):
         self.plot_displacement_by_geno()
@@ -181,6 +186,7 @@ class FEBioPlotter:
         self.plot_displacement_by_score()
         self.plot_stress_by_score()
         plt.show()
+
 
 if __name__ == "__main__":
     plotter = FEBioPlotter()

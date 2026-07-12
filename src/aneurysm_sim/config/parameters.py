@@ -1,26 +1,30 @@
 import numpy as np
 
+
 class ArterialParameters:
     """
-    Class to hold general and patient-specific initial parameters for the 1D artery model. 
-
-    args
-
+    Class to hold general and patient-specific initial parameters for the 1D artery model.
     """
-    def __init__(self, gender = None, age = None, genotype = None, 
-                 polygenic_score = None, smc_fraction=None, tgf_beta_level=None):
-        # Geometric and pressure 
-        self.c_diam_tzero_mm = 2.9 
-        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3) 
-        self.c_thickness_tzero = self.c_radius_tzero / 5 
+    def __init__(
+        self,
+        genotype=None,
+        polygenic_score=None,
+        smc_fraction=None,
+        tgf_beta_level=None,
+    ):
+        # Geometric and pressure
+        self.c_diam_tzero_mm = 2.9
+        self.c_radius_tzero = self.c_diam_tzero_mm / (2 * 1.3)
+        # self.c_thickness_tzero = self.c_radius_tzero / 5
         self.c_thickness_ad = 0.104
         self.c_thickness_me = 0.216
-        self.c_pressure_sys = 16000 # Pa
+        self.c_thickness_tzero = self.c_thickness_ad + self.c_thickness_me
+        self.c_pressure_sys = 16000  # Pa
 
         # Stretches
         self.c_lambda_z = 1.3
         self.c_lambda_sys = 1.3
-        self.c_lambda_elastin = 1.3 
+        self.c_lambda_elastin = 1.3
         self.c_lambda_muscle = 1.13
         self.c_lambda_muscle_att = 1.1
         self.c_rec_muscle = self.c_lambda_sys / self.c_lambda_muscle
@@ -67,19 +71,23 @@ class ArterialParameters:
         self.v_c_ad = self.c_rec_mod_ad
 
         self.tgf_beta_levels = {"TT": 0.713, "TC": 0.916, "CC": 1.119}
-        self.smc_mean_fractions = {0: 0.7262666, 
-                                   1: 0.7132891, 
-                                   2: 0.6736118, 
-                                   3: 0.7635375, 
-                                   4: 0.4898171}
-        self.smc_sd_fractions = {0: 0.1118832, 
-                                 1: 0.1333362, 
-                                 2: 0.1479770, 
-                                 3: 0.0969533, 
-                                 4: 0.1184857}
+        self.smc_mean_fractions = {
+            0: 0.7262666,
+            1: 0.7132891,
+            2: 0.6736118,
+            3: 0.7635375,
+            4: 0.4898171,
+        }
+        self.smc_sd_fractions = {
+            0: 0.1118832,
+            1: 0.1333362,
+            2: 0.1479770,
+            3: 0.0969533,
+            4: 0.1184857,
+        }
         self.polygenic_score = polygenic_score
         self.genotype = genotype
-        
+
         def _is_missing(v):
             return v is None or (isinstance(v, float) and np.isnan(v))
 
@@ -104,81 +112,107 @@ class ArterialParameters:
         self.tgf_spike_amount = 0.65
 
         # Immune cell related rates
-        self.r_e = 1.0       # Elastin degradation rate by immune cell proteases (years^-1)
-        self.r_cm = 1.0      # Medial collagen degradation rate by immune cell proteases (years^-1)
-        self.t_i0 = 40       # Time for onset of immune cell infiltration (years)
-        self.t_treat = 45    # Time for TGF-Beta treatment (years)
-        self.i_0 = 0         # Initial level of immune cells in the arterial wall
-        self.i_max = 1.0     # Maximum level of immune cells in the arterial wall
-        self.k_i = 1.25      # Time for immune cell levels to reach half of maximum level (years)
-        self.r_pc1 = 1.0     # Collagenase secretion rate by immune cells (years^-1)
-        self.r_pc2 = 1.0     # Baseline immune cell collagenase degradation rate (years^-1)
-        self.r_pe1 = 1.0     # Elastase secretion rate by immune cells (years^-1)
-        self.r_pe2 = 1.0     # Baseline immune cell elastase degradation rate (years^-1)
+        self.r_e = 1.0  # Elastin degradation rate by immune cell proteases (years^-1)
+        self.r_cm = (
+            1.0  # Medial collagen degradation rate by immune cell proteases (years^-1)
+        )
+        self.t_i0 = 40  # Time for onset of immune cell infiltration (years)
+        self.t_treat = 45  # Time for TGF-Beta treatment (years)
+        self.i_0 = 0  # Initial level of immune cells in the arterial wall
+        self.i_max = 1.0  # Maximum level of immune cells in the arterial wall
+        self.k_i = (
+            1.25  # Time for immune cell levels to reach half of maximum level (years)
+        )
+        self.r_pc1 = 1.0  # Collagenase secretion rate by immune cells (years^-1)
+        self.r_pc2 = 1.0  # Baseline immune cell collagenase degradation rate (years^-1)
+        self.r_pe1 = 1.0  # Elastase secretion rate by immune cells (years^-1)
+        self.r_pe2 = 1.0  # Baseline immune cell elastase degradation rate (years^-1)
 
         # Fibroblast rates
-        self.r_f1 = 1.0      # Baseline fibroblast migration and proliferation rate (years^-1)
-        self.r_f2 = 0.5      # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
-        self.r_f3 = 1.0      # Fibroblast cell death rate (years^-1)
+        self.r_f1 = (
+            1.0  # Baseline fibroblast migration and proliferation rate (years^-1)
+        )
+        self.r_f2 = (
+            0.5  # Fibroblast population dynamics sensitivity to TGF-Beta (years^-1)
+        )
+        self.r_f3 = 1.0  # Fibroblast cell death rate (years^-1)
 
         # Smooth muscle cell rates
-        self.beta1_smc = 0.5 # Rate of change in SMCs according to stretch
-        self.beta2_smc = 0.0 # Rate of change in SMCs according to change in elastin
-        self.beta3_smc = 1.0 # Rate of change in SMCs according to immune cells
-        self.beta_wss_smc = 1.0 # or 500
-        self.tau_homeo = 1.0 
-        self.k_active_smc = 12e8     # Material parameter for the active response of SMCs
-        self.k_passive_smc = 11.8e3  # Material parameter for the passive response of SMCs
-        self.lambda_smc_max = 1.4    # Stretch where active force is max
-        self.lambda_smc_zero = 2.0   # Stretch limit where active force becomes 0
-        self.lambda_att_smc = 1.1    # Attachment stretch of SMCs
+        self.beta1_smc = 0.5  # Rate of change in SMCs according to stretch
+        self.beta2_smc = 0.0  # Rate of change in SMCs according to change in elastin
+        self.beta3_smc = 1.0  # Rate of change in SMCs according to immune cells
+        self.beta_wss_smc = 1.0  # or 500
+        self.tau_homeo = 1.0
+        self.k_active_smc = 12e8  # Material parameter for the active response of SMCs
+        self.k_passive_smc = (
+            11.8e3  # Material parameter for the passive response of SMCs
+        )
+        self.lambda_smc_max = 1.4  # Stretch where active force is max
+        self.lambda_smc_zero = 2.0  # Stretch limit where active force becomes 0
+        self.lambda_att_smc = 1.1  # Attachment stretch of SMCs
 
         # Procollagen rates
-        self.r_p1 = 1.0      # Baseline procollagen secretion rate by fibroblasts (years^-1)
-        self.r_p2 = 0.5      # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
-        self.r_p3 = 1.0      # Combined baseline procollagen degradation and modification rate (years^-1)
+        self.r_p1 = 1.0  # Baseline procollagen secretion rate by fibroblasts (years^-1)
+        self.r_p2 = (
+            0.5  # Fibroblast procollagen secretion sensitivity to TGF-Beta (years^-1)
+        )
+        self.r_p3 = 1.0  # Combined baseline procollagen degradation and modification rate (years^-1)
 
         # Adventitial collagen rates
-        self.r_c1 = 0.5      # Baseline adventitial collagen maturation rate (years^-1)
-        self.r_c2 = 0.5      # Adventitial collagen degradation rate (years^-1)
+        self.r_c1 = 0.5  # Baseline adventitial collagen maturation rate (years^-1)
+        self.r_c2 = 0.5  # Adventitial collagen degradation rate (years^-1)
 
         # Zymogen rates
-        self.r_z1 = 1.0      # Baseline zymogen secretion rate by fibroblasts (years^-1)
-        self.r_z2 = 0.5      # Fibroblast zymogen secretion sensitivity to TGF-Beta (years^-1)
-        self.r_z3 = 1.0      # Combined baseline zymogen degradation and modification rates (years^-1)
+        self.r_z1 = 1.0  # Baseline zymogen secretion rate by fibroblasts (years^-1)
+        self.r_z2 = (
+            0.5  # Fibroblast zymogen secretion sensitivity to TGF-Beta (years^-1)
+        )
+        self.r_z3 = 1.0  # Combined baseline zymogen degradation and modification rates (years^-1)
 
         # Collagenase rates
-        self.r_ca1 = 0.5      # Baseline active collagenase maturation rate (years^-1)
-        self.r_ca2 = 0.25     # Collagenase inactivation rate by TIMPs (years^-1)
-        self.r_ca3 = 0.25     # Inhibitor–collagenase complex formation rate (years^-1)
+        self.r_ca1 = 0.5  # Baseline active collagenase maturation rate (years^-1)
+        self.r_ca2 = 0.25  # Collagenase inactivation rate by TIMPs (years^-1)
+        self.r_ca3 = 0.25  # Inhibitor–collagenase complex formation rate (years^-1)
 
         # Inhibitor rates
-        self.r_i1 = 1.0       # Baseline inhibitor secretion rate (years^-1)
-        self.r_i2 = 0.5       # Fibroblast collagenase inhibitor secretion sensitivity to TGF-β (years^-1)
-        self.r_i3 = 0.75      # Baseline collagenase inhibitor degradation rate (years^-1)
-        self.r_i4 = 0.25      # Inhibitor–collagenase complex formation rate (duplicate of r_ca3) (years^-1)
+        self.r_i1 = 1.0  # Baseline inhibitor secretion rate (years^-1)
+        self.r_i2 = 0.5  # Fibroblast collagenase inhibitor secretion sensitivity to TGF-β (years^-1)
+        self.r_i3 = 0.75  # Baseline collagenase inhibitor degradation rate (years^-1)
+        self.r_i4 = 0.25  # Inhibitor–collagenase complex formation rate (duplicate of r_ca3) (years^-1)
 
         # TGF-Beta rates
-        self.r_betal1 = 0.1          # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
-        self.r_betal2 = 5.0          # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
-        self.r_betal3 = 1.0          # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
-        self.r_betal4 = 1.0          # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
-        self.r_betal5 = 1.0          # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1)
-        self.r_beta1 = 0.5           # Baseline latent TGF-Beta activation rate
-        self.r_beta2 = 1.0           # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
-        self.r_beta3 = 1.0           # Baseline active TGF-Beta degradation rate (years^-1)
+        self.r_betal1 = (
+            0.1  # Fibroblast latent TGF-Beta secretion sensitivity to active TGF-Beta
+        )
+        self.r_betal2 = 5.0  # Fibroblast latent TGF-Beta secretion sensitivity to deviations from mechanical homeostasis (Parameter study with [0.1, 1.0, 5.0, 10.0])
+        self.r_betal3 = (
+            1.0  # Fibroblast latent TGF-Beta secretion sensitivity to collagen levels
+        )
+        self.r_betal4 = 1.0  # Combined baseline latent TGF-Bet degradation/modification rate (years^-1)
+        self.r_betal5 = 1.0  # Latent TGF-Beta modification rate by integrin/ECM/Stretch–dependent mechanism (years^-1)
+        self.r_beta1 = 0.5  # Baseline latent TGF-Beta activation rate
+        self.r_beta2 = 1.0  # Modification rate by integrin/ECM/Stretch–dependent mechanism (same as r_betaL5)
+        self.r_beta3 = 1.0  # Baseline active TGF-Beta degradation rate (years^-1)
 
         # Mechanical model parameters
-        self.remodel_time = 10       # Averaging time period for attachment stretch remodelling 
-        self.t_sim = 90              # Simulation time in years
-        self.width_att_dist = self.c_att_max_ad - self.c_att_min_ad    # Width of the attachment stretch distribution (assumed constant)
-        self.skew_att_dist = (self.c_att_mod_ad - self.c_att_min_ad) / self.width_att_dist    # Skew of the attachment stretch distribution (assumed constant)
-        self.width_att_dist_me = self.c_att_max_me - self.c_att_min_me   
-        self.skew_att_dist_me  = (self.c_att_mod_me - self.c_att_min_me) / self.width_att_dist_me    
+        self.remodel_time = (
+            10  # Averaging time period for attachment stretch remodelling
+        )
+        self.t_sim = 90  # Simulation time in years
+        self.width_att_dist = (
+            self.c_att_max_ad - self.c_att_min_ad
+        )  # Width of the attachment stretch distribution (assumed constant)
+        self.skew_att_dist = (
+            (self.c_att_mod_ad - self.c_att_min_ad) / self.width_att_dist
+        )  # Skew of the attachment stretch distribution (assumed constant)
+        self.width_att_dist_me = self.c_att_max_me - self.c_att_min_me
+        self.skew_att_dist_me = (
+            self.c_att_mod_me - self.c_att_min_me
+        ) / self.width_att_dist_me
 
-        # Set initial values for variables 
+        # Set initial values for variables
         self.alpha_init = 0.1
-        self.init_fibroblast = 1.0 
+        self.init_fibroblast = 1.0
         # baseline_healthy_smc_fraction = self.smc_mean_fractions[0]
         # self.init_muscle_cells = self.smc_fraction / baseline_healthy_smc_fraction
         self.init_muscle_cells = 1.0
@@ -197,30 +231,58 @@ class ArterialParameters:
 
         self.refresh_physics()
 
-    def refresh_physics(self): 
-        '''
-        Recalculates stiffness parameters based on current TGF-Beta levels and SMC fractions. 
-        '''
-        #CHANGED
+    def refresh_physics(self):
+        """
+        Recalculates stiffness parameters based on current TGF-Beta levels and SMC fractions.
+        """
+        # CHANGED
         self.c_att_max_me_current = self.c_att_max_me
 
         self.c_rec_max_me = self.c_lambda_elastin / self.c_att_min_me
         self.c_rec_min_me = self.c_lambda_elastin / self.c_att_max_me
         self.c_rec_mod_me = self.c_lambda_elastin / self.c_att_mod_me
-        self.v_a_me, self.v_b_me, self.v_c_me = self.c_rec_min_me, self.c_rec_max_me, self.c_rec_mod_me
+        self.v_a_me, self.v_b_me, self.v_c_me = (
+            self.c_rec_min_me,
+            self.c_rec_max_me,
+            self.c_rec_mod_me,
+        )
 
         self.c_rec_max_ad = self.c_lambda_elastin / self.c_att_min_ad
         self.c_rec_min_ad = self.c_lambda_elastin / self.c_att_max_ad
         self.c_rec_mod_ad = self.c_lambda_elastin / self.c_att_mod_ad
-        self.v_a_ad, self.v_b_ad, self.v_c_ad = self.c_rec_min_ad, self.c_rec_max_ad, self.c_rec_mod_ad
+        self.v_a_ad, self.v_b_ad, self.v_c_ad = (
+            self.c_rec_min_ad,
+            self.c_rec_max_ad,
+            self.c_rec_mod_ad,
+        )
 
         self.c_load_borne_muscle_p = self.smc_fraction / 2
         self.c_load_borne_muscle_a = self.c_load_borne_muscle_p
-        self.c_load_borne_elastin = (1/3) * (1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a))
-        self.c_load_borne_collagen = 1.0 - (self.c_load_borne_elastin + self.c_load_borne_muscle_p + self.c_load_borne_muscle_a)
+        self.c_load_borne_elastin = (1 / 3) * (
+            1 - (self.c_load_borne_muscle_p + self.c_load_borne_muscle_a)
+        )
+        self.c_load_borne_collagen = 1.0 - (
+            self.c_load_borne_elastin
+            + self.c_load_borne_muscle_p
+            + self.c_load_borne_muscle_a
+        )
 
-        self.c_common_factor_me = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_me)
-        self.c_common_factor_ad = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_ad)
+        # self.c_common_factor = (self.c_pressure_sys * self.c_radius_tzero * self.c_lambda_elastin**2 * self.c_lambda_z / self.c_thickness_tzero)
+        self.c_common_factor_me = (
+            self.c_pressure_sys
+            * self.c_radius_tzero
+            * self.c_lambda_elastin**2
+            * self.c_lambda_z
+            / self.c_thickness_me
+        )
+        self.c_common_factor_ad = (
+            self.c_pressure_sys
+            * self.c_radius_tzero
+            * self.c_lambda_elastin**2
+            * self.c_lambda_z
+            / self.c_thickness_ad
+        )
+
         x = self.c_lambda_elastin
         v_a = self.v_a_me
         v_b = self.v_b_me
@@ -230,28 +292,80 @@ class ArterialParameters:
         delta_unit = 1.0 / ((v_b - v_a) * (v_b - v_c))
 
         if x < v_a:
-            collagen_denominator = 1e-9 
+            collagen_denominator = 1e-9
         elif x < v_c:
-            collagen_denominator = x * gamma_unit * 2 * ((x + v_a) * np.log(x / v_a) + 2 * (v_a - x))
+            collagen_denominator = (
+                x * gamma_unit * 2 * ((x + v_a) * np.log(x / v_a) + 2 * (v_a - x))
+            )
         elif x <= v_b:
             term1 = (x + v_a) * np.log(v_c / v_a) + v_a - v_c + ((v_a - v_c) / v_c) * x
             term2 = (x + v_b) * np.log(x / v_c) + v_b + v_c - ((v_b + v_c) / v_c) * x
-            collagen_denominator = x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+            collagen_denominator = (
+                x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+            )
         else:
             term1 = (x + v_a) * np.log(v_c / v_a) + v_a - v_c + ((v_a - v_c) / v_c) * x
             term2 = (x + v_b) * np.log(v_b / v_c) - v_b + v_c - ((v_b - v_c) / v_c) * x
-            collagen_denominator = x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+            collagen_denominator = (
+                x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
+            )
 
-        self.c_k_collagen = self.c_load_borne_collagen * (self.c_common_factor_me) / collagen_denominator
-        self.v_gamma_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me))
-        self.v_delta_me = self.c_k_collagen / ((self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me))
-        self.v_gamma_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
-        self.v_delta_ad = self.c_k_collagen * self.c_collagen_ratio_ad_me / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
-        self.c_k_elastin = self.c_load_borne_elastin * (self.c_common_factor_me) / (self.c_lambda_elastin**2 * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4))))
-        muscle_a_denominator = (self.c_vasodil_conc * self.c_lambda_muscle * (1 - ((self.c_musc_mean - self.c_lambda_muscle) / (self.c_musc_mean - self.c_musc_min)) ** 2))
-        self.c_k_muscle_p = self.c_load_borne_muscle_p * (self.c_common_factor_me) / (self.c_lambda_muscle**2 * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4)))
-        self.c_k_muscle_a = self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
-        print(f"Updated physics: K elastin: {self.c_k_elastin:.2f}, K collagen: {self.c_k_collagen:.2f}, K muscle passive: {self.c_k_muscle_p:.2f}, K muscle active: {self.c_k_muscle_a:.2f}")
+        self.c_k_collagen = (
+            self.c_load_borne_collagen
+            * (self.c_common_factor_me)
+            / collagen_denominator
+        )
+
+        self.v_gamma_me = self.c_k_collagen / (
+            (self.v_b_me - self.v_a_me) * (self.v_c_me - self.v_a_me)
+        )
+        self.v_delta_me = self.c_k_collagen / (
+            (self.v_b_me - self.v_a_me) * (self.v_b_me - self.v_c_me)
+        )
+        self.v_gamma_ad = (
+            self.c_k_collagen
+            * self.c_collagen_ratio_ad_me
+            / ((self.v_b_ad - self.v_a_ad) * (self.v_c_ad - self.v_a_ad))
+        )
+        self.v_delta_ad = (
+            self.c_k_collagen
+            * self.c_collagen_ratio_ad_me
+            / ((self.v_b_ad - self.v_a_ad) * (self.v_b_ad - self.v_c_ad))
+        )
+        self.c_k_elastin = (
+            self.c_load_borne_elastin
+            * (self.c_common_factor_me)
+            / (
+                self.c_lambda_elastin**2
+                * (1 - (1 / (self.c_lambda_z**2 * self.c_lambda_elastin**4)))
+            )
+        )
+        muscle_a_denominator = (
+            self.c_vasodil_conc
+            * self.c_lambda_muscle
+            * (
+                1
+                - (
+                    (self.c_musc_mean - self.c_lambda_muscle)
+                    / (self.c_musc_mean - self.c_musc_min)
+                )
+                ** 2
+            )
+        )
+        self.c_k_muscle_p = (
+            self.c_load_borne_muscle_p
+            * (self.c_common_factor_me)
+            / (
+                self.c_lambda_muscle**2
+                * (1 - 1 / (self.c_lambda_z**2 * self.c_lambda_muscle**4))
+            )
+        )
+        self.c_k_muscle_a = (
+            self.c_load_borne_muscle_a * self.c_common_factor_me / muscle_a_denominator
+        )
+        print(
+            f"Updated physics: K elastin: {self.c_k_elastin:.2f}, K collagen: {self.c_k_collagen:.2f}, K muscle passive: {self.c_k_muscle_p:.2f}, K muscle active: {self.c_k_muscle_a:.2f}"
+        )
 
     def to_dict(self):
         return self.__dict__

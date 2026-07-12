@@ -12,63 +12,112 @@ DATA_PATH = "src/aneurysm_sim/data/syn_patient_data.csv"
 def run_general_mode(plot_names):
     GENOTYPES = ["TT", "TC", "CC"]
     SCORES = range(5)
+    REDUCED_SCORES = [0, 2, 4]
     SMC_RANGE = np.linspace(0.45, 0.85, 30)
     TGF_RANGE = np.linspace(0.65, 1.25, 30)
     Z = np.zeros((len(TGF_RANGE), len(SMC_RANGE)))
 
     for plot_name in plot_names:
         if plot_name == "density_by_genotype":
-            results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
-            plots.plot_normalised_densities_by_genotype2(results["TT"], results["TC"], results["CC"])
+            results = {
+                g: model.simulate_aneurysm(ArterialParameters(genotype=g))
+                for g in GENOTYPES
+            }
+            plots.plot_normalised_densities_by_genotype2(
+                results["TT"], results["TC"], results["CC"]
+            )
 
         elif plot_name == "density_by_geno_treat":
-            results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
-            plots.plot_normalised_densities_by_genotype2(results["TT"], results["TC"], results["CC"])
-        
+            results = {
+                g: model.simulate_aneurysm(
+                    ArterialParameters(genotype=g), treatment=True
+                )
+                for g in GENOTYPES
+            }
+            plots.plot_normalised_densities_by_genotype2(
+                results["TT"], results["TC"], results["CC"]
+            )
+
         elif plot_name == "density_by_score":
-            results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s)) for s in SCORES}
-            plots.plot_normalised_densities_by_score2(*[results[s] for s in SCORES])
-        
+            results = {
+                s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s))
+                for s in REDUCED_SCORES
+            }
+            plots.plot_normalised_densities_by_score2(
+                *[results[s] for s in REDUCED_SCORES]
+            )
+
         elif plot_name == "density_by_score_treat":
-            results = {s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s), treatment=True) for s in SCORES}
-            plots.plot_normalised_densities_by_score(*[results[s] for s in SCORES])
+            results = {
+                s: model.simulate_aneurysm(
+                    ArterialParameters(polygenic_score=s), treatment=True
+                )
+                for s in REDUCED_SCORES
+            }
+            plots.plot_normalised_densities_by_score(
+                *[results[s] for s in REDUCED_SCORES]
+            )
 
         elif plot_name == "stretch_by_genotype":
-            results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
+            results = {
+                g: model.simulate_aneurysm(ArterialParameters(genotype=g))
+                for g in GENOTYPES
+            }
             plots.plot_stretch_by_genotype(results["TT"], results["TC"], results["CC"])
-        
+
         elif plot_name == "stretch_by_geno_treat":
-                results = {g: model.simulate_aneurysm(ArterialParameters(genotype=g)) for g in GENOTYPES}
-                results_treat = {g: model.simulate_aneurysm(ArterialParameters(genotype=g), treatment=True) for g in GENOTYPES}
-                plots.plot_stretch_by_geno_treat(results["TT"], results["TC"], results["CC"],
-                                                 results_treat["TT"], results_treat["TC"], results_treat["CC"])
-                
+            results = {
+                g: model.simulate_aneurysm(ArterialParameters(genotype=g))
+                for g in GENOTYPES
+            }
+            results_treat = {
+                g: model.simulate_aneurysm(
+                    ArterialParameters(genotype=g), treatment=True
+                )
+                for g in GENOTYPES
+            }
+            plots.plot_stretch_by_geno_treat(
+                results["TT"],
+                results["TC"],
+                results["CC"],
+                results_treat["TT"],
+                results_treat["TC"],
+                results_treat["CC"],
+            )
+
         elif plot_name == "stretch_by_score":
             results_batch = {}
             for s in SCORES:
                 p = ArterialParameters(polygenic_score=s)
-                results_batch[s] = model.simulate_aneurysm_batch_smc(p, treatment=False, n_vals=100)
+                results_batch[s] = model.simulate_aneurysm_batch_smc(
+                    p, treatment=False, n_vals=100
+                )
             plots.plot_stretch_by_score(results_batch)
 
         elif plot_name == "stretch_by_score_treat":
             results_notreat, results_treat = {}, {}
             for s in SCORES:
                 p = ArterialParameters(polygenic_score=s)
-                results_notreat[s] = model.simulate_aneurysm_batch_smc(p, treatment=False, n_vals=100)
-                results_treat[s]   = model.simulate_aneurysm_batch_smc(p, treatment=True, n_vals=100)
+                results_notreat[s] = model.simulate_aneurysm_batch_smc(
+                    p, treatment=False, n_vals=1
+                )
+                results_treat[s] = model.simulate_aneurysm_batch_smc(
+                    p, treatment=True, n_vals=1
+                )
             plots.plot_stretch_by_score(results_notreat, results_treat)
 
-        elif plot_name == "load_bearing_epochs":
-            params_dict = {s: ArterialParameters(polygenic_score=s) for s in [0,4]}
-            results_dict = {s: model.simulate_aneurysm(params_dict[s]) for s in [0,4]}
-            plots.plot_load_bearing_epochs(results_dict, params_dict)
-        
+        elif plot_name == "load_bearing":
+            params_dict = {s: ArterialParameters(polygenic_score=s) for s in SCORES}
+            plots.plot_load_bearing(params_dict)
+
         elif plot_name == "time_convergence":
             dt_list = np.linspace(0.05, 0.0005, 50)
             plots.plot_time_step_convergence(dt_list, ArterialParameters())
 
         else:
-            print(f"Unknown plot '{plot_name}' for general mode. Available: density_by_genotype, density_by_geno_treat, density_by_score")
+            print(
+                f"Unknown plot '{plot_name}' for general mode. Available: density_by_genotype, density_by_geno_treat, density_by_score"
+            )
 
 
 def run_patient_mode(patient_data, patient_ids, plot_names):
@@ -83,27 +132,46 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
             genotype=patient_row["TGF Genotype"].values[0],
             polygenic_score=patient_row["Polygenic Score"].values[0],
         )
-        
+
         patient_results = model.simulate_aneurysm(patient_params)
         patient_results_treat = model.simulate_aneurysm(patient_params, treatment=True)
-        patient_stretch_results = model.simulate_arterial_stress_and_pressure(patient_params)
+        patient_stretch_results = model.simulate_arterial_stress_and_pressure(
+            patient_params
+        )
 
         plot_registry = {
-            "pressure_vs_stretch": lambda: plots.plot_pressure_vs_stretch(patient_stretch_results),
-            "pressure_vs_diameter": lambda: plots.plot_pressure_vs_diameter(patient_stretch_results),
-            "stretch_vs_stress": lambda: plots.plot_stretch_vs_stress(patient_stretch_results),
-            "att_dist":     lambda: plots.plot_stretch_evolution_dist(patient_results, stretch_type="attachment"),
-            "rec_dist":     lambda: plots.plot_stretch_evolution_dist(patient_results, stretch_type="recruitment"),
-            "density":           lambda: [plots.plot_normalised_densities(patient_results, legend=True), plt.show()],
-            "density_treat":     lambda: [plots.plot_normalised_densities(patient_results_treat, legend=True), plt.show()],
-
+            "pressure_vs_stretch": lambda: plots.plot_pressure_vs_stretch(
+                patient_stretch_results
+            ),
+            "pressure_vs_diameter": lambda: plots.plot_pressure_vs_diameter(
+                patient_stretch_results
+            ),
+            "stretch_vs_stress": lambda: plots.plot_stretch_vs_stress(
+                patient_stretch_results
+            ),
+            "att_dist": lambda: plots.plot_stretch_evolution_dist(
+                patient_results, stretch_type="attachment"
+            ),
+            "rec_dist": lambda: plots.plot_stretch_evolution_dist(
+                patient_results, stretch_type="recruitment"
+            ),
+            "density": lambda: [
+                plots.plot_normalised_densities(patient_results, legend=True),
+                plt.show(),
+            ],
+            "density_treat": lambda: [
+                plots.plot_normalised_densities(patient_results_treat, legend=True),
+                plt.show(),
+            ],
         }
 
         for plot_name in plot_names:
             if plot_name in plot_registry:
                 plot_registry[plot_name]()
             else:
-                print(f"Unknown plot '{plot_name}' for patient mode. Available: {', '.join(plot_registry)}")
+                print(
+                    f"Unknown plot '{plot_name}' for patient mode. Available: {', '.join(plot_registry)}"
+                )
 
 
 def main():
@@ -115,7 +183,7 @@ def main():
             "epochs, and numerical convergence, either aggregated across all "
             "genotype/score cohorts ('general' mode) or for individual patients from a "
             "supplied dataset ('patient' mode)."
-        ), 
+        ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
@@ -129,7 +197,7 @@ def main():
             "simulated from ArterialParameters defaults. 'patient': runs simulations for one "
             "or more individual patients, using genotype and polygenic score values looked up "
             "from the CSV dataset by patient ID."
-        )
+        ),
     )
     parser.add_argument(
         "--id",
@@ -138,7 +206,7 @@ def main():
         help=(
             "One or more patient IDs to simulate, matched against the 'ID' column of the "
             "patient dataset. Required when --mode patient is selected, ignored otherwise."
-        )
+        ),
     )
     parser.add_argument(
         "--plot",
@@ -179,8 +247,8 @@ def main():
             "stretch over the simulation.\n"
             "  density                Normalised constituent density evolution for the "
             "patient, no treatment.\n"
-            "  density_treat          As above, with treatment intervention applied.", 
-        )
+            "  density_treat          As above, with treatment intervention applied.",
+        ),
     )
     args = parser.parse_args()
 
