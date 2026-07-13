@@ -1,18 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import seaborn as sns
 import matplotlib as mpl
 import matplotlib.transforms as mtransforms
 import matplotlib.patheffects as path_effects
 
-from aneurysm_sim.model import functions
 from aneurysm_sim.model import model
 
 
 def plot_pressure_vs_stretch(results, n_zoom=120):
     """
-    Plot the pressure vs stretch of the artery with a zoomed-in view.
+    Plots the pressure vs stretch of the artery with a zoomed-in view.
+
+    Parameters:
+    results (dict):
+        A dictionary containing the stress/pressure simulation results.
+    n_zoom (int):
+        The number of data points to display in the zoomed-in view.
     """
     stretch = results["sv_stretch_var"]
     sv_pressure_var = results["sv_pressure_var"]
@@ -64,9 +68,14 @@ def plot_pressure_vs_stretch(results, n_zoom=120):
 
 def plot_pressure_vs_diameter(results, n_zoom=120):
     """
-    Plot the pressure vs diameter of the artery with a zoomed-in view.
-    """
+    Plots the pressure vs diameter of the artery with a zoomed-in view.
 
+    Parameters:
+    results (dict):
+        A dictionary containing the stress/pressure simulation results.
+    n_zoom (int): 
+        The number of data points to display in the zoomed-in view.
+    """
     sv_diam_var = results["sv_diam_var"]
     sv_pressure_var = results["sv_pressure_var"]
     sv_pressure_var_elastin = results["sv_pressure_var_elastin"]
@@ -155,7 +164,13 @@ def plot_pressure_vs_diameter(results, n_zoom=120):
 
 def plot_stretch_vs_stress(results, n_zoom=120):
     """
-    Plot the stretch vs stress with a zoomed-in view.
+    Plots the stretch vs stress with a zoomed-in view.
+
+    Parameters:
+    results (dict):
+        A dictionary containing the stress/pressure simulation results.
+    n_zoom (int):
+        The number of data points to display in the zoomed-in view.
     """
     sv_stretch_var = results["sv_stretch_var"]
     sv_stress_var_elastin = results["sv_stress_var_elastin"]
@@ -183,9 +198,30 @@ def plot_stretch_vs_stress(results, n_zoom=120):
         linewidth=2,
         label="Collagen",
     )
-    # plt.plot(sv_stretch_var[44:n_zoom], sv_stress_var_collagen_me[44:n_zoom], '+', linewidth=2, markersize=8, label='Collagen ME')
-    # plt.plot(sv_stretch_var[:n_zoom], sv_stress_var_collagen_ad[:n_zoom], '.', linewidth=2, markersize=8, label='Collagen AD')
-    # plt.plot(sv_stretch_var[64:n_zoom], sv_stress_var_muscle[64:n_zoom], '-', linewidth=2, markersize=8, label='vSMC')
+    plt.plot(
+        sv_stretch_var[44:n_zoom],
+        sv_stress_var_collagen_me[44:n_zoom],
+        "+",
+        linewidth=2,
+        markersize=8,
+        label="Collagen ME",
+    )
+    plt.plot(
+        sv_stretch_var[:n_zoom],
+        sv_stress_var_collagen_ad[:n_zoom],
+        ".",
+        linewidth=2,
+        markersize=8,
+        label="Collagen AD",
+    )
+    plt.plot(
+        sv_stretch_var[64:n_zoom],
+        sv_stress_var_muscle[64:n_zoom],
+        "-",
+        linewidth=2,
+        markersize=8,
+        label="vSMC",
+    )
     plt.plot(
         sv_stretch_var[44:n_zoom],
         sv_stress_var_muscle_a[44:n_zoom],
@@ -251,7 +287,12 @@ def plot_normalised_densities(
     results, ax=None, title=None, legend=False, xlabel=False, ylabel=False
 ):
     """
-    Plot the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
+    Plots the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
+
+    Parameters:
+    results (dict): 
+        A dictionary containing the aneurysm simultion results.
+    Remaining parameters are for customizing the plot appearance.
     """
 
     if ax is None:
@@ -390,7 +431,6 @@ def plot_normalised_densities(
 
     ax.set_xlim(38, 75)
     ax.axvline(40, color="black", linestyle="--", linewidth=1.5)
-    # ax.axvline(50, color='black', linestyle=':',  linewidth=1.5)
     ax.grid(True, linestyle="--", alpha=0.4)
 
     if legend:
@@ -400,44 +440,19 @@ def plot_normalised_densities(
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     """
-    Plot normalised densities for each genotype (TT, TC, CC) in a 2x2 grid.
-    """
-    fig = plt.figure(figsize=(16, 12))
-    gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1], width_ratios=[1, 1])
+    Plots the normalised densities of elastin, collagen, immune cells, latent 
+    and active TGF Beta for each genotype side by side.
 
-    ax1 = fig.add_subplot(gs[0, 0])  # Top left: TT
-    ax_legend = fig.add_subplot(gs[0, 1])  # Top right: Legend placeholder
-    ax2 = fig.add_subplot(gs[1, 0])  # Bottom left: TC
-    ax3 = fig.add_subplot(gs[1, 1])  # Bottom right: CC
-
-    plot_normalised_densities(
-        results_tt, ax1, title="Genotype: TT", ylabel=True, xlabel=False, legend=False
-    )
-    plot_normalised_densities(
-        results_tc, ax2, title="Genotype: TC", ylabel=True, xlabel=True, legend=False
-    )
-    plot_normalised_densities(
-        results_cc, ax3, title="Genotype: CC", ylabel=False, xlabel=True, legend=False
-    )
-    ax_legend.axis("off")
-    handles, labels = ax1.get_legend_handles_labels()
-    ax_legend.legend(handles, labels, loc="lower left", fontsize=10)
-
-    plt.subplots_adjust(
-        hspace=0.3, wspace=0.3, left=0.12, right=0.95, bottom=0.1, top=0.95
-    )
-    plt.show()
-
-    return fig
-
-
-def plot_normalised_densities_by_genotype2(results_tt, results_tc, results_cc):
-    """
-    Accessible side-by-side plot for genotypes with high-visibility markers and fonts.
+    Parameters:
+    results_tt (dict): 
+        A dictionary containing the aneurysm simulation results for genotype TT.
+    results_tc (dict):
+        A dictionary containing the aneurysm simulation results for genotype TC.
+    results_cc (dict):
+        A dictionary containing the aneurysm simulation results for genotype CC.
     """
     fig, axes = plt.subplots(1, 3, figsize=(22, 8), sharey=True)
 
-    # Plot each genotype
     plot_normalised_densities(
         results_tt, axes[0], title="Genotype TT (0.7)", ylabel=True, xlabel=False
     )
@@ -448,7 +463,6 @@ def plot_normalised_densities_by_genotype2(results_tt, results_tc, results_cc):
         results_cc, axes[2], title="Genotype CC (1.1)", ylabel=False, xlabel=False
     )
 
-    # Collect legend handles from the first axis
     handles, labels = axes[0].get_legend_handles_labels()
 
     fig.legend(
@@ -463,8 +477,6 @@ def plot_normalised_densities_by_genotype2(results_tt, results_tc, results_cc):
         shadow=True,
     )
 
-    # axes[0].text(40.5, 1.6, "Infiltration", fontsize=16, rotation=90, verticalalignment='center', weight='bold')
-
     plt.show()
 
     return fig
@@ -474,7 +486,19 @@ def plot_normalised_densities_by_score(
     results_score_0, results_score_1, results_score_2, results_score_3, results_score_4
 ):
     """
-    Plot normalised densities for each polygenic score (0-4) in a 3x2 grid.
+    Plot normalised densities for each polygenic score (0-4) in a 3x2 grid layout.
+
+    Parameters:
+    results_score_0 (dict): 
+        A dictionary containing the aneurysm simulation results for polygenic score 0.
+    results_score_1 (dict):
+        A dictionary containing the aneurysm simulation results for polygenic score 1.
+    results_score_2 (dict): 
+        A dictionary containing the aneurysm simulation results for polygenic score 2.
+    results_score_3 (dict):
+        A dictionary containing the aneurysm simulation results for polygenic score 3.
+    results_score_4 (dict):
+        A dictionary containing the aneurysm simulation results for polygenic score 4.
     """
     fig, axes = plt.subplots(3, 2, figsize=(18, 18))
     axes = axes.flatten()
@@ -529,11 +553,21 @@ def plot_normalised_densities_by_score(
     return fig
 
 
-def plot_normalised_densities_by_score2(
+def plot_normalised_densities_by_score_reduced(
     results_score_0, results_score_2, results_score_4
 ):
     """
-    Plot normalised densities for each polygenic score (0-4) side by side.
+    Plot normalised densities for polygenic scores 0, 2, and 4 in a single row layout.
+
+    Parameters:
+    results_score_0 (dict): 
+        A dictionary containing the aneurysm simulation results for polygenic score 0.
+    results_score_2 (dict):
+        A dictionary containing the aneurysm simulation results for polygenic score 2.
+    results_score_4 (dict):
+        A dictionary containing the aneurysm simulation results for polygenic score 4.
+    
+    Note: This plot is for reduced polygenic scores to focus on the extremes. 
     """
     fig, axes = plt.subplots(1, 3, figsize=(20, 6), sharey=True)
 
@@ -583,10 +617,42 @@ def plot_normalised_densities_by_score2(
 
     return fig
 
+def plot_stretch(results):
+    """
+    Plot patient-specific systolic stretch over time based on genotype input.
+
+    Parameters:
+    results (dict): 
+        A dictionary containing the patient aneurysm simulation results.
+    """
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    ax.plot(results["time"], results["lambda_sys"], color="blue")
+
+    ax.set_xlabel("Time (years)", fontsize=20)
+    ax.set_ylabel(r"Systolic Stretch $\lambda_{sys}$ (mm)", fontsize=20)
+    ax.grid(True, linestyle="--", alpha=0.4)
+    ax.tick_params(axis="x", labelsize=16)
+    ax.tick_params(axis="y", labelsize=16)
+    ax.set_xlim(40, 75)
+    ax.legend(fontsize=12)
+    ax.axvline(45, color="black", linestyle="--", linewidth=1.5)
+    fig.tight_layout()
+    plt.show()
+
+    return fig
 
 def plot_stretch_by_genotype(results_tt, results_tc, results_cc):
     """
     Plot the systolic stretch over time for each genotype.
+
+    Parameters:
+    results_tt (dict): 
+        A dictionary containing the aneurysm simulation results for genotype TT.
+    results_tc (dict):
+        A dictionary containing the aneurysm simulation results for genotype TC.
+    results_cc (dict):
+        A dictionary containing the aneurysm simulation results for genotype CC.
     """
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -616,6 +682,16 @@ def plot_stretch_by_geno_treat(
     results_tc_treat,
     results_cc_treat,
 ):
+    """
+    Plot the systolic stretch over time for each genotype, 
+    comparing untreated and treated cases.
+
+    Parameters:
+    results_tt/results_tc/results_cc (dict): 
+        A dictionary containing the aneurysm simulation results for each genotype (untreated).
+    results_tt_treat/results_tc_treat/results_cc_treat (dict):
+        A dictionary containing the aneurysm simulation results for each genotype (treated).
+    """
     colors = ["#0072B2", "#D55E00", "#56B4E9"]
     styles = ["-", "--", ":"]
 
@@ -719,6 +795,16 @@ def plot_stretch_by_geno_treat(
 
 
 def plot_stretch_by_score(results_dict, results_dict_treat):
+    """
+    Plots the systolic stretch over time for each polygenic score, 
+    comparing untreated and treated cases.
+
+    Parameters:
+    results_dict (dict):
+        A dictionary containing the aneurysm simulation results for each polygenic score (untreated).
+    results_dict_treat (dict):
+        A dictionary containing the aneurysm simulation results for each polygenic score (treated).
+    """
     fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True, figsize=(18, 10))
 
     cmap = plt.get_cmap("viridis")
@@ -825,7 +911,14 @@ def plot_stretch_evolution_dist(
     """
     Plots multiple triangular distributions layered on the same axes.
     Specifically targets requested years to capture active remodeling.
-    Includes time-evolution arrows, a colorbar, and paper-ready aesthetics.
+
+    Parameters:
+    results (dict):
+        A dictionary containing the aneurysm simulation results.
+    stretch_type (str):
+        Type of stretch to plot. Options are "attachment" or "recruitment".
+    target_years (list):
+        List of years to plot the distributions for. Default is 40-60. 
     """
     time = results["time"]
 
@@ -842,13 +935,10 @@ def plot_stretch_evolution_dist(
     else:
         raise ValueError("stretch_type must be 'attachment' or 'recruitment'")
 
-    # Find closest indices to target years
     indices = [np.argmin(np.abs(time - y)) for y in target_years]
 
-    # Setup Figure
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Colormap and Normalization for true time values
     cmap = plt.cm.viridis
     norm = mpl.colors.Normalize(vmin=min(target_years), vmax=max(target_years))
 
@@ -864,12 +954,8 @@ def plot_stretch_evolution_dist(
 
     for i, idx in enumerate(indices):
         t = time[idx]
-
-        # Sort the vertices to guarantee a valid geometric triangle
         vertices = np.sort([l_min_raw[idx], l_mode_raw[idx], l_max_raw[idx]])
         a, b, c = vertices
-
-        # Protect against the triangle collapsing into a vertical line
         if c - a < 1e-6:
             y = np.zeros_like(x)
             peak_y = 0
@@ -884,12 +970,8 @@ def plot_stretch_evolution_dist(
             peak_y = 2 / (c - a)
 
         color = cmap(norm(t))
-
-        # Lower alpha so dense overlaps don't block out the back layers
         ax.fill_between(x, y, alpha=0.15, color=color, edgecolor="none")
         ax.plot(x, y, color=color, linewidth=2.5)
-
-        # Track the peak for the arrow
         peaks_x.append(b)
         peaks_y.append(peak_y)
 
@@ -905,7 +987,6 @@ def plot_stretch_evolution_dist(
     ax.grid(True, linestyle="--", alpha=0.4)
 
     if len(peaks_x) >= 2:
-        # Draw a curved arrow from the first year's peak to the last year's peak
         x_start, y_start = peaks_x[0], peaks_y[0]
         x_end, y_end = peaks_x[-1], peaks_y[-1]
 
@@ -916,10 +997,10 @@ def plot_stretch_evolution_dist(
             xytext=(x_start, y_start),
             textcoords="data",
             arrowprops=dict(
-                arrowstyle="->",  # Standard arrow head
+                arrowstyle="->",  
                 color="black",
                 lw=2.5,
-                connectionstyle="arc3,rad=0.15",  # Slight curve to the arrow body
+                connectionstyle="arc3,rad=0.15",  
             ),
             fontsize=16,
             weight="bold",
@@ -928,7 +1009,6 @@ def plot_stretch_evolution_dist(
             va="bottom",
         )
 
-    # --- Colorbar ---
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=ax, aspect=30, pad=0.03)
@@ -939,61 +1019,23 @@ def plot_stretch_evolution_dist(
     plt.show()
 
 
-def plot_sobol_indices(si_results, width=0.35):
-    """
-    Plot the Sobol sensitivity indices for the final circumferential stretch.
-    """
-    param_names = ["SMC Volume Fraction", "TGF-beta Level"]
-    s1 = si_results["S1"]
-    s2 = si_results["S2"]
-    st = si_results["ST"]
-    s1_error = si_results["S1_conf"]
-    s2_error = si_results["S2_conf"]
-    st_error = si_results["ST_conf"]
-    x = np.arange(len(param_names))
-    print(x)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.bar(x - width / 2, s1, width, label="First-order (S1)", color="red")
-    ax.bar(x + width / 2, st, width, label="Total-order (ST)", color="orange")
-    ax.errorbar(x - width / 2, s1, yerr=s1_error, fmt="none", ecolor="black", capsize=5)
-    ax.errorbar(x + width / 2, st, yerr=st_error, fmt="none", ecolor="black", capsize=5)
-    ax.set_title(
-        "Sobol Sensitivity Indices for Final Circumferential Stretch",
-        fontsize=14,
-        weight="bold",
-    )
-    ax.set_xticks(x)
-    ax.set_xticklabels(param_names, rotation=45, ha="right", fontsize=12)
-    ax.set_ylabel("Sensitivity Index", fontsize=12)
-    ax.grid(axis="y", linestyle="--", alpha=0.6)
-    ax.legend(fontsize=11)
-
-    plt.tight_layout()
-    plt.show()
-
-    return fig
-
-
 def plot_load_bearing(params_dict):
     """
-    Grid of pie charts showing the design-target load-bearing partition
-    (Elastin / VSMC / Medial Collagen / Adventitial Collagen) for each
-    polygenic score. Fractions come from refresh_physics() and are
-    smc_fraction-dependent (no time/stretch dependence).
+    Grid of pie charts showing the design-target load-bearing partition.
 
-    The VSMC wedge is exploded to draw the eye, since it's the
-    genotype-driven quantity that varies across scores.
+    Parameters:
+    params_dict (dict):
+        A dictionary where keys are polygenic scores and values are calculated parameters. 
     """
     labels = ["Elastin", "VSMC", "Collagen (Media)", "Collagen (Adventitia)"]
     palette = {
-        "Elastin": "#64DFDF",  # aqua
-        "VSMC": "#6930C3",  # deep violet (the standout)
-        "Collagen (Media)": "#5390D9",  # blue
-        "Collagen (Adventitia)": "#48BFE3",  # cyan
+        "Elastin": "#64DFDF", 
+        "VSMC": "#6930C3", 
+        "Collagen (Media)": "#5390D9", 
+        "Collagen (Adventitia)": "#48BFE3", 
     }
     wedge_colors = [palette[l] for l in labels]
-    explode = [0.0, 0.10, 0.0, 0.0]  # pop the VSMC slice out
+    explode = [0.0, 0.10, 0.0, 0.0] 
 
     scores = sorted(params_dict.keys())
     n = len(scores)
@@ -1027,11 +1069,10 @@ def plot_load_bearing(params_dict):
             textprops={"color": "white", "fontsize": 12, "weight": "bold"},
         )
 
-        # soft shadow on the popped VSMC wedge for depth
         wedges[1].set_path_effects(
             [path_effects.withSimplePatchShadow(offset=(2, -2), alpha=0.22)]
         )
-        # halo the % labels so they read on any wedge colour
+
         for at in autotexts:
             at.set_path_effects(
                 [path_effects.withStroke(linewidth=2.5, foreground="#00000055")]
@@ -1080,6 +1121,15 @@ def plot_load_bearing(params_dict):
 
 
 def plot_time_step_convergence(dt_list, params):
+    """
+    Plots the convergence of key variables (systolic stretch, collagen density, and active TGF-β)
+
+    Parameters:
+    dt_list (list):
+        A list of time step sizes to test for convergence.
+    params (dict):
+        ArterialParameters / the dictionary containing the parameters for the aneurysm simulation. 
+    """
     final_lambda_sys_array = []
     final_collagen_array = []
     final_tgf_array = []
@@ -1101,7 +1151,6 @@ def plot_time_step_convergence(dt_list, params):
     ratio_tgf = step_ratios(final_tgf_array)
     dt_plot = dt_list[1:]  # one shorter than dt_list
 
-    # Minimum dt where all ratios are within 1% of 1.0
     converged_indices = [
         i
         for i in range(len(dt_plot))

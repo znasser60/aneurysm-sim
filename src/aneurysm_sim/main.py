@@ -23,7 +23,7 @@ def run_general_mode(plot_names):
                 g: model.simulate_aneurysm(ArterialParameters(genotype=g))
                 for g in GENOTYPES
             }
-            plots.plot_normalised_densities_by_genotype2(
+            plots.plot_normalised_densities_by_genotype(
                 results["TT"], results["TC"], results["CC"]
             )
 
@@ -34,7 +34,7 @@ def run_general_mode(plot_names):
                 )
                 for g in GENOTYPES
             }
-            plots.plot_normalised_densities_by_genotype2(
+            plots.plot_normalised_densities_by_genotype(
                 results["TT"], results["TC"], results["CC"]
             )
 
@@ -43,7 +43,7 @@ def run_general_mode(plot_names):
                 s: model.simulate_aneurysm(ArterialParameters(polygenic_score=s))
                 for s in REDUCED_SCORES
             }
-            plots.plot_normalised_densities_by_score2(
+            plots.plot_normalised_densities_by_score(
                 *[results[s] for s in REDUCED_SCORES]
             )
 
@@ -161,6 +161,14 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
             ],
             "density_treat": lambda: [
                 plots.plot_normalised_densities(patient_results_treat, legend=True),
+                plt.show(),
+            ],
+            "stretch": lambda: [
+                plots.plot_stretch(patient_results),
+                plt.show(), 
+            ],
+            "stretch_treat": lambda: [
+                plots.plot_stretch(patient_results_treat),
                 plt.show(),
             ],
         }

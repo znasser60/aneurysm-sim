@@ -5,12 +5,12 @@ class ArterialParameters:
     """
     Class to hold general and patient-specific initial parameters for the 1D cerebral artery model.
 
-    A patient is specified by a ```genotype``` and/or a ```polygenic_score```, from
-    which the baseline TGF-beta production level and smooth muscle cell (SMC)
-    volume fraction are looked up. Either derived quantity can be overridden
+    A patient is specified by a genotype and/or a polygenic score to initilize
+    the simulation. Baseline TGF-beta production level and smooth muscle cell (SMC)
+    volume fraction are looked up, and either derived quantity can be overridden
     directly via ```tgf_beta_level``` or ```smc_fraction``` for sensitivity sweeps
-    and synthetic-patient studies. Method `refresh_physics` is called at each simulation
-    run to calibrate the constituent stiffness constants against systolic pressure.
+    and synthetic-patient studies. The method `refresh_physics` is called at each simulation
+    run to calculaate the constituent stiffness constants. 
 
     Parameters:
     genotype: str, optional
@@ -358,7 +358,7 @@ class ArterialParameters:
             collagen_denominator = (
                 x * gamma_unit * 2 * term1 - x * delta_unit * 2 * term2
             )
-        
+
         # Collagen stiffness parameter
         self.k_collagen = (
             self.load_borne_collagen * (self.common_factor_me) / collagen_denominator

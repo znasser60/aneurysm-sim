@@ -32,7 +32,7 @@ def sigma_muscle_p(x, params):
 
 def sigma_muscle_a(x, params):
     """Cauchy stress of active smooth muscle response
-    
+
     Uses the active length-tension relationship where contractile stress
     peaks at musc_mean."""
     return (
@@ -61,7 +61,7 @@ def sigma_collagen_me_0(x):
 
 
 def sigma_collagen_me_ac(x, params):
-    """Cauchy stress of medial collagen in the ascending section of 
+    """Cauchy stress of medial collagen in the ascending section of
     the triangular distribution, between the minimum and mode attachment stretches"""
     return (
         x
@@ -72,7 +72,7 @@ def sigma_collagen_me_ac(x, params):
 
 
 def sigma_collagen_me_cb(x, params):
-    """Cauchy stress of medial collagen in the descending section of 
+    """Cauchy stress of medial collagen in the descending section of
     the triangular distribution, between the mode and maximum attachment stretches"""
     term1 = (
         (x + params.a_me) * np.log(params.c_me / params.a_me)
@@ -91,7 +91,7 @@ def sigma_collagen_me_cb(x, params):
 
 def sigma_collagen_me_b(x, params):
     """
-    Cauchy stress of medial collagen at maximum stretch 
+    Cauchy stress of medial collagen at maximum stretch
     beyond the maximum attachment stretch (all fibers recruited).
     """
     term1 = (
@@ -126,8 +126,9 @@ def sigma_collagen_ad_0(x):
     """Cauchy stress of adventitial collagen at zero stretch (no stress)"""
     return 0 * x
 
+
 def sigma_collagen_ad_ac(x, params):
-    """Cauchy stress of adventitial collagen in the ascending section of 
+    """Cauchy stress of adventitial collagen in the ascending section of
     the triangular distribution, between the minimum and mode attachment stretches"""
     return (
         x
@@ -138,7 +139,7 @@ def sigma_collagen_ad_ac(x, params):
 
 
 def sigma_collagen_ad_cb(x, params):
-    """Cauchy stress of adventitial collagen in the descending section of 
+    """Cauchy stress of adventitial collagen in the descending section of
     the triangular distribution, between the mode and maximum attachment stretches"""
     term1 = (
         (x + params.a_ad) * np.log(params.c_ad / params.a_ad)
@@ -256,10 +257,11 @@ def pressure_collagen_ad(x, params):
     """Pressure from adventitial collagen constituent"""
     return pres_prefactor(x, params) * sigma_collagen_ad(x, params)
 
+
 # Force balance equation (solves systolic stretch)
 def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     """Residual of the force balance equation for root-finding via scipy.fsolve.
- 
+
     Parameters:
     lambda_sys_guess : sequence of float
         Single-element guess for the systolic stretch (passed by ``fsolve``).
@@ -299,7 +301,7 @@ def calculate_immune_cell_level(t, params):
     """
     Immune cell level as a function of time.
 
-    Level is constant at i_0 until time t_i0, after which it increases according 
+    Level is constant at i_0 until time t_i0, after which it increases according
     to a Michaelis-Menten function.
     """
     if t <= params.t_i0:
@@ -338,12 +340,12 @@ def d_elastases_dt(immune_cells, elastases, params):
     return params.r_pc1 * immune_cells - params.r_pc2 * elastases
 
 
-# Adventitial growth and remodeling 
+# Adventitial growth and remodeling
 def f_lambda_fibroblast(lambda_c_max, lambda_att_max):
     """
-    Fibroblast mechanotransduction signal f(lambda). 
+    Fibroblast mechanotransduction signal f(lambda).
 
-    Fractional overstretch of collagen beyond its maximum attachment stretch, 
+    Fractional overstretch of collagen beyond its maximum attachment stretch,
     stimulates latent TGF-beta production.
     """
     if lambda_c_max <= lambda_att_max:
@@ -365,8 +367,8 @@ def d_fibroblast_dt(tgf_beta, fibroblast, params):
 def d_procollagen_dt(tgf_beta, fibroblast, procollagen, params):
     """
     Procollagen ODE: fibroblast secretion minus decay.
-    
-    Procollagen is the precursor to collagen, activated by collagenase and 
+
+    Procollagen is the precursor to collagen, activated by collagenase and
     later matured into collagen.
     """
     return (
@@ -417,10 +419,10 @@ def d_latent_tgf_beta_dt(
     params,
 ):
     """Latent TGF-beta ODE (Eq. 16): strain-driven production minus turnover.
-    
+
     Production is governed by the fibroblast mechanotransduction signal and
     collagen level, and scaled by the genotype-dependent baseline
-    ``params.tgf_beta_level``. 
+    ``params.tgf_beta_level``.
     """
     term1 = params.r_betal1 * tgf_beta + params.r_betal2 * f_lambda_fibroblast(
         lambda_c_max, lambda_att_max
@@ -444,7 +446,7 @@ def d_active_tgf_beta_dt(
     """
     Active TGF-beta ODE: activation from latent pool minus decay.
 
-    Active TGF-beta is the active form of TGF-beta, 
+    Active TGF-beta is the active form of TGF-beta,
     which stimulates fibroblast proliferation and collagen synthesis.
     """
     return (
@@ -457,7 +459,7 @@ def d_active_tgf_beta_dt(
 
 def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
     """Smooth muscle cell ODE.
- 
+
     vSMCs proliferate with deviation from homeostatic stretch and are lost as immune
     cells rise; an elastin-coupling term is available but weighted by
     ``beta2_smc`` (currently 0).
@@ -474,9 +476,9 @@ def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
 
 def calculate_max_attachment_stretch(lambda_c_max_history, dt, t_idx, params):
     """Maximum attachment stretch as a moving average over the remodelling window.
- 
+
     Averages the historical maximum collagen stretch over the remodelling time
-    window (N steps). Ghost values are filled with the initial maximum collagen 
+    window (N steps). Ghost values are filled with the initial maximum collagen
     stretch to take into account the initial state of the tissue.
     """
     N = int(params.remodel_time / dt)
@@ -534,7 +536,7 @@ def alpha_rate(fibroblast, collagen, collagenase, params):
     Fibroblast remodelling rate alpha
 
     Balances fibroblast activity against collagen availability, with a
-    synthesis/degradation term that scales with the square root of collagen 
+    synthesis/degradation term that scales with the square root of collagen
     and collagenase levels.
     """
     alpha = (
@@ -567,10 +569,10 @@ def d_collagen_mode_recruitment_stretch_ad_dt(alpha, lambda_c_mode, lambda_att_m
 # Add TGF-beta1 protein level function
 def get_latent_tgf_beta_level(params, genotype=None):
     """Return the genotype-specific baseline latent TGF-beta level.
- 
-    Looks up ``genotype`` in ``params.tgf_beta_levels``, returns 
+
+    Looks up ``genotype`` in ``params.tgf_beta_levels``, returns
     1.0 if none or Nan. Used to scale latent TGF-beta production.
- 
+
     Parameters
     params : ArterialParameters
         Provides the genotype-to-level lookup table.
