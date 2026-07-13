@@ -1,4 +1,4 @@
-'''This is a work in progress Streamlit dashboard for aneurysm simulation.'''
+"""This is a work in progress Streamlit dashboard for aneurysm simulation."""
 
 import streamlit as st
 import plotly.graph_objects as go
@@ -7,38 +7,46 @@ from aneurysm_sim.model.model import simulate_aneurysm
 from aneurysm_sim.config.parameters import ArterialParameters
 from aneurysm_sim.model import plots
 
+
 def circular_gauge(abr_score):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=abr_score,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "ABR (Wall Stress / Strength)", 'font': {'size': 14}},  # smaller title
-        gauge={
-            'axis': {'range': [0, 2], 'tickwidth': 1, 'tickcolor': "darkgray"},
-            'bar': {'color': "darkblue"},
-            'steps': [
-                {'range': [0, 0.4], 'color': "lightgreen"},
-                {'range': [0.41, 0.7], 'color': "gold"},
-                {'range': [0.71, 10.0], 'color': "red"},
-            ],
-            'threshold': {
-                'line': {'color': "black", 'width': 4},
-                'thickness': 0.75,
-                'value': 1.0
-            }
-        }
-    ))
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge+number",
+            value=abr_score,
+            domain={"x": [0, 1], "y": [0, 1]},
+            title={
+                "text": "ABR (Wall Stress / Strength)",
+                "font": {"size": 14},
+            },  # smaller title
+            gauge={
+                "axis": {"range": [0, 2], "tickwidth": 1, "tickcolor": "darkgray"},
+                "bar": {"color": "darkblue"},
+                "steps": [
+                    {"range": [0, 0.4], "color": "lightgreen"},
+                    {"range": [0.41, 0.7], "color": "gold"},
+                    {"range": [0.71, 10.0], "color": "red"},
+                ],
+                "threshold": {
+                    "line": {"color": "black", "width": 4},
+                    "thickness": 0.75,
+                    "value": 1.0,
+                },
+            },
+        )
+    )
     fig.update_layout(
         margin=dict(t=10, b=10, l=10, r=10),
-        width=300,   # set smaller width
-        height=250   # set smaller height
+        width=300,  # set smaller width
+        height=250,  # set smaller height
     )
     return fig
+
 
 @st.cache_resource
 def run_simulation(genotype, polygenic_score, treatment):
     params = ArterialParameters(genotype=genotype, polygenic_score=polygenic_score)
     return simulate_aneurysm(params, treatment=treatment)
+
 
 def main():
     st.set_page_config(layout="wide", page_title="Aneurysm Simulation Dashboard")
