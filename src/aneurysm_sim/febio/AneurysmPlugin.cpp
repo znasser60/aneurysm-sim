@@ -27,7 +27,14 @@ static double MaxPrincipalStretch(const mat3d& F)
     return sqrt(lam_sq_max);
 }
 
-
+/**
+ * @brief Gauss points biological state update for the aneurysm material.
+ *
+ * Stores the local cell and protein densities/masses/concentrations,
+ * collagen recruitment-stretch triangular-distribution vertices, and a
+ * rolling history of the maximum collagen stretch used to form the moving
+ * average attachment stretch. 
+ */
 class FEAneurysmPoint :
 public FEMaterialPointData
 {
@@ -55,18 +62,21 @@ public:
     double lambda_rec_max;
     double lambda_rec_mode;
 
+    // Rolling history of maximum collagen stretch to compute moving average for attachment stretch
     static const int MAX_HIST = 2000;
     double lc_max_history[MAX_HIST];
     int    hist_count;
 
     FEAneurysmPoint(FEMaterialPointData* pt) : FEMaterialPointData(pt) {}
 
+    // Deep copy the point data, including next pointer 
     FEMaterialPointData* Copy() override {
         FEAneurysmPoint* p = new FEAneurysmPoint(*this);
         if (m_pNext) p->m_pNext = m_pNext->Copy();
         return p;
     }
 
+    // Write the point data to a dump stream for serialization
     void Serialize(DumpStream& ar) override {
         FEMaterialPointData::Serialize(ar);
         ar & bio_time & bio_last_update_time & homeostatic_stretch;
@@ -79,6 +89,7 @@ public:
         for (int i = 0; i < MAX_HIST; ++i) ar & lc_max_history[i];
     }
 
+    // Reset the point data to initial values 
     void Init() override {
         bio_time             = 0.0;
         bio_last_update_time = -1.0;
@@ -113,7 +124,14 @@ public:
 
 const int FEAneurysmPoint::MAX_HIST;
 
-
+/**
+ * @brief Chemo-mechano-biological changes due to aneurysm disease and immune infiltration.
+ *
+ * Advances the biochemical ODEs and recruitment remodelling at
+ * each Gauss point and re-weighs the deviatoric stress/tangent by the
+ * evolving load-bearing constituent masses. A subset of rates are exposed to the 
+ * .feb file to allow for user-defined parameter values (see the FECORE class).
+ */
 class FEAneurysmMaterial :
 public FEUncoupledMaterial
 {
@@ -219,14 +237,14 @@ public:
     double febio_treatment_start = -1.0;  // negative = disabled
     double tgf_spike_amount      = 0.65;        
 
-
+    // Construct with default identifiers, timing, and infiltration-patch if not specified
     FEAneurysmMaterial(FEModel* fem) : FEUncoupledMaterial(fem)
     {
         m_pPassive = nullptr;
         m_pActive  = nullptr;
 
-        layer           = 0;
-        genotype        = 0;
+        layer = 0;
+        genotype = 0;
         polygenic_score = 0;
 
         febio_disease_start = 2.0;
@@ -238,20 +256,28 @@ public:
 
     DECLARE_FECORE_CLASS();
 
+    /**
+     * @brief Map genotype and polygenic score to model parameters.
+     *
+     * Clamps the genotype (0-2) and score (0-4) to valid ranges, looks up
+     * the baseline TGF-beta production level and vSMC volume fraction.
+     */
     bool Init() override
     {
         const double tgf_map[3] = {0.713, 0.916, 1.119};
         const double smc_map[5] = {0.7262666, 0.7132891, 0.6736118, 0.7635375, 0.4898171};
 
-        genotype        = std::max(0, std::min(genotype, 2));
+        genotype = std::max(0, std::min(genotype, 2));
         polygenic_score = std::max(0, std::min(polygenic_score, 4));
 
         tgf_beta_level = tgf_map[genotype];
-        smc_fraction   = smc_map[polygenic_score];
+        smc_fraction  = smc_map[polygenic_score];
 
         return FEUncoupledMaterial::Init();
     }
 
+    // Build layered material point data for the aneurysm material, 
+    // including the passive and active materials
     FEMaterialPointData* CreateMaterialPointData() override
     {
         FEMaterialPointData* pd = m_pPassive->CreateMaterialPointData();
@@ -259,6 +285,15 @@ public:
         return new FEAneurysmPoint(pd);
     }
 
+    /**
+     * @brief Load-bearing mass scale for the passive stress at this point.
+     *
+     * Media: mass-weighted average of elastin, medial collagen, and passive
+     * vSMC (weights split the non-vSMC capacity 1:2 elastin:collagen, with
+     * vSMC weighted by smc_fraction). 
+     * 
+     * Adventitia: the current adventitial collagen mass. 
+     */
     double ComputeScale(const FEAneurysmPoint& pt) const
     {
         if (layer == 0) {
@@ -273,6 +308,8 @@ public:
         }
     }
 
+    // Maximum principal stretch at this point (proxy for the circumferential
+    // wall stretch driving remodelling).
     double GetCircumferentialStretch(FEMaterialPoint& mp) const
     {
         FEElasticMaterialPoint* ep = mp.ExtractData<FEElasticMaterialPoint>();
@@ -280,6 +317,10 @@ public:
         return MaxPrincipalStretch(ep->m_F);
     }
 
+    /**
+     * @brief Maximum attachment stretch, calculated as a moving average of lc_max over the
+     *        remodelling window of N steps.
+     */
     double CalcLamAttMax(FEAneurysmPoint& pt) const
     {
         int N     = std::min(remodel_N, FEAneurysmPoint::MAX_HIST);
@@ -315,6 +356,14 @@ public:
         return ComputeScale(pt);
     }
 
+    /**
+     * @brief Deviatoric Cauchy stress with biology advanced once per FEBio step.
+     *
+     * Impose focal (Gaussian) immune infiltration at a specified time and sub-steps 
+     * the reaction ODEs and the recruitment-stretch remodelling, 
+     * then appends lc_max to the history. The raw passive stress calculated by FEBio
+     * is scaled by the calculated scale in ComputeScale to account for degradation. 
+     */
     mat3ds DevStress(FEMaterialPoint& mp) override
     {
         if (!m_pPassive) return mat3ds(0.0);
@@ -396,18 +445,6 @@ public:
                 return (std::fabs(den) > 1e-12) ? num / den : 0.0;
             };
 
-            // if (dist_sq < 0.002 && std::fmod(pt.bio_time, 1.0) < dt_bio) {
-            //     feLog("Geno:%d layer:%d t:%.1f lam:%.4f lc_max:%.4f att:%.4f "
-            //           "f_lam:%.5f col_ad:%.4f col_me:%.4f elastin:%.4f "
-            //           "muscle:%.4f lat_tgf:%.5f act_tgf:%.5f "
-            //           "sxx:%.4f syy:%.4f szz:%.4f scale:%.4f\n",
-            //         genotype, layer, pt.bio_time, lam, lc_max, lam_att_max,
-            //         f_lam, pt.collagen_ad, pt.collagen_me, pt.elastin_me,
-            //         pt.muscle_cells, pt.latent_tgf_beta, pt.active_tgf_beta,
-            //         s_pass_raw.xx(), s_pass_raw.yy(), s_pass_raw.zz(),
-            //         ComputeScale(pt));
-            // }
-
             int    n_sub  = std::max(1, (int)std::round(dt_bio / dt_ref));
             double dt_sub = dt_bio / n_sub;
 
@@ -475,9 +512,8 @@ public:
                         * safe_div(lc_mode - lam_att_mode, lam_att_mode);
                 }
 
-            } // end sub-loop
+            } 
 
-            // --- Append lc_max to history (once per FEBio step, after sub-loop) ---
             if (pt.hist_count < FEAneurysmPoint::MAX_HIST) {
                 pt.lc_max_history[pt.hist_count] = lc_max;
             }
@@ -499,6 +535,11 @@ public:
         }
     }
 
+    /**
+     * @brief Deviatoric tangent scaled same as DevStress.
+     *
+     * Applies the same load-bearing/vSMC scaling to the raw tangent calculations.
+     */
     tens4ds DevTangent(FEMaterialPoint& mp) override
     {
         if (!m_pPassive) return tens4ds(0.0);

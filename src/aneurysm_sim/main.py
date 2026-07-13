@@ -1,3 +1,9 @@
+"""
+Main script for running aneurysm simulations and generating plots 
+based on genotype and polygenic score. Supports both general population-level
+comparisons and patient-specific simulations.
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
