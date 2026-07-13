@@ -1,7 +1,5 @@
 import numpy as np
 from scipy.optimize import fsolve
-# from SALib.sample import saltelli
-# from SALib.analyze import sobol
 
 from aneurysm_sim.model import functions
 from aneurysm_sim.config.parameters import ArterialParameters

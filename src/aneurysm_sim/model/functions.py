@@ -4,7 +4,7 @@ import numpy as np
 # Constituent-specific stretch and stress functions
 def lambda_muscle(x, params):
     """Smooth muscle stretch relative to the homeostatic muscle stretch."""
-    return x / params.c_rec_muscle
+    return x / params.rec_muscle
 
 
 def lambda_elastin(x, params):
@@ -16,8 +16,8 @@ def sigma_elastin(x, params):
     """Cauchy stress of elastin (incompressible Neo-hookean)"""
     return (
         lambda_elastin(x, params) ** 2
-        * params.c_k_elastin
-        * (1 - (1 / (params.c_lambda_z**2 * lambda_elastin(x, params) ** 4)))
+        * params.k_elastin
+        * (1 - (1 / (params.lambda_z**2 * lambda_elastin(x, params) ** 4)))
     )
 
 
@@ -25,8 +25,8 @@ def sigma_muscle_p(x, params):
     """Cauchy stress of passive smooth muscle (incompressible Neo-hookean)"""
     return (
         lambda_muscle(x, params) ** 2
-        * params.c_k_muscle_p
-        * (1 - 1 / (params.c_lambda_z**2 * lambda_muscle(x, params) ** 4))
+        * params.k_muscle_p
+        * (1 - 1 / (params.lambda_z**2 * lambda_muscle(x, params) ** 4))
     )
 
 
@@ -36,14 +36,14 @@ def sigma_muscle_a(x, params):
     Uses the active length-tension relationship where contractile stress
     peaks at musc_mean."""
     return (
-        params.c_vasodil_conc
-        * params.c_k_muscle_a
+        params.vasodil_conc
+        * params.k_muscle_a
         * lambda_muscle(x, params)
         * (
             1
             - (
-                (params.c_musc_mean - lambda_muscle(x, params))
-                / (params.c_musc_mean - params.c_musc_min)
+                (params.musc_mean - lambda_muscle(x, params))
+                / (params.musc_mean - params.musc_min)
             )
             ** 2
         )
@@ -65,9 +65,9 @@ def sigma_collagen_me_ac(x, params):
     the triangular distribution, between the minimum and mode attachment stretches"""
     return (
         x
-        * params.v_gamma_me
+        * params.gamma_me
         * 2
-        * ((x + params.v_a_me) * np.log(x / params.v_a_me) + 2 * (params.v_a_me - x))
+        * ((x + params.a_me) * np.log(x / params.a_me) + 2 * (params.a_me - x))
     )
 
 
@@ -75,18 +75,18 @@ def sigma_collagen_me_cb(x, params):
     """Cauchy stress of medial collagen in the descending section of 
     the triangular distribution, between the mode and maximum attachment stretches"""
     term1 = (
-        (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me)
-        + params.v_a_me
-        - params.v_c_me
-        + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
+        (x + params.a_me) * np.log(params.c_me / params.a_me)
+        + params.a_me
+        - params.c_me
+        + ((params.a_me - params.c_me) / params.c_me) * x
     )
     term2 = (
-        (x + params.v_b_me) * np.log(x / params.v_c_me)
-        + params.v_b_me
-        + params.v_c_me
-        - ((params.v_b_me + params.v_c_me) / params.v_c_me) * x
+        (x + params.b_me) * np.log(x / params.c_me)
+        + params.b_me
+        + params.c_me
+        - ((params.b_me + params.c_me) / params.c_me) * x
     )
-    return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
+    return x * params.gamma_me * 2 * term1 - x * params.delta_me * 2 * term2
 
 
 def sigma_collagen_me_b(x, params):
@@ -95,28 +95,28 @@ def sigma_collagen_me_b(x, params):
     beyond the maximum attachment stretch (all fibers recruited).
     """
     term1 = (
-        (x + params.v_a_me) * np.log(params.v_c_me / params.v_a_me)
-        + params.v_a_me
-        - params.v_c_me
-        + ((params.v_a_me - params.v_c_me) / params.v_c_me) * x
+        (x + params.a_me) * np.log(params.c_me / params.a_me)
+        + params.a_me
+        - params.c_me
+        + ((params.a_me - params.c_me) / params.c_me) * x
     )
     term2 = (
-        (x + params.v_b_me) * np.log(params.v_b_me / params.v_c_me)
-        - params.v_b_me
-        + params.v_c_me
-        - ((params.v_b_me - params.v_c_me) / params.v_c_me) * x
+        (x + params.b_me) * np.log(params.b_me / params.c_me)
+        - params.b_me
+        + params.c_me
+        - ((params.b_me - params.c_me) / params.c_me) * x
     )
-    return x * params.v_gamma_me * 2 * term1 - x * params.v_delta_me * 2 * term2
+    return x * params.gamma_me * 2 * term1 - x * params.delta_me * 2 * term2
 
 
 def sigma_collagen_me(x, params):
     """Full piecewise Cauchy stress function of medial collagen
     based on recruitment stages."""
-    if x < params.v_a_me:
+    if x < params.a_me:
         return sigma_collagen_me_0(x)
-    elif x < params.v_c_me:
+    elif x < params.c_me:
         return sigma_collagen_me_ac(x, params)
-    elif x <= params.v_b_me:
+    elif x <= params.b_me:
         return sigma_collagen_me_cb(x, params)
     else:
         return sigma_collagen_me_b(x, params)
@@ -131,9 +131,9 @@ def sigma_collagen_ad_ac(x, params):
     the triangular distribution, between the minimum and mode attachment stretches"""
     return (
         x
-        * params.v_gamma_ad
+        * params.gamma_ad
         * 2
-        * ((x + params.v_a_ad) * np.log(x / params.v_a_ad) + 2 * (params.v_a_ad - x))
+        * ((x + params.a_ad) * np.log(x / params.a_ad) + 2 * (params.a_ad - x))
     )
 
 
@@ -141,46 +141,46 @@ def sigma_collagen_ad_cb(x, params):
     """Cauchy stress of adventitial collagen in the descending section of 
     the triangular distribution, between the mode and maximum attachment stretches"""
     term1 = (
-        (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad)
-        + params.v_a_ad
-        - params.v_c_ad
-        + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
+        (x + params.a_ad) * np.log(params.c_ad / params.a_ad)
+        + params.a_ad
+        - params.c_ad
+        + ((params.a_ad - params.c_ad) / params.c_ad) * x
     )
     term2 = (
-        (x + params.v_b_ad) * np.log(x / params.v_c_ad)
-        + params.v_b_ad
-        + params.v_c_ad
-        - ((params.v_b_ad + params.v_c_ad) / params.v_c_ad) * x
+        (x + params.b_ad) * np.log(x / params.c_ad)
+        + params.b_ad
+        + params.c_ad
+        - ((params.b_ad + params.c_ad) / params.c_ad) * x
     )
-    return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
+    return x * params.gamma_ad * 2 * term1 - x * params.delta_ad * 2 * term2
 
 
 def sigma_collagen_ad_b(x, params):
     """Cauchy stress of adventitial collagen at maximum stretch
     beyond the maximum attachment stretch (all fibers recruited)."""
     term1 = (
-        (x + params.v_a_ad) * np.log(params.v_c_ad / params.v_a_ad)
-        + params.v_a_ad
-        - params.v_c_ad
-        + ((params.v_a_ad - params.v_c_ad) / params.v_c_ad) * x
+        (x + params.a_ad) * np.log(params.c_ad / params.a_ad)
+        + params.a_ad
+        - params.c_ad
+        + ((params.a_ad - params.c_ad) / params.c_ad) * x
     )
     term2 = (
-        (x + params.v_b_ad) * np.log(params.v_b_ad / params.v_c_ad)
-        - params.v_b_ad
-        + params.v_c_ad
-        - ((params.v_b_ad - params.v_c_ad) / params.v_c_ad) * x
+        (x + params.b_ad) * np.log(params.b_ad / params.c_ad)
+        - params.b_ad
+        + params.c_ad
+        - ((params.b_ad - params.c_ad) / params.c_ad) * x
     )
-    return x * params.v_gamma_ad * 2 * term1 - x * params.v_delta_ad * 2 * term2
+    return x * params.gamma_ad * 2 * term1 - x * params.delta_ad * 2 * term2
 
 
 def sigma_collagen_ad(x, params):
     """Full piecewise Cauchy stress function of adventitial collagen
     based on recruitment stages."""
-    if x < params.v_a_ad:
+    if x < params.a_ad:
         return sigma_collagen_ad_0(x)
-    elif x < params.v_c_ad:
+    elif x < params.c_ad:
         return sigma_collagen_ad_ac(x, params)
-    elif x <= params.v_b_ad:
+    elif x <= params.b_ad:
         return sigma_collagen_ad_cb(x, params)
     else:
         return sigma_collagen_ad_b(x, params)
@@ -193,7 +193,7 @@ def sigma_collagen(x, params):
 
 def pres_prefactor(x, params):
     """Laplace prefactor H / (R0 * lambda_z * x^2) converting stress to pressure"""
-    return params.c_thickness_tzero / (params.c_radius_tzero * params.c_lambda_z * x**2)
+    return params.thickness_tzero / (params.radius_tzero * params.lambda_z * x**2)
 
 
 def pressure_ECM(x, params):
@@ -281,17 +281,17 @@ def force_balance_equation(lambda_sys_guess, mE_M, mC_M, mC_A, mM, params):
     stress_collagen_ad = sigma_collagen_ad(lambda_sys, params)
     stress_muscle = sigma_muscle_t(lambda_sys, params)
     mass_density_mult = (
-        params.c_thickness_me * (mE_M * stress_elastin)
-        + params.c_thickness_me * (mC_M * stress_collagen_me)
-        + params.c_thickness_ad * (mC_A * stress_collagen_ad)
-        + params.c_thickness_me * (mM * stress_muscle)
+        params.thickness_me * (mE_M * stress_elastin)
+        + params.thickness_me * (mC_M * stress_collagen_me)
+        + params.thickness_ad * (mC_A * stress_collagen_ad)
+        + params.thickness_me * (mM * stress_muscle)
     )
     calculated_pressure = (
-        1 / (params.c_radius_tzero * lambda_sys**2 * params.c_lambda_z)
+        1 / (params.radius_tzero * lambda_sys**2 * params.lambda_z)
     ) * mass_density_mult
 
     # Return residual from target pressure
-    return calculated_pressure - params.c_pressure_sys
+    return calculated_pressure - params.pressure_sys
 
 
 # Medial degeneration by immune cell infiltration
@@ -462,7 +462,7 @@ def d_muscle_cells_dt(x, muscle_cells, elastin_me, immune_cells, params):
     cells rise; an elastin-coupling term is available but weighted by
     ``beta2_smc`` (currently 0).
     """
-    epsilon_stretch = max(0, (x - params.c_lambda_sys) / params.c_lambda_sys)
+    epsilon_stretch = max(0, (x - params.lambda_sys) / params.lambda_sys)
     epsilon_elastin = (elastin_me - params.init_elastin_me) / params.init_elastin_me
     epsilon_immune = (params.i_0 - immune_cells) / 1.0
     return muscle_cells * (
@@ -569,7 +569,7 @@ def get_latent_tgf_beta_level(params, genotype=None):
     """Return the genotype-specific baseline latent TGF-beta level.
  
     Looks up ``genotype`` in ``params.tgf_beta_levels``, returns 
-    1.0 if none or Nan. Used to scale latent TGF-beta production. 
+    1.0 if none or Nan. Used to scale latent TGF-beta production.
  
     Parameters
     params : ArterialParameters
