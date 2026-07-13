@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import matplotlib.transforms as mtransforms
 import matplotlib.patheffects as path_effects
@@ -73,7 +72,7 @@ def plot_pressure_vs_diameter(results, n_zoom=120):
     Parameters:
     results (dict):
         A dictionary containing the stress/pressure simulation results.
-    n_zoom (int): 
+    n_zoom (int):
         The number of data points to display in the zoomed-in view.
     """
     sv_diam_var = results["sv_diam_var"]
@@ -290,7 +289,7 @@ def plot_normalised_densities(
     Plots the normalised densities of elastin, collagen, immune cells, latent and active TGF Beta.
 
     Parameters:
-    results (dict): 
+    results (dict):
         A dictionary containing the aneurysm simultion results.
     Remaining parameters are for customizing the plot appearance.
     """
@@ -440,11 +439,11 @@ def plot_normalised_densities(
 
 def plot_normalised_densities_by_genotype(results_tt, results_tc, results_cc):
     """
-    Plots the normalised densities of elastin, collagen, immune cells, latent 
+    Plots the normalised densities of elastin, collagen, immune cells, latent
     and active TGF Beta for each genotype side by side.
 
     Parameters:
-    results_tt (dict): 
+    results_tt (dict):
         A dictionary containing the aneurysm simulation results for genotype TT.
     results_tc (dict):
         A dictionary containing the aneurysm simulation results for genotype TC.
@@ -489,11 +488,11 @@ def plot_normalised_densities_by_score(
     Plot normalised densities for each polygenic score (0-4) in a 3x2 grid layout.
 
     Parameters:
-    results_score_0 (dict): 
+    results_score_0 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 0.
     results_score_1 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 1.
-    results_score_2 (dict): 
+    results_score_2 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 2.
     results_score_3 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 3.
@@ -560,14 +559,14 @@ def plot_normalised_densities_by_score_reduced(
     Plot normalised densities for polygenic scores 0, 2, and 4 in a single row layout.
 
     Parameters:
-    results_score_0 (dict): 
+    results_score_0 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 0.
     results_score_2 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 2.
     results_score_4 (dict):
         A dictionary containing the aneurysm simulation results for polygenic score 4.
-    
-    Note: This plot is for reduced polygenic scores to focus on the extremes. 
+
+    Note: This plot is for reduced polygenic scores to focus on the extremes.
     """
     fig, axes = plt.subplots(1, 3, figsize=(20, 6), sharey=True)
 
@@ -617,12 +616,13 @@ def plot_normalised_densities_by_score_reduced(
 
     return fig
 
+
 def plot_stretch(results):
     """
     Plot patient-specific systolic stretch over time based on genotype input.
 
     Parameters:
-    results (dict): 
+    results (dict):
         A dictionary containing the patient aneurysm simulation results.
     """
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -642,12 +642,13 @@ def plot_stretch(results):
 
     return fig
 
+
 def plot_stretch_by_genotype(results_tt, results_tc, results_cc):
     """
     Plot the systolic stretch over time for each genotype.
 
     Parameters:
-    results_tt (dict): 
+    results_tt (dict):
         A dictionary containing the aneurysm simulation results for genotype TT.
     results_tc (dict):
         A dictionary containing the aneurysm simulation results for genotype TC.
@@ -683,11 +684,11 @@ def plot_stretch_by_geno_treat(
     results_cc_treat,
 ):
     """
-    Plot the systolic stretch over time for each genotype, 
+    Plot the systolic stretch over time for each genotype,
     comparing untreated and treated cases.
 
     Parameters:
-    results_tt/results_tc/results_cc (dict): 
+    results_tt/results_tc/results_cc (dict):
         A dictionary containing the aneurysm simulation results for each genotype (untreated).
     results_tt_treat/results_tc_treat/results_cc_treat (dict):
         A dictionary containing the aneurysm simulation results for each genotype (treated).
@@ -796,7 +797,7 @@ def plot_stretch_by_geno_treat(
 
 def plot_stretch_by_score(results_dict, results_dict_treat):
     """
-    Plots the systolic stretch over time for each polygenic score, 
+    Plots the systolic stretch over time for each polygenic score,
     comparing untreated and treated cases.
 
     Parameters:
@@ -918,7 +919,7 @@ def plot_stretch_evolution_dist(
     stretch_type (str):
         Type of stretch to plot. Options are "attachment" or "recruitment".
     target_years (list):
-        List of years to plot the distributions for. Default is 40-60. 
+        List of years to plot the distributions for. Default is 40-60.
     """
     time = results["time"]
 
@@ -997,10 +998,10 @@ def plot_stretch_evolution_dist(
             xytext=(x_start, y_start),
             textcoords="data",
             arrowprops=dict(
-                arrowstyle="->",  
+                arrowstyle="->",
                 color="black",
                 lw=2.5,
-                connectionstyle="arc3,rad=0.15",  
+                connectionstyle="arc3,rad=0.15",
             ),
             fontsize=16,
             weight="bold",
@@ -1025,17 +1026,17 @@ def plot_load_bearing(params_dict):
 
     Parameters:
     params_dict (dict):
-        A dictionary where keys are polygenic scores and values are calculated parameters. 
+        A dictionary where keys are polygenic scores and values are calculated parameters.
     """
     labels = ["Elastin", "VSMC", "Collagen (Media)", "Collagen (Adventitia)"]
     palette = {
-        "Elastin": "#64DFDF", 
-        "VSMC": "#6930C3", 
-        "Collagen (Media)": "#5390D9", 
-        "Collagen (Adventitia)": "#48BFE3", 
+        "Elastin": "#64DFDF",
+        "VSMC": "#6930C3",
+        "Collagen (Media)": "#5390D9",
+        "Collagen (Adventitia)": "#48BFE3",
     }
     wedge_colors = [palette[l] for l in labels]
-    explode = [0.0, 0.10, 0.0, 0.0] 
+    explode = [0.0, 0.10, 0.0, 0.0]
 
     scores = sorted(params_dict.keys())
     n = len(scores)
@@ -1128,7 +1129,7 @@ def plot_time_step_convergence(dt_list, params):
     dt_list (list):
         A list of time step sizes to test for convergence.
     params (dict):
-        ArterialParameters / the dictionary containing the parameters for the aneurysm simulation. 
+        ArterialParameters / the dictionary containing the parameters for the aneurysm simulation.
     """
     final_lambda_sys_array = []
     final_collagen_array = []

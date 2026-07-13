@@ -20,7 +20,6 @@ def simulate_arterial_stress_and_pressure(params):
     stretch = 0.55 + 0.01 * np.arange(n)  # circumferential stretch sweep
     diam = 2 * params.radius_tzero * stretch
 
-    # Stress curves (scalar constitutive laws → looped).
     stress = {
         k: np.zeros(n)
         for k in (
@@ -133,7 +132,7 @@ def simulate_aneurysm(params, treatment=False, dt=0.01):
     time = np.linspace(0, params.t_sim, steps)
 
     def _traj():
-        # Helper to create a zero trajectory array of the correct length
+        # Helper func to create a zero trajectory array of the correct length
         return np.zeros(steps)
 
     # Initializing trajectories

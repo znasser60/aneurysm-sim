@@ -10,7 +10,7 @@ class ArterialParameters:
     volume fraction are looked up, and either derived quantity can be overridden
     directly via ```tgf_beta_level``` or ```smc_fraction``` for sensitivity sweeps
     and synthetic-patient studies. The method `refresh_physics` is called at each simulation
-    run to calculaate the constituent stiffness constants. 
+    run to calculaate the constituent stiffness constants.
 
     Parameters:
     genotype: str, optional

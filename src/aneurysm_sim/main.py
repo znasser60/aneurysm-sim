@@ -165,7 +165,7 @@ def run_patient_mode(patient_data, patient_ids, plot_names):
             ],
             "stretch": lambda: [
                 plots.plot_stretch(patient_results),
-                plt.show(), 
+                plt.show(),
             ],
             "stretch_treat": lambda: [
                 plots.plot_stretch(patient_results_treat),
