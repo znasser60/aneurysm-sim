@@ -1,3 +1,9 @@
+"""This module generates patient-specific FEBio .feb inputs and run the aneurysm plugin.
+ 
+Injects genotype, polygenic score, and fitted HGO material parameters into a
+template .feb file, then launches FEBio with the custom plugin over a batch
+of genotype/score setups.
+"""
 import xml.etree.ElementTree as ET
 import subprocess
 import os
@@ -17,6 +23,25 @@ sys.path.insert(0, src_dir)
 
 
 class FebioRunner:
+    """
+    Class to generate patient-specific FEBio .feb files and run simulations with the aneurysm plugin.
+
+    Attributes:
+    template_path (str):
+        Path to the template .feb file.
+    results_dir (str):
+        Directory to save the generated .feb files and simulation results.
+    febio_executable (str):
+        Path to the FEBio executable.
+    plugin_path (str):
+        Path to the compiled aneurysm plugin shared library.
+    
+    Methods:
+    _generate_patient_feb(params, output_path):
+        Generates a patient-specific .feb file with the given parameters.
+    run_simulations(batch_setups, max_concurrent=3, cores_per_sim=2):
+        Runs a batch of simulations in parallel or in a queue with the specified setups.
+    """
     def __init__(
         self,
         template_path="cylinder_with_plugin.feb",
@@ -61,11 +86,11 @@ class FebioRunner:
                         elem = ET.SubElement(mat, tag)
                     elem.text = str(val)
 
-        # get new material parameters based on SMC fraction
+        # Get new material parameters based on SMC fraction
         media_c, media_k1, media_k2 = fit_media_stress_hgo_params(params)
         adv_c, adv_k1, adv_k2 = fit_adventitia_stress_hgo_params(params)
 
-        # update media
+        # Update media
         media_mat = root.find(".//material[@name='Media']")
         if media_mat is not None:
             media_mat.find("genotype").text = str(geno_int)
@@ -83,7 +108,7 @@ class FebioRunner:
                 smax_mpa = smax_pa / 1e6
                 active_muscle.find("smax").text = f"{smax_mpa:.10f}"
 
-        # update adventitia
+        # Update adventitia
         adv_mat = root.find(".//material[@name='Adventitia']")
         if adv_mat is not None:
             hgo_adv = adv_mat.find(".//passive_solid")
@@ -94,7 +119,7 @@ class FebioRunner:
         results_abs = os.path.abspath(self.results_dir)
         stem = os.path.splitext(os.path.basename(output_path))[0]
 
-        # output file paths for FEBio to write results
+        # Output file paths for FEBio to write results
         output_elem = root.find(".//Output")
         if output_elem is not None:
             plotfile = output_elem.find("plotfile")
@@ -107,6 +132,19 @@ class FebioRunner:
         tree.write(output_path, encoding="ISO-8859-1", xml_declaration=True)
 
     def run_simulations(self, batch_setups: list, max_concurrent=3, cores_per_sim=2):
+        """
+        Runs a batch of simulations in parallel or in a queue with the specified setups.
+
+        Parameters:
+        batch_setups (list):
+            List of ArterialParameters instances for each simulation setup.
+        max_concurrent (int, optional):
+            Maximum number of concurrent simulations to run. Default is 3.
+        cores_per_sim (int, optional):
+            Number of CPU cores to allocate per simulation. Default is 2. 
+            
+        NOTE: Do not exceed the total available cores on your machine, it will cause issues.
+        """
         print(f"Preparing {len(batch_setups)} simulations...")
         commands = []
         for i, params in enumerate(batch_setups):
@@ -126,7 +164,6 @@ class FebioRunner:
 
         for filename, cmd in commands:
             while len(active) >= max_concurrent:
-                # Clean up finished processes
                 active = [p for p in active if p.poll() is None]
                 time.sleep(0.5)
 
@@ -135,7 +172,6 @@ class FebioRunner:
                 subprocess.Popen(
                     cmd,
                     stdout=subprocess.DEVNULL,
-                    # stderr=subprocess.DEVNULL
                 )
             )
 
